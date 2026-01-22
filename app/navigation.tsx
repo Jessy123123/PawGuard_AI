@@ -7,31 +7,33 @@ import { theme } from '../theme';
 
 // Import screens
 import { AuthScreen } from '../screens/AuthScreen';
+import { HomeScreen } from '../screens/HomeScreen';
+import { ReportSightingScreen } from '../screens/ReportSightingScreen';
+import { AdoptionListScreen } from '../screens/AdoptionListScreen';
+import { AdoptionExitScreen } from '../screens/AdoptionExitScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
-import { DisasterResponseScreen } from '../screens/DisasterResponseScreen';
 import { DogProfileScreen } from '../screens/DogProfileScreen';
-import { MissionControlScreen } from '../screens/MissionControlScreen';
 
 // Type definitions
 export type RootStackParamList = {
     Auth: undefined;
     Main: undefined;
-    DisasterResponse: undefined;
+    ReportSighting: undefined;
+    AdoptionExit: { petId?: string };
     DogProfile: undefined;
 };
 
 export type MainTabParamList = {
-    Dashboard: undefined;
-    Map: undefined;
-    Mission: undefined;
-    Animals: undefined;
+    Scan: undefined;
+    Report: undefined;
     Adoption: undefined;
+    Profile: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Tab Navigator Component
+// Tab Navigator Component - New layout matching mockups
 const MainTabs: React.FC = () => {
     return (
         <Tab.Navigator
@@ -44,7 +46,7 @@ const MainTabs: React.FC = () => {
                     paddingBottom: 10,
                     paddingTop: 10,
                 },
-                tabBarActiveTintColor: theme.colors.primary,
+                tabBarActiveTintColor: theme.colors.greenPrimary,
                 tabBarInactiveTintColor: theme.colors.textSecondary,
                 tabBarLabelStyle: {
                     fontSize: 10,
@@ -55,53 +57,43 @@ const MainTabs: React.FC = () => {
             }}
         >
             <Tab.Screen
-                name="Dashboard"
+                name="Scan"
+                component={HomeScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="scan" size={size} color={color} />
+                    ),
+                    tabBarLabel: 'SCAN',
+                }}
+            />
+            <Tab.Screen
+                name="Report"
                 component={DashboardScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="grid" size={size} color={color} />
+                        <Ionicons name="document-text" size={size} color={color} />
                     ),
-                    tabBarLabel: 'DASHBOARD',
-                }}
-            />
-            <Tab.Screen
-                name="Map"
-                component={DisasterResponseScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="map" size={size} color={color} />
-                    ),
-                    tabBarLabel: 'MAP',
-                }}
-            />
-            <Tab.Screen
-                name="Mission"
-                component={MissionControlScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="grid" size={size} color={color} />
-                    ),
-                    tabBarLabel: 'MISSION',
-                }}
-            />
-            <Tab.Screen
-                name="Animals"
-                component={DogProfileScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="paw" size={size} color={color} />
-                    ),
-                    tabBarLabel: 'ANIMALS',
+                    tabBarLabel: 'REPORT',
                 }}
             />
             <Tab.Screen
                 name="Adoption"
-                component={DashboardScreen}
+                component={AdoptionListScreen}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="heart" size={size} color={color} />
                     ),
                     tabBarLabel: 'ADOPTION',
+                }}
+            />
+            <Tab.Screen
+                name="Profile"
+                component={DogProfileScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person" size={size} color={color} />
+                    ),
+                    tabBarLabel: 'PROFILE',
                 }}
             />
         </Tab.Navigator>
@@ -121,10 +113,17 @@ export const AppNavigation: React.FC = () => {
                 <Stack.Screen name="Auth" component={AuthScreen} />
                 <Stack.Screen name="Main" component={MainTabs} />
                 <Stack.Screen
-                    name="DisasterResponse"
-                    component={DisasterResponseScreen}
+                    name="ReportSighting"
+                    component={ReportSightingScreen}
                     options={{
-                        presentation: 'modal',
+                        presentation: 'card',
+                    }}
+                />
+                <Stack.Screen
+                    name="AdoptionExit"
+                    component={AdoptionExitScreen}
+                    options={{
+                        presentation: 'card',
                     }}
                 />
                 <Stack.Screen

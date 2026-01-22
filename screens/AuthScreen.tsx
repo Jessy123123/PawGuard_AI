@@ -1,40 +1,78 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { RoleSelector, CustomInput, CustomButton } from '../components';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { RoleSelector, CustomInput, CustomButton, LoadingOverlay } from '../components';
 import { theme } from '../theme';
 import { UserRole } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { loginSchema, signupSchema, LoginFormData, SignupFormData } from '../utils/validation';
 
 export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
     const [isSignUp, setIsSignUp] = useState(true);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [orgName, setOrgName] = useState('');
-    const [regNumber, setRegNumber] = useState('');
-    const [country, setCountry] = useState('USA');
+    const { login, register, isLoading } = useAuth();
 
-    const handleSubmit = () => {
-        // Navigate to main app
-        navigation.navigate('Main');
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm<SignupFormData>({
+        resolver: yupResolver(isSignUp ? signupSchema : loginSchema),
+        context: { isNGO: selectedRole === 'ngo' },
+        mode: 'onBlur',
+    });
+
+    const onSubmit = async (data: LoginFormData | SignupFormData) => {
+        try {
+            if (isSignUp) {
+                await register(
+                    data.email,
+                    data.password,
+                    selectedRole,
+                    'organizationName' in data ? data.organizationName : undefined
+                );
+            } else {
+                await login(data.email, data.password, selectedRole);
+            }
+            navigation.navigate('Main');
+        } catch (error) {
+            console.error('Auth error:', error);
+        }
+    };
+
+    const toggleMode = () => {
+        setIsSignUp(!isSignUp);
+        reset();
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar style="light" />
+            <LoadingOverlay visible={isLoading} message={isSignUp ? 'Creating account...' : 'Logging in...'} />
+
             <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <Ionicons name="paw" size={32} color={theme.colors.textPrimary} />
-                    </View>
-                    <Text style={styles.title}>PawGuard AI</Text>
-                </View>
+                {/* Gradient Header */}
+                <LinearGradient
+                    colors={[theme.colors.peach, theme.colors.coral, theme.colors.softOrange]}
+                    start={theme.gradientPositions.diagonal.start}
+                    end={theme.gradientPositions.diagonal.end}
+                    style={styles.logoContainer}
+                >
+                    <Ionicons name="paw" size={40} color={theme.colors.textPrimary} />
+                </LinearGradient>
+                <Text style={styles.title}>PawGuard AI</Text>
+                <Text style={styles.subtitle}>Animal Rescue Intelligence</Text>
 
                 {/* Role Selector */}
                 <RoleSelector selectedRole={selectedRole} onSelectRole={setSelectedRole} />
@@ -61,48 +99,88 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
                 {/* Form */}
                 <View style={styles.form}>
-                    <CustomInput
-                        label="EMAIL ADDRESS"
-                        placeholder="contact@organization.org"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
+                    <Controller
+                        control={control}
+                        name="email"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <CustomInput
+                                label="EMAIL ADDRESS"
+                                placeholder="contact@organization.org"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                error={errors.email?.message}
+                            />
+                        )}
                     />
 
-                    <CustomInput
-                        label="PASSWORD"
-                        placeholder="••••••••"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
+                    <Controller
+                        control={control}
+                        name="password"
+                        render={({ field: { onChange, onBlur, value } }) => (
+                            <CustomInput
+                                label="PASSWORD"
+                                placeholder="••••••••"
+                                value={value}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                                secureTextEntry
+                                error={errors.password?.message}
+                            />
+                        )}
                     />
 
                     {isSignUp && selectedRole === 'ngo' && (
                         <>
-                            <CustomInput
-                                label="ORGANIZATION NAME"
-                                placeholder="Global Rescue Corp"
-                                value={orgName}
-                                onChangeText={setOrgName}
+                            <Controller
+                                control={control}
+                                name="organizationName"
+                                render={({ field: { onChange, onBlur, value } }) => (
+                                    <CustomInput
+                                        label="ORGANIZATION NAME"
+                                        placeholder="Global Rescue Corp"
+                                        value={value}
+                                        onChangeText={onChange}
+                                        onBlur={onBlur}
+                                        error={errors.organizationName?.message}
+                                    />
+                                )}
                             />
 
                             <View style={styles.row}>
                                 <View style={styles.halfWidth}>
-                                    <CustomInput
-                                        label="REG NUMBER"
-                                        placeholder="REG-29384"
-                                        value={regNumber}
-                                        onChangeText={setRegNumber}
+                                    <Controller
+                                        control={control}
+                                        name="regNumber"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <CustomInput
+                                                label="REG NUMBER"
+                                                placeholder="REG-29384"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                error={errors.regNumber?.message}
+                                            />
+                                        )}
                                     />
                                 </View>
                                 <View style={styles.halfWidth}>
-                                    <CustomInput
-                                        label="COUNTRY"
-                                        placeholder="USA"
-                                        value={country}
-                                        onChangeText={setCountry}
-                                        icon="chevron-down"
+                                    <Controller
+                                        control={control}
+                                        name="country"
+                                        render={({ field: { onChange, onBlur, value } }) => (
+                                            <CustomInput
+                                                label="COUNTRY"
+                                                placeholder="USA"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                icon="chevron-down"
+                                                error={errors.country?.message}
+                                            />
+                                        )}
                                     />
                                 </View>
                             </View>
@@ -112,8 +190,9 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     <CustomButton
                         title="Access Platform"
                         icon="arrow-forward"
-                        onPress={handleSubmit}
+                        onPress={handleSubmit(onSubmit)}
                         style={styles.submitButton}
+                        disabled={isLoading}
                     />
 
                     {/* Divider */}
@@ -126,23 +205,14 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     {/* Google Button */}
                     <CustomButton
                         title="Google"
-                        variant="ghost"
+                        variant="glass"
                         icon="logo-google"
                         iconPosition="left"
                         onPress={() => { }}
                     />
 
-                    {/* Footer Links */}
-                    <View style={styles.footer}>
-                        <Pressable>
-                            <Text style={styles.footerLink}>Privacy Policy</Text>
-                        </Pressable>
-                        <Pressable>
-                            <Text style={styles.footerLink}>Terms of Service</Text>
-                        </Pressable>
-                    </View>
-
-                    <Text style={styles.copyright}>© 2024 PAWGUARD AI MISSION CONTROL</Text>
+                    {/* Footer */}
+                    <Text style={styles.copyright}>© 2026 PAWGUARD AI</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -159,52 +229,59 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: theme.spacing.xl,
+        paddingTop: theme.spacing.md,
         paddingBottom: theme.spacing.xxxl,
     },
-    header: {
-        alignItems: 'center',
-        marginTop: theme.spacing.xl,
-        marginBottom: theme.spacing.xxxl,
-    },
     logoContainer: {
-        width: 64,
-        height: 64,
-        borderRadius: theme.radius.lg,
-        backgroundColor: theme.colors.primary,
+        width: 80,
+        height: 80,
+        borderRadius: theme.radius.xxl,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: theme.spacing.md,
+        alignSelf: 'center',
+        marginTop: theme.spacing.xxl,
+        marginBottom: theme.spacing.lg,
+        ...theme.shadows.lg,
     },
     title: {
-        ...theme.textStyles.h3,
+        ...theme.textStyles.h1,
         color: theme.colors.textPrimary,
         fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: theme.spacing.xs,
+    },
+    subtitle: {
+        ...theme.textStyles.body,
+        color: theme.colors.textMuted,
+        textAlign: 'center',
+        marginBottom: theme.spacing.xxxl,
     },
     tabContainer: {
         flexDirection: 'row',
         gap: theme.spacing.md,
-        marginBottom: theme.spacing.xl,
+        marginBottom: theme.spacing.xxl,
+        backgroundColor: theme.colors.glassLight,
+        borderRadius: theme.borderRadius.button,
+        padding: theme.spacing.xs,
     },
     tab: {
         flex: 1,
         paddingVertical: theme.spacing.md,
-        borderRadius: theme.borderRadius.button,
-        borderWidth: 2,
-        borderColor: theme.colors.primaryDark,
-        backgroundColor: 'transparent',
+        borderRadius: theme.borderRadius.button - 4,
         alignItems: 'center',
     },
     tabActive: {
-        backgroundColor: theme.colors.primary,
-        borderColor: theme.colors.primary,
+        backgroundColor: theme.colors.surface,
     },
     tabText: {
         ...theme.textStyles.button,
-        color: theme.colors.textPrimary,
+        color: theme.colors.textMuted,
         fontSize: 14,
+        fontWeight: '600',
     },
     tabTextActive: {
-        color: theme.colors.textDark,
+        color: theme.colors.textAccent,
+        fontWeight: '700',
     },
     form: {
         marginTop: theme.spacing.md,
@@ -217,41 +294,32 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     submitButton: {
-        marginTop: theme.spacing.md,
-        marginBottom: theme.spacing.xl,
+        marginTop: theme.spacing.lg,
+        marginBottom: theme.spacing.xxl,
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: theme.spacing.xl,
+        marginVertical: theme.spacing.xxl,
     },
     divider: {
         flex: 1,
         height: 1,
-        backgroundColor: theme.colors.primaryDark,
+        backgroundColor: theme.colors.borderGlass,
     },
     dividerText: {
         ...theme.textStyles.caption,
-        color: theme.colors.textSecondary,
+        color: theme.colors.textMuted,
         marginHorizontal: theme.spacing.md,
         fontSize: 11,
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: theme.spacing.xl,
-        marginTop: theme.spacing.xxxl,
-    },
-    footerLink: {
-        ...theme.textStyles.body,
-        color: theme.colors.textSecondary,
-        fontSize: 13,
+        letterSpacing: 1,
     },
     copyright: {
         ...theme.textStyles.small,
-        color: theme.colors.textTertiary,
+        color: theme.colors.textMuted,
         textAlign: 'center',
-        marginTop: theme.spacing.md,
-        fontSize: 9,
+        marginTop: theme.spacing.xxl,
+        fontSize: 10,
+        letterSpacing: 1,
     },
 });

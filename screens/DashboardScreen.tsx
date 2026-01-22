@@ -1,60 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { StatCard, AlertCard } from '../components';
+import { StatCard, AlertCard, SkeletonLoader, OfflineBanner } from '../components';
 import { theme } from '../theme';
-import { Alert } from '../types';
-
-const mockAlerts: Alert[] = [
-    {
-        id: '1',
-        title: 'Food Warning',
-        description: 'Rising water levels detected.',
-        location: 'Area B',
-        timestamp: '2m ago',
-        status: 'critical',
-        icon: 'warning',
-    },
-    {
-        id: '2',
-        title: 'Public Report',
-        description: 'Injured Dog spotted near park.',
-        location: 'Sector 4',
-        timestamp: '10m ago',
-        status: 'review',
-        icon: 'person',
-    },
-    {
-        id: '3',
-        title: 'AI Detection',
-        description: 'Multiple strays identified.',
-        location: 'Sector 7',
-        timestamp: '15m ago',
-        status: 'active',
-        icon: 'sparkles',
-    },
-];
+import { useData } from '../contexts/DataContext';
 
 export const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    const { alerts, stats, isLoading, refreshData } = useData();
+
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
             <StatusBar style="light" />
-            <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Pressable style={styles.zoneSelector}>
-                        <Text style={styles.zoneLabel}>CURRENT ZONE</Text>
-                        <View style={styles.zoneValue}>
-                            <Text style={styles.zoneText}>Sector 7 - Downtown</Text>
-                            <Ionicons name="chevron-down" size={20} color={theme.colors.primary} />
+            <OfflineBanner />
+
+            {/* Gradient Header */}
+            <LinearGradient
+                colors={[theme.colors.surface, theme.colors.background]}
+                style={styles.header}
+            >
+                <View style={styles.headerContent}>
+                    <View>
+                        <Text style={styles.greeting}>Welcome Back</Text>
+                        <View style={styles.locationRow}>
+                            <Ionicons name="location" size={14} color={theme.colors.textAccent} />
+                            <Text style={styles.location}>Sector 7 • Downtown</Text>
                         </View>
-                    </Pressable>
+                    </View>
                     <Pressable style={styles.searchButton}>
-                        <Ionicons name="search" size={24} color={theme.colors.textPrimary} />
+                        <Ionicons name="search" size={22} color={theme.colors.textPrimary} />
                     </Pressable>
                 </View>
+            </LinearGradient>
 
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={refreshData}
+                        tintColor={theme.colors.textAccent}
+                    />
+                }
+            >
                 {/* Statistics Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -62,43 +54,50 @@ export const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                         <Text style={styles.sectionSubtitle}>Last 24h</Text>
                     </View>
 
-                    <View style={styles.statsGrid}>
-                        <StatCard
-                            icon="home"
-                            label="DOGS RESCUED"
-                            value={128}
-                            positive={true}
-                            iconBackgroundColor={theme.colors.iconGreen}
-                            iconColor={theme.colors.iconGreenDark}
-                        />
-                        <StatCard
-                            icon="alert-circle"
-                            label="DOGS NOT RESCUED"
-                            value={45}
-                            positive={false}
-                            iconBackgroundColor={theme.colors.iconRed}
-                            iconColor={theme.colors.iconRedDark}
-                        />
-                    </View>
+                    {isLoading ? (
+                        <>
+                            <View style={styles.statsGrid}>
+                                <SkeletonLoader variant="stat" />
+                                <SkeletonLoader variant="stat" />
+                            </View>
+                            <View style={styles.statsGrid}>
+                                <SkeletonLoader variant="stat" />
+                                <SkeletonLoader variant="stat" />
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <View style={styles.statsGrid}>
+                                <StatCard
+                                    icon="home"
+                                    label="DOGS RESCUED"
+                                    value={stats.dogsRescued}
+                                    positive={true}
+                                />
+                                <StatCard
+                                    icon="alert-circle"
+                                    label="DOGS AT RISK"
+                                    value={stats.dogsNotRescued}
+                                    positive={false}
+                                />
+                            </View>
 
-                    <View style={styles.statsGrid}>
-                        <StatCard
-                            icon="paw"
-                            label="CATS RESCUED"
-                            value={84}
-                            positive={true}
-                            iconBackgroundColor={theme.colors.iconGreen}
-                            iconColor={theme.colors.iconGreenDark}
-                        />
-                        <StatCard
-                            icon="warning"
-                            label="CATS NOT RESCUED"
-                            value={22}
-                            positive={false}
-                            iconBackgroundColor={theme.colors.iconRed}
-                            iconColor={theme.colors.iconRedDark}
-                        />
-                    </View>
+                            <View style={styles.statsGrid}>
+                                <StatCard
+                                    icon="paw"
+                                    label="CATS RESCUED"
+                                    value={stats.catsRescued}
+                                    positive={true}
+                                />
+                                <StatCard
+                                    icon="warning"
+                                    label="CATS AT RISK"
+                                    value={stats.catsNotRescued}
+                                    positive={false}
+                                />
+                            </View>
+                        </>
+                    )}
                 </View>
 
                 {/* Intelligence Feed */}
@@ -110,17 +109,24 @@ export const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) =
                         </Pressable>
                     </View>
 
-                    {mockAlerts.map((alert) => (
-                        <AlertCard
-                            key={alert.id}
-                            alert={alert}
-                            onPress={() => navigation.navigate('DogProfile')}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <>
+                            <SkeletonLoader variant="list" />
+                            <SkeletonLoader variant="list" />
+                            <SkeletonLoader variant="list" />
+                        </>
+                    ) : (
+                        alerts.map((alert) => (
+                            <AlertCard
+                                key={alert.id}
+                                alert={alert}
+                                onPress={() => navigation.navigate('DogProfile')}
+                            />
+                        ))
+                    )}
                 </View>
 
-                {/* Bottom padding for tab bar */}
-                <View style={{ height: 100 }} />
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -131,51 +137,49 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.colors.background,
     },
+    header: {
+        paddingTop: theme.spacing.lg,
+        paddingBottom: theme.spacing.xl,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: theme.spacing.xl,
+    },
+    greeting: {
+        ...theme.textStyles.h3,
+        color: theme.colors.textPrimary,
+        fontWeight: 'bold',
+        marginBottom: theme.spacing.xs,
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: theme.spacing.xs,
+    },
+    location: {
+        ...theme.textStyles.body,
+        color: theme.colors.textSecondary,
+        fontSize: 13,
+    },
+    searchButton: {
+        width: 48,
+        height: 48,
+        borderRadius: theme.radius.full,
+        ...theme.glassEffect,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     container: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: theme.spacing.xxxl,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: theme.spacing.xl,
-        paddingTop: theme.spacing.lg,
-        paddingBottom: theme.spacing.xl,
-        justifyContent: 'space-between',
-    },
-    zoneSelector: {
-        flex: 1,
-    },
-    zoneLabel: {
-        ...theme.textStyles.caption,
-        color: theme.colors.info,
-        marginBottom: 4,
-        fontSize: 10,
-        letterSpacing: 1,
-    },
-    zoneValue: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    zoneText: {
-        ...theme.textStyles.bodyLarge,
-        color: theme.colors.textPrimary,
-        fontWeight: '600',
-        marginRight: theme.spacing.xs,
-    },
-    searchButton: {
-        width: 44,
-        height: 44,
-        borderRadius: theme.radius.full,
-        backgroundColor: theme.colors.surfaceDark,
-        justifyContent: 'center',
-        alignItems: 'center',
+        paddingBottom: theme.layout.tabBarHeight + theme.spacing.xl,
     },
     section: {
         paddingHorizontal: theme.spacing.xl,
-        marginBottom: theme.spacing.xl,
+        marginBottom: theme.spacing.xxl,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -190,13 +194,15 @@ const styles = StyleSheet.create({
     },
     sectionSubtitle: {
         ...theme.textStyles.body,
-        color: theme.colors.textSecondary,
+        color: theme.colors.textMuted,
+        fontSize: 13,
     },
     viewAllButton: {
         ...theme.textStyles.body,
-        color: theme.colors.primary,
-        fontWeight: '600',
+        color: theme.colors.textAccent,
+        fontWeight: '700',
         fontSize: 12,
+        letterSpacing: 0.5,
     },
     statsGrid: {
         flexDirection: 'row',

@@ -1,11 +1,12 @@
 import React from 'react';
 import { Pressable, Text, StyleSheet, ViewStyle, PressableProps, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 
 interface CustomButtonProps extends Omit<PressableProps, 'style'> {
     title: string;
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+    variant?: 'primary' | 'secondary' | 'outline' | 'glass';
     size?: 'small' | 'medium' | 'large';
     icon?: keyof typeof Ionicons.glyphMap;
     iconPosition?: 'left' | 'right';
@@ -24,70 +25,180 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     disabled,
     ...pressableProps
 }) => {
-    const getButtonStyle = () => {
-        const baseStyle = [styles.button, styles[`button${size.charAt(0).toUpperCase() + size.slice(1)}`]];
-
-        switch (variant) {
-            case 'primary':
-                return [...baseStyle, styles.buttonPrimary];
-            case 'secondary':
-                return [...baseStyle, styles.buttonSecondary];
-            case 'outline':
-                return [...baseStyle, styles.buttonOutline];
-            case 'ghost':
-                return [...baseStyle, styles.buttonGhost];
-            case 'danger':
-                return [...baseStyle, styles.buttonDanger];
-            default:
-                return [...baseStyle, styles.buttonPrimary];
+    const getHeight = () => {
+        switch (size) {
+            case 'small': return 44;
+            case 'large': return 64;
+            default: return 56;
         }
     };
 
-    const getTextStyle = () => {
-        const baseStyle = [styles.text];
+    if (variant === 'primary') {
+        return (
+            <Pressable
+                {...pressableProps}
+                disabled={disabled || loading}
+                style={({ pressed }) => [
+                    { opacity: pressed || disabled ? 0.8 : 1 },
+                    style,
+                ]}
+            >
+                <LinearGradient
+                    colors={theme.gradients.primary}
+                    start={theme.gradientPositions.horizontal.start}
+                    end={theme.gradientPositions.horizontal.end}
+                    style={[
+                        styles.button,
+                        { height: getHeight() },
+                        theme.shadows.md,
+                    ]}
+                >
+                    {loading ? (
+                        <ActivityIndicator color={theme.colors.textPrimary} />
+                    ) : (
+                        <>
+                            {icon && iconPosition === 'left' && (
+                                <Ionicons
+                                    name={icon}
+                                    size={22}
+                                    color={theme.colors.textPrimary}
+                                    style={styles.iconLeft}
+                                />
+                            )}
+                            <Text style={styles.textPrimary}>{title}</Text>
+                            {icon && iconPosition === 'right' && (
+                                <Ionicons
+                                    name={icon}
+                                    size={22}
+                                    color={theme.colors.textPrimary}
+                                    style={styles.iconRight}
+                                />
+                            )}
+                        </>
+                    )}
+                </LinearGradient>
+            </Pressable>
+        );
+    }
 
-        switch (variant) {
-            case 'primary':
-            case 'danger':
-                return [...baseStyle, styles.textPrimary];
-            case 'secondary':
-                return [...baseStyle, styles.textDark];
-            case 'outline':
-            case 'ghost':
-                return [...baseStyle, styles.textOutline];
-            default:
-                return [...baseStyle, styles.textPrimary];
-        }
-    };
+    if (variant === 'secondary') {
+        return (
+            <Pressable
+                {...pressableProps}
+                disabled={disabled || loading}
+                style={({ pressed }) => [
+                    { opacity: pressed || disabled ? 0.8 : 1 },
+                    style,
+                ]}
+            >
+                <LinearGradient
+                    colors={theme.gradients.secondary}
+                    start={theme.gradientPositions.horizontal.start}
+                    end={theme.gradientPositions.horizontal.end}
+                    style={[
+                        styles.button,
+                        { height: getHeight() },
+                        theme.shadows.md,
+                    ]}
+                >
+                    {loading ? (
+                        <ActivityIndicator color={theme.colors.textPrimary} />
+                    ) : (
+                        <>
+                            {icon && iconPosition === 'left' && (
+                                <Ionicons
+                                    name={icon}
+                                    size={22}
+                                    color={theme.colors.textPrimary}
+                                    style={styles.iconLeft}
+                                />
+                            )}
+                            <Text style={styles.textPrimary}>{title}</Text>
+                            {icon && iconPosition === 'right' && (
+                                <Ionicons
+                                    name={icon}
+                                    size={22}
+                                    color={theme.colors.textPrimary}
+                                    style={styles.iconRight}
+                                />
+                            )}
+                        </>
+                    )}
+                </LinearGradient>
+            </Pressable>
+        );
+    }
 
+    if (variant === 'glass') {
+        return (
+            <Pressable
+                {...pressableProps}
+                disabled={disabled || loading}
+                style={({ pressed }) => [
+                    styles.button,
+                    styles.buttonGlass,
+                    theme.glassEffect,
+                    { height: getHeight(), opacity: pressed || disabled ? 0.8 : 1 },
+                    style,
+                ]}
+            >
+                {loading ? (
+                    <ActivityIndicator color={theme.colors.textPrimary} />
+                ) : (
+                    <>
+                        {icon && iconPosition === 'left' && (
+                            <Ionicons
+                                name={icon}
+                                size={22}
+                                color={theme.colors.textPrimary}
+                                style={styles.iconLeft}
+                            />
+                        )}
+                        <Text style={styles.textSecondary}>{title}</Text>
+                        {icon && iconPosition === 'right' && (
+                            <Ionicons
+                                name={icon}
+                                size={22}
+                                color={theme.colors.textPrimary}
+                                style={styles.iconRight}
+                            />
+                        )}
+                    </>
+                )}
+            </Pressable>
+        );
+    }
+
+    // Outline variant
     return (
         <Pressable
             {...pressableProps}
             disabled={disabled || loading}
             style={({ pressed }) => [
-                ...getButtonStyle(),
-                { opacity: pressed || disabled ? 0.6 : 1 },
+                styles.button,
+                styles.buttonOutline,
+                { height: getHeight(), opacity: pressed || disabled ? 0.8 : 1 },
                 style,
             ]}
         >
             {loading ? (
-                <ActivityIndicator color={variant === 'primary' ? theme.colors.textPrimary : theme.colors.primary} />
+                <ActivityIndicator color={theme.colors.textAccent} />
             ) : (
                 <>
                     {icon && iconPosition === 'left' && (
                         <Ionicons
                             name={icon}
-                            size={20}
-                            color={variant === 'primary' || variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary}
+                            size={22}
+                            color={theme.colors.textAccent}
                             style={styles.iconLeft}
                         />
                     )}
-                    <Text style={getTextStyle()}>{title}</Text>
+                    <Text style={styles.textOutline}>{title}</Text>
                     {icon && iconPosition === 'right' && (
                         <Ionicons
                             name={icon}
-                            size={20}
-                            color={variant === 'primary' || variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary}
+                            size={22}
+                            color={theme.colors.textAccent}
                             style={styles.iconRight}
                         />
                     )}
@@ -103,50 +214,32 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        ...theme.shadows.sm,
-    },
-    buttonSmall: {
-        paddingHorizontal: theme.spacing.lg,
-        height: 40,
-    },
-    buttonMedium: {
         paddingHorizontal: theme.spacing.xl,
-        height: 52,
     },
-    buttonLarge: {
-        paddingHorizontal: theme.spacing.xxl,
-        height: 64,
-    },
-    buttonPrimary: {
-        backgroundColor: theme.colors.primary,
-    },
-    buttonSecondary: {
-        backgroundColor: theme.colors.primaryLight,
+    buttonGlass: {
     },
     buttonOutline: {
         backgroundColor: 'transparent',
         borderWidth: 2,
-        borderColor: theme.colors.primary,
-    },
-    buttonGhost: {
-        backgroundColor: 'transparent',
-        borderWidth: 2,
-        borderColor: theme.colors.textPrimary,
-    },
-    buttonDanger: {
-        backgroundColor: theme.colors.danger,
-    },
-    text: {
-        ...theme.textStyles.button,
+        borderColor: theme.colors.borderGradient,
     },
     textPrimary: {
+        ...theme.textStyles.button,
         color: theme.colors.textPrimary,
+        fontWeight: '700',
+        fontSize: 16,
     },
-    textDark: {
-        color: theme.colors.textDark,
+    textSecondary: {
+        ...theme.textStyles.button,
+        color: theme.colors.textPrimary,
+        fontWeight: '600',
+        fontSize: 16,
     },
     textOutline: {
-        color: theme.colors.primary,
+        ...theme.textStyles.button,
+        color: theme.colors.textAccent,
+        fontWeight: '600',
+        fontSize: 16,
     },
     iconLeft: {
         marginRight: theme.spacing.sm,

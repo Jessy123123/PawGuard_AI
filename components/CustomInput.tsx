@@ -17,24 +17,32 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     ...props
 }) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
     const isPassword = secureTextEntry;
 
     return (
         <View style={styles.container}>
             <Text style={styles.label}>{label}</Text>
-            <View style={[styles.inputContainer, error && styles.inputContainerError]}>
+            <View style={[
+                styles.inputContainer,
+                theme.glassEffect,
+                isFocused && styles.inputContainerFocused,
+                error && styles.inputContainerError,
+            ]}>
                 {icon && (
                     <Ionicons
                         name={icon}
                         size={20}
-                        color={theme.colors.textTertiary}
+                        color={isFocused ? theme.colors.textAccent : theme.colors.textMuted}
                         style={styles.icon}
                     />
                 )}
                 <TextInput
                     style={styles.input}
-                    placeholderTextColor={theme.colors.textTertiary}
+                    placeholderTextColor={theme.colors.textMuted}
                     secureTextEntry={isPassword && !isPasswordVisible}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     {...props}
                 />
                 {isPassword && (
@@ -45,7 +53,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
                         <Ionicons
                             name={isPasswordVisible ? 'eye-outline' : 'eye-off-outline'}
                             size={20}
-                            color={theme.colors.textTertiary}
+                            color={theme.colors.textMuted}
                         />
                     </Pressable>
                 )}
@@ -61,22 +69,29 @@ const styles = StyleSheet.create({
     },
     label: {
         ...theme.textStyles.label,
-        color: theme.colors.textPrimary,
+        color: theme.colors.textSecondary,
         marginBottom: theme.spacing.xs,
         textTransform: 'uppercase',
         fontSize: 11,
+        fontWeight: '600',
+        letterSpacing: 1,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.colors.surface,
         borderRadius: theme.borderRadius.input,
         paddingHorizontal: theme.spacing.md,
-        height: 52,
+        height: 56,
+        borderWidth: 1,
+        borderColor: theme.colors.borderGlass,
+    },
+    inputContainerFocused: {
+        borderColor: theme.colors.borderGradient,
+        borderWidth: 2,
     },
     inputContainerError: {
-        borderWidth: 1,
-        borderColor: theme.colors.error,
+        borderColor: theme.colors.danger,
+        borderWidth: 1.5,
     },
     icon: {
         marginRight: theme.spacing.sm,
@@ -84,14 +99,15 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         ...theme.textStyles.body,
-        color: theme.colors.textDark,
+        color: theme.colors.textPrimary,
+        fontSize: 16,
     },
     eyeIcon: {
         padding: theme.spacing.xs,
     },
     error: {
         ...theme.textStyles.caption,
-        color: theme.colors.error,
+        color: theme.colors.danger,
         marginTop: theme.spacing.xs,
     },
 });

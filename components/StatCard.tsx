@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 
@@ -17,50 +18,55 @@ export const StatCard: React.FC<StatCardProps> = ({
     label,
     value,
     positive = true,
-    iconBackgroundColor,
-    iconColor,
 }) => {
-    const bgColor = iconBackgroundColor || (positive ? theme.colors.iconGreen : theme.colors.iconRed);
-    const color = iconColor || (positive ? theme.colors.iconGreenDark : theme.colors.iconRedDark);
-
     return (
-        <View style={styles.container}>
-            <View style={[styles.iconContainer, { backgroundColor: bgColor }]}>
-                <Ionicons name={icon} size={28} color={color} />
-            </View>
+        <View style={[styles.container, theme.glassEffect]}>
+            <LinearGradient
+                colors={positive ? [theme.colors.peach, theme.colors.coral] : [theme.colors.danger, theme.colors.sunset]}
+                start={theme.gradientPositions.diagonal.start}
+                end={theme.gradientPositions.diagonal.end}
+                style={styles.iconContainer}
+            >
+                <Ionicons name={icon} size={28} color={theme.colors.textPrimary} />
+            </LinearGradient>
             <Text style={styles.label}>{label}</Text>
-            <Text style={[styles.value, { color }]}>{value}</Text>
+            <Text style={[styles.value, { color: positive ? theme.colors.lightTeal : theme.colors.danger }]}>
+                {value.toLocaleString()}
+            </Text>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: theme.colors.surface,
         borderRadius: theme.borderRadius.card,
         padding: theme.spacing.lg,
         alignItems: 'flex-start',
         ...theme.shadows.base,
         flex: 1,
+        minHeight: 140,
     },
     iconContainer: {
-        width: 48,
-        height: 48,
+        width: 56,
+        height: 56,
         borderRadius: theme.radius.lg,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: theme.spacing.md,
+        ...theme.shadows.sm,
     },
     label: {
         ...theme.textStyles.caption,
-        color: theme.colors.textTertiary,
+        color: theme.colors.textMuted,
         marginBottom: theme.spacing.xs,
         textTransform: 'uppercase',
         fontSize: 10,
-        fontWeight: '600',
+        fontWeight: '700',
+        letterSpacing: 1.5,
     },
     value: {
         ...theme.textStyles.h2,
         fontWeight: 'bold',
+        fontSize: 32,
     },
 });
