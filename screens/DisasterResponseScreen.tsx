@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
         opacity: 0.5,
     },
     mapText: {
-        fontSize: 48,
+        fontSize: theme.normalize(48),
         marginBottom: theme.spacing.md,
     },
     mapSubtext: {
@@ -226,7 +226,6 @@ const styles = StyleSheet.create({
         ...theme.textStyles.caption,
         color: theme.colors.primary,
         marginBottom: 4,
-        fontSize: 10,
         letterSpacing: 1,
     },
     areaName: {
@@ -251,7 +250,6 @@ const styles = StyleSheet.create({
     targetLabel: {
         ...theme.textStyles.caption,
         color: theme.colors.textSecondary,
-        fontSize: 9,
     },
     broadcastButton: {
         backgroundColor: theme.colors.primary,

@@ -31,7 +31,6 @@ const styles = StyleSheet.create({
         color: theme.colors.textSecondary,
         marginBottom: 4,
         textTransform: 'uppercase',
-        fontSize: 10,
     },
     value: {
         ...theme.textStyles.bodyLarge,

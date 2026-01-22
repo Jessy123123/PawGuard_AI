@@ -5,7 +5,7 @@ import type { ColorKey, GradientKey } from './colors';
 import { spacing, layout } from './spacing';
 import type { SpacingKey } from './spacing';
 
-import { typography, textStyles } from './typography';
+import { typography, textStyles, normalize } from './typography';
 import type { TextStyleKey } from './typography';
 
 import { radius, borderRadius } from './radius';
@@ -21,7 +21,7 @@ export type { ColorKey, GradientKey };
 export { spacing, layout };
 export type { SpacingKey };
 
-export { typography, textStyles };
+export { typography, textStyles, normalize };
 export type { TextStyleKey };
 
 export { radius, borderRadius };
@@ -39,6 +39,7 @@ export const theme = {
     layout: layout,
     typography: typography,
     textStyles: textStyles,
+    normalize: normalize,
     radius: radius,
     borderRadius: borderRadius,
     shadows: shadows,
