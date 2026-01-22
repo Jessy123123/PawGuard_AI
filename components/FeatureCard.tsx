@@ -140,8 +140,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     imageContainer: {
-        width: 120,
-        height: 140,
+        width: '30%',
+        maxWidth: 120,
+        height: 'auto',
+        aspectRatio: 0.85,
         borderRadius: theme.radius.lg,
         overflow: 'hidden',
     },

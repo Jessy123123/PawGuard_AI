@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBadge, InfoCard, CustomButton, ActivityItem } from '../components';
@@ -35,7 +36,7 @@ const mockActivities: ActivityItemType[] = [
 
 export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar style="light" />
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
                 {/* Header with Image */}

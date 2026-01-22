@@ -2,32 +2,25 @@ import { Dimensions, Platform, PixelRatio } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Based on standard ~5" screen mobile device
-const bScale = SCREEN_WIDTH / 375;
-
+// Scaling disabled to force standard sizes
 export function normalize(size: number) {
-    const newSize = size * bScale;
-    if (Platform.OS === 'ios') {
-        return Math.round(PixelRatio.roundToNearestPixel(newSize));
-    } else {
-        return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
-    }
+    return size;
 }
 
 // Typography scale (Dynamically Scaled)
 export const typography = {
     // Font sizes (optimized for mobile)
     fontSize: {
-        xs: normalize(14),
-        sm: normalize(16),
-        base: normalize(18),
-        lg: normalize(20),
-        xl: normalize(24),
-        xxl: normalize(26),
-        xxxl: normalize(30),
-        huge: normalize(36),
-        massive: normalize(40),
-        giant: normalize(48),
+        xs: 10,
+        sm: 11,   // Reduced from 12
+        base: 12, // Reduced from 14
+        lg: 14,   // Reduced from 16
+        xl: 16,   // Reduced from 18
+        xxl: 18,  // Reduced from 20
+        xxxl: 20, // Reduced from 22
+        huge: 22, // Reduced from 24
+        massive: 24, // Reduced from 26
+        giant: 26, // Reduced from 28
     },
 
     // Font weights
@@ -71,7 +64,7 @@ export const textStyles = {
         lineHeight: typography.lineHeight.normal,
     },
     body: {
-        fontSize: typography.fontSize.base,
+        fontSize: 13, // Slightly reduced from base (14)
         fontWeight: typography.fontWeight.regular,
         lineHeight: typography.lineHeight.normal,
     },

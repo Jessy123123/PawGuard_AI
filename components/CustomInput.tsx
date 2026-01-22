@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: theme.borderRadius.input,
         paddingHorizontal: theme.spacing.md,
-        height: 56,
+        height: 44,
         borderWidth: 1,
         borderColor: theme.colors.borderGlass,
     },
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
         flex: 1,
         ...theme.textStyles.body,
         color: theme.colors.textPrimary,
-        fontSize: 16,
+        fontSize: 14,
     },
     eyeIcon: {
         padding: theme.spacing.xs,

@@ -27,7 +27,7 @@ export const StatCard: React.FC<StatCardProps> = ({
                 end={theme.gradientPositions.diagonal.end}
                 style={styles.iconContainer}
             >
-                <Ionicons name={icon} size={28} color={theme.colors.textPrimary} />
+                <Ionicons name={icon} size={20} color={theme.colors.textPrimary} />
             </LinearGradient>
             <Text style={styles.label}>{label}</Text>
             <Text style={[styles.value, { color: positive ? theme.colors.lightTeal : theme.colors.danger }]}>
@@ -40,16 +40,16 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
     container: {
         borderRadius: theme.borderRadius.card,
-        padding: theme.spacing.lg,
+        padding: theme.spacing.md,
         alignItems: 'flex-start',
         ...theme.shadows.base,
         flex: 1,
-        minHeight: 140,
+        minHeight: 110,
     },
     iconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: theme.radius.lg,
+        width: 40,
+        height: 40,
+        borderRadius: theme.radius.md,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: theme.spacing.md,
@@ -58,15 +58,15 @@ const styles = StyleSheet.create({
     label: {
         ...theme.textStyles.caption,
         color: theme.colors.textMuted,
-        marginBottom: theme.spacing.xs,
+        marginBottom: theme.spacing.xxs,
         textTransform: 'uppercase',
         fontSize: 10,
         fontWeight: '700',
-        letterSpacing: 1.5,
+        letterSpacing: 1.0,
     },
     value: {
         ...theme.textStyles.h2,
         fontWeight: 'bold',
-        fontSize: 32,
+        fontSize: 24,
     },
 });

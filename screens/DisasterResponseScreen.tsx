@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { FilterChip, CustomButton, CustomInput } from '../components';
@@ -7,7 +8,7 @@ import { theme } from '../theme';
 
 export const DisasterResponseScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar style="light" />
             <View style={styles.container}>
                 {/* Header */}

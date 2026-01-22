@@ -33,7 +33,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                         >
                             <View style={styles.cardContent}>
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
+                                    <Ionicons name="person" size={24} color={theme.colors.textPrimary} />
                                 </View>
                                 <View style={styles.textContainer}>
                                     <Text style={styles.cardTitle}>Citizen</Text>
@@ -48,7 +48,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                         <View style={[styles.glassCard, theme.glassEffect]}>
                             <View style={styles.cardContent}>
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="person-outline" size={40} color={theme.colors.textSecondary} />
+                                    <Ionicons name="person-outline" size={24} color={theme.colors.textSecondary} />
                                 </View>
                                 <View style={styles.textContainer}>
                                     <Text style={styles.cardTitleInactive}>Citizen</Text>
@@ -76,7 +76,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                         >
                             <View style={styles.cardContent}>
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="medical" size={40} color={theme.colors.textPrimary} />
+                                    <Ionicons name="medical" size={24} color={theme.colors.textPrimary} />
                                 </View>
                                 <View style={styles.textContainer}>
                                     <Text style={styles.cardTitle}>NGO</Text>
@@ -91,7 +91,7 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                         <View style={[styles.glassCard, theme.glassEffect]}>
                             <View style={styles.cardContent}>
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name="medical-outline" size={40} color={theme.colors.textSecondary} />
+                                    <Ionicons name="medical-outline" size={24} color={theme.colors.textSecondary} />
                                 </View>
                                 <View style={styles.textContainer}>
                                     <Text style={styles.cardTitleInactive}>NGO</Text>
@@ -144,8 +144,8 @@ const styles = StyleSheet.create({
         gap: theme.spacing.md,
     },
     iconContainer: {
-        width: 64,
-        height: 64,
+        width: 40,
+        height: 40,
         borderRadius: theme.radius.xl,
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         justifyContent: 'center',

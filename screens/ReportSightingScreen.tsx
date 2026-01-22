@@ -52,7 +52,7 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
     };
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
             <StatusBar style="light" />
 
             {/* Header */}
