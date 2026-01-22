@@ -31,7 +31,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.logoContainer}>
-                        <Ionicons name="paw" size={32} color={theme.colors.textPrimary} />
+                        <Ionicons name="paw" size={40} color={theme.colors.textPrimary} />
                     </View>
                     <Text style={styles.title}>PawGuard AI</Text>
                 </View>
@@ -130,6 +130,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         icon="logo-google"
                         iconPosition="left"
                         onPress={() => { }}
+                        style={styles.googleButton}
                     />
 
                     {/* Footer Links */}
@@ -201,7 +202,6 @@ const styles = StyleSheet.create({
     tabText: {
         ...theme.textStyles.button,
         color: theme.colors.textPrimary,
-        fontSize: 14,
     },
     tabTextActive: {
         color: theme.colors.textDark,
@@ -220,6 +220,10 @@ const styles = StyleSheet.create({
         marginTop: theme.spacing.md,
         marginBottom: theme.spacing.xl,
     },
+    googleButton: {
+        borderColor: theme.colors.gray600,
+        borderWidth: 1,
+    },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -228,13 +232,12 @@ const styles = StyleSheet.create({
     divider: {
         flex: 1,
         height: 1,
-        backgroundColor: theme.colors.primaryDark,
+        backgroundColor: theme.colors.gray600,
     },
     dividerText: {
         ...theme.textStyles.caption,
         color: theme.colors.textSecondary,
         marginHorizontal: theme.spacing.md,
-        fontSize: 11,
     },
     footer: {
         flexDirection: 'row',
@@ -245,13 +248,11 @@ const styles = StyleSheet.create({
     footerLink: {
         ...theme.textStyles.body,
         color: theme.colors.textSecondary,
-        fontSize: 13,
     },
     copyright: {
         ...theme.textStyles.small,
         color: theme.colors.textTertiary,
         textAlign: 'center',
         marginTop: theme.spacing.md,
-        fontSize: 9,
     },
 });

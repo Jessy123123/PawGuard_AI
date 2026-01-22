@@ -53,10 +53,9 @@ const styles = StyleSheet.create({
     },
     label: {
         ...theme.textStyles.caption,
-        color: theme.colors.textTertiary,
+        color: theme.colors.gray500,
         marginBottom: theme.spacing.xs,
         textTransform: 'uppercase',
-        fontSize: 10,
         fontWeight: '600',
     },
     value: {

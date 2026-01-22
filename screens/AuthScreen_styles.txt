@@ -1,0 +1,4 @@
+    googleButton: {
+        borderColor: theme.colors.gray600,
+        borderWidth: 1,
+    },

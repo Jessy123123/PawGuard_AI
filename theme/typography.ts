@@ -1,17 +1,33 @@
-// Typography scale
+import { Dimensions, Platform, PixelRatio } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Based on standard ~5" screen mobile device
+const bScale = SCREEN_WIDTH / 375;
+
+export function normalize(size: number) {
+    const newSize = size * bScale;
+    if (Platform.OS === 'ios') {
+        return Math.round(PixelRatio.roundToNearestPixel(newSize));
+    } else {
+        return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
+    }
+}
+
+// Typography scale (Dynamically Scaled)
 export const typography = {
-    // Font sizes
+    // Font sizes (optimized for mobile)
     fontSize: {
-        xs: 10,
-        sm: 12,
-        base: 14,
-        lg: 16,
-        xl: 18,
-        xxl: 20,
-        xxxl: 24,
-        huge: 28,
-        massive: 32,
-        giant: 40,
+        xs: normalize(14),
+        sm: normalize(16),
+        base: normalize(18),
+        lg: normalize(20),
+        xl: normalize(24),
+        xxl: normalize(26),
+        xxxl: normalize(30),
+        huge: normalize(36),
+        massive: normalize(40),
+        giant: normalize(48),
     },
 
     // Font weights

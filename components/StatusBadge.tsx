@@ -66,7 +66,6 @@ const styles = StyleSheet.create({
     text: {
         ...theme.textStyles.caption,
         fontWeight: '600',
-        fontSize: 10,
         textTransform: 'uppercase',
     },
 });

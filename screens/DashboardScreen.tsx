@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
         ...theme.textStyles.caption,
         color: theme.colors.info,
         marginBottom: 4,
-        fontSize: 10,
         letterSpacing: 1,
     },
     zoneValue: {
@@ -196,7 +195,6 @@ const styles = StyleSheet.create({
         ...theme.textStyles.body,
         color: theme.colors.primary,
         fontWeight: '600',
-        fontSize: 12,
     },
     statsGrid: {
         flexDirection: 'row',

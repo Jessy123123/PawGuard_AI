@@ -26,7 +26,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
                 {icon && (
                     <Ionicons
                         name={icon}
-                        size={20}
+                        size={24}
                         color={theme.colors.textTertiary}
                         style={styles.icon}
                     />
@@ -44,7 +44,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
                     >
                         <Ionicons
                             name={isPasswordVisible ? 'eye-outline' : 'eye-off-outline'}
-                            size={20}
+                            size={24}
                             color={theme.colors.textTertiary}
                         />
                     </Pressable>
@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
         color: theme.colors.textPrimary,
         marginBottom: theme.spacing.xs,
         textTransform: 'uppercase',
-        fontSize: 11,
     },
     inputContainer: {
         flexDirection: 'row',

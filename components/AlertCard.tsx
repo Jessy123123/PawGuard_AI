@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
     badgeText: {
         ...theme.textStyles.small,
         fontWeight: '600',
-        fontSize: 9,
     },
     description: {
         ...theme.textStyles.body,

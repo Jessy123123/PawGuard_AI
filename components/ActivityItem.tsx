@@ -68,7 +68,6 @@ const styles = StyleSheet.create({
         color: theme.colors.primary,
         fontWeight: '600',
         textTransform: 'uppercase',
-        fontSize: 10,
     },
     title: {
         ...theme.textStyles.bodyLarge,

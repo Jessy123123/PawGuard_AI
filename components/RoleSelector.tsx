@@ -20,10 +20,10 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                 >
                     {selectedRole === 'citizen' && (
                         <View style={styles.checkmark}>
-                            <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                            <Ionicons name="checkmark-circle" size={28} color={theme.colors.primary} />
                         </View>
                     )}
-                    <Ionicons name="person" size={32} color={theme.colors.textPrimary} />
+                    <Ionicons name="person" size={40} color={theme.colors.textPrimary} />
                     <Text style={styles.cardText}>Citizen</Text>
                 </Pressable>
 
@@ -33,10 +33,10 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
                 >
                     {selectedRole === 'ngo' && (
                         <View style={styles.checkmark}>
-                            <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                            <Ionicons name="checkmark-circle" size={28} color={theme.colors.primary} />
                         </View>
                     )}
-                    <Ionicons name="medical" size={32} color={theme.colors.textPrimary} />
+                    <Ionicons name="medical" size={40} color={theme.colors.textPrimary} />
                     <Text style={styles.cardText}>NGO</Text>
                 </Pressable>
             </View>

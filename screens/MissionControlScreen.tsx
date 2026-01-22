@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
         ...theme.textStyles.body,
         color: theme.colors.textDark,
         fontWeight: '600',
-        fontSize: 12,
     },
     section: {
         padding: theme.spacing.xl,
@@ -283,7 +282,6 @@ const styles = StyleSheet.create({
         color: theme.colors.textSecondary,
         marginBottom: theme.spacing.xs,
         fontWeight: '600',
-        fontSize: 10,
     },
     metricValue: {
         ...theme.textStyles.h1,

@@ -1,15 +1,15 @@
-// PawGuard AI Color Palette
+// PawGuard AI Color Palette (Forest Theme)
 export const colors = {
-  // Primary colors (green theme)
-  primary: '#10B981',        // Emerald green
-  primaryDark: '#047857',    // Dark teal
-  primaryLight: '#34D399',   // Light green
+  // Primary colors (Neon Green Accent)
+  primary: '#00E07C',        // Vibrant Neon Green
+  primaryDark: '#00B363',    // Darker Green
+  primaryLight: '#4ADE80',   // Light Green
 
   // Background colors
-  background: '#064E3B',     // Deep teal background
-  backgroundLight: '#065F46', // Lighter teal
-  surface: '#FFFFFF',
-  surfaceDark: '#0F766E',    // Teal surface
+  background: '#042F24',     // Deep Forest Green
+  backgroundLight: '#064E3B', // Slightly lighter forest green
+  surface: '#FFFFFF',        // Pure White (for light cards)
+  surfaceDark: '#064E3B',    // Dark Green (for dark cards)
 
   // Card & surface colors
   cardBackground: '#FFFFFF',
@@ -17,14 +17,14 @@ export const colors = {
 
   // Text colors
   textPrimary: '#FFFFFF',    // White for dark backgrounds
-  textSecondary: '#9CA3AF',  // Gray
-  textTertiary: '#6B7280',   // Darker gray
-  textDark: '#1F2937',       // For light backgrounds
+  textSecondary: '#A1A1AA',  // Light Gray
+  textTertiary: '#D1D5DB',   // Gray
+  textDark: '#042F24',       // Dark Green (for light backgrounds)
   textLight: '#F3F4F6',      // Light gray
 
   // Status colors
-  success: '#10B981',
-  warning: '#F59E0B',
+  success: '#00E07C',        // Matching primary
+  warning: '#FBBF24',
   danger: '#EF4444',
   error: '#EF4444',
   info: '#3B82F6',
@@ -53,8 +53,8 @@ export const colors = {
   iconYellowDark: '#D97706',
   iconBlue: '#DBEAFE',
   iconBlueDark: '#2563EB',
-  iconGreen: '#D1FAE5',
-  iconGreenDark: '#059669',
+  iconGreen: '#DCFCE7',
+  iconGreenDark: '#166534',
   iconPink: '#FCE7F3',
   iconPinkDark: '#DB2777',
 

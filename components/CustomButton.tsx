@@ -24,8 +24,14 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
     disabled,
     ...pressableProps
 }) => {
+    const sizeStyles = {
+        small: styles.buttonSmall,
+        medium: styles.buttonMedium,
+        large: styles.buttonLarge,
+    };
+
     const getButtonStyle = () => {
-        const baseStyle = [styles.button, styles[`button${size.charAt(0).toUpperCase() + size.slice(1)}`]];
+        const baseStyle = [styles.button, sizeStyles[size]];
 
         switch (variant) {
             case 'primary':
@@ -48,6 +54,7 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
 
         switch (variant) {
             case 'primary':
+                return [...baseStyle, styles.textDark];
             case 'danger':
                 return [...baseStyle, styles.textPrimary];
             case 'secondary':
@@ -77,8 +84,8 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
                     {icon && iconPosition === 'left' && (
                         <Ionicons
                             name={icon}
-                            size={20}
-                            color={variant === 'primary' || variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary}
+                            size={24}
+                            color={variant === 'primary' ? theme.colors.textDark : (variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary)}
                             style={styles.iconLeft}
                         />
                     )}
@@ -86,8 +93,8 @@ export const CustomButton: React.FC<CustomButtonProps> = ({
                     {icon && iconPosition === 'right' && (
                         <Ionicons
                             name={icon}
-                            size={20}
-                            color={variant === 'primary' || variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary}
+                            size={24}
+                            color={variant === 'primary' ? theme.colors.textDark : (variant === 'danger' ? theme.colors.textPrimary : theme.colors.primary)}
                             style={styles.iconRight}
                         />
                     )}
