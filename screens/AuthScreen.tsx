@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -12,7 +13,8 @@ import { UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { loginSchema, signupSchema, LoginFormData, SignupFormData } from '../utils/validation';
 
-export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const AuthScreen: React.FC = () => {
+    const router = useRouter();
     const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
     const [isSignUp, setIsSignUp] = useState(true);
     const { login, register, isLoading } = useAuth();
@@ -40,7 +42,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             } else {
                 await login(data.email, data.password, selectedRole);
             }
-            navigation.navigate('Main');
+            router.replace('/Main');
         } catch (error) {
             console.error('Auth error:', error);
         }

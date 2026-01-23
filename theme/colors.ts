@@ -1,11 +1,11 @@
 // Fintech-style Dark Theme Color Palette
 export const colors = {
   // Base colors - Deep charcoal and dark green
-  background: '#0F1419',        // Deep charcoal
-  backgroundAlt: '#16181D',     // Slightly lighter
-  surface: '#1A2F2A',           // Dark green surface
-  surfaceAlt: '#243530',        // Lighter surface
-  surfaceDark: '#111827',
+  background: '#065645',        // Dark green from HTML
+  backgroundAlt: '#05483A',     // Slightly darker
+  surface: '#FFFFFF',           // White cards
+  surfaceAlt: '#F9FBF9',        // Light background from HTML
+  surfaceDark: '#0B3B2D',       // Dark green surface for dark mode equivalents
 
   // Glassmorphism overlays
   glassLight: 'rgba(26, 47, 42, 0.6)',
@@ -50,7 +50,7 @@ export const colors = {
   borderGradient: 'rgba(255, 180, 162, 0.3)',
 
   // Status colors
-  primary: '#F97316',
+  primary: '#40bf75',
   success: '#4ECDC4',
   warning: '#FFB347',
   danger: '#FF6B9D',

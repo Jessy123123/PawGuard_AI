@@ -34,7 +34,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Tab Navigator Component - New layout matching mockups
-const MainTabs: React.FC = () => {
+export const MainTabs: React.FC = () => {
     return (
         <Tab.Navigator
             screenOptions={{
