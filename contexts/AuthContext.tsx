@@ -7,16 +7,19 @@ interface User {
     email: string;
     name: string;
     role: UserRole;
+    phone?: string;
     organizationName?: string;
+    profileComplete: boolean;
 }
 
 interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string, role: UserRole, orgName?: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
-    register: (email: string, password: string, role: UserRole, orgName?: string) => Promise<void>;
+    register: (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => Promise<void>;
+    updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const login = async (email: string, password: string, role: UserRole, orgName?: string) => {
+    const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
             // Simulate API call
@@ -51,9 +54,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const newUser: User = {
                 id: Math.random().toString(36).substr(2, 9),
                 email,
-                name: orgName || email.split('@')[0],
-                role,
-                organizationName: orgName,
+                name: email.split('@')[0], // Default name from email
+                role: 'citizen',
+                profileComplete: false, // Login requires profile completion
             };
 
             await AsyncStorage.setItem('@user', JSON.stringify(newUser));
@@ -64,9 +67,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const register = async (email: string, password: string, role: UserRole, orgName?: string) => {
-        // For now, registration is the same as login
-        await login(email, password, role, orgName);
+    const register = async (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => {
+        setIsLoading(true);
+        try {
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const profileComplete = !!(name && role && (role === 'ngo' ? orgName : true) && phone);
+
+            const newUser: User = {
+                id: Math.random().toString(36).substr(2, 9),
+                email,
+                name,
+                role,
+                phone,
+                organizationName: orgName,
+                profileComplete,
+            };
+
+            await AsyncStorage.setItem('@user', JSON.stringify(newUser));
+            await AsyncStorage.setItem('@token', 'mock-jwt-token');
+            setUser(newUser);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const updateProfile = async (updates: Partial<User>) => {
+        if (!user) return;
+
+        try {
+            const updatedUser = { ...user, ...updates };
+
+            // Check if profile is complete
+            const profileComplete = !!(
+                updatedUser.name &&
+                updatedUser.role &&
+                updatedUser.phone &&
+                (updatedUser.role === 'ngo' ? updatedUser.organizationName : true)
+            );
+
+            updatedUser.profileComplete = profileComplete;
+
+            await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
+            setUser(updatedUser);
+        } catch (error) {
+            console.error('Failed to update profile:', error);
+        }
     };
 
     const logout = async () => {
@@ -87,6 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 login,
                 logout,
                 register,
+                updateProfile,
             }}
         >
             {children}

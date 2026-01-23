@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { colors } from '../theme/colors';
 import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
@@ -10,11 +11,8 @@ import { FloatingCard } from '../components/FloatingCard';
 import { SearchBar } from '../components/SearchBar';
 import { FilterChip } from '../components/FilterChip';
 
-interface NewHomeDashboardProps {
-    navigation: any;
-}
-
-export const NewHomeDashboard: React.FC<NewHomeDashboardProps> = ({ navigation }) => {
+export const NewHomeDashboard: React.FC = () => {
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('All');
 
@@ -80,7 +78,7 @@ export const NewHomeDashboard: React.FC<NewHomeDashboardProps> = ({ navigation }
                 <View style={styles.quickAccessRow}>
                     <Pressable
                         style={styles.quickAccessCard}
-                        onPress={() => navigation.navigate('CommunityFeed')}
+                        onPress={() => router.push('/Community')}
                     >
                         <FloatingCard style={styles.quickCardInner} shadow="medium">
                             <Ionicons name="people" size={32} color={colors.minimalist.coral} />
@@ -93,7 +91,7 @@ export const NewHomeDashboard: React.FC<NewHomeDashboardProps> = ({ navigation }
 
                     <Pressable
                         style={styles.quickAccessCard}
-                        onPress={() => navigation.navigate('CommunityFeed')}
+                        onPress={() => router.push('/CommunityFeed')}
                     >
                         <FloatingCard style={styles.quickCardInner} shadow="medium">
                             <Ionicons name="search" size={32} color={colors.minimalist.orange} />

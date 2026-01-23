@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
@@ -9,6 +10,7 @@ import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ActivityItem {
     id: string;
@@ -46,14 +48,17 @@ const mockActivities: ActivityItem[] = [
     },
 ];
 
-export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export default function AnimalProfileScreen() {
+    const router = useRouter();
+    const { user } = useAuth();
+
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
             <StatusBar style="dark" />
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Back and Share Buttons */}
                 <View style={styles.headerButtons}>
-                    <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
+                    <Pressable onPress={() => router.back()} style={styles.iconButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.minimalist.textDark} />
                     </Pressable>
                     <Pressable style={styles.iconButton}>

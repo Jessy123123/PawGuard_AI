@@ -1,6 +1,7 @@
 
 import { Stack } from 'expo-router';
 import { Providers } from './_providers';
+import { colors } from '../theme/colors';
 
 export default function RootLayout() {
     return (
@@ -8,10 +9,13 @@ export default function RootLayout() {
             <Stack
                 screenOptions={{
                     headerShown: false,
-                    contentStyle: { backgroundColor: '#FFFFFF' }, // Default background
+                    contentStyle: { backgroundColor: colors.minimalist.bgLight },
                 }}
             >
                 <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="complete-profile" options={{ headerShown: false }} />
                 <Stack.Screen name="Main" />
                 <Stack.Screen
                     name="ReportSighting"
@@ -25,6 +29,8 @@ export default function RootLayout() {
                     name="DogProfile"
                     options={{ presentation: 'card' }}
                 />
+                <Stack.Screen name="Community" />
+                <Stack.Screen name="CommunityFeed" />
             </Stack>
         </Providers>
     );

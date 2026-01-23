@@ -1,77 +1,69 @@
-import React, { ReactNode } from 'react';
-import { View, StyleSheet, ViewStyle, ImageBackground, ImageSourcePropType } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, ViewStyle, Platform, StyleProp } from 'react-native';
 import { colors } from '../theme/colors';
-import { minimalistShadows } from '../theme/shadows';
-import { spacing } from '../theme/spacing';
+
+type ShadowLevel = 'soft' | 'medium' | 'large';
 
 interface FloatingCardProps {
-    children: ReactNode;
-    style?: ViewStyle;
-    backgroundColor?: string;
-    padding?: 'small' | 'medium' | 'large';
-    shadow?: 'soft' | 'medium' | 'hover';
-    imageSource?: ImageSourcePropType;
-    imageHeight?: number;
+    children: React.ReactNode;
+    style?: StyleProp<ViewStyle>;
+    shadow?: ShadowLevel;
 }
 
 export const FloatingCard: React.FC<FloatingCardProps> = ({
     children,
     style,
-    backgroundColor = colors.minimalist.white,
-    padding = 'medium',
-    shadow = 'soft',
-    imageSource,
-    imageHeight = 200,
+    shadow = 'soft'
 }) => {
-    const paddingMap = {
-        small: spacing.md,
-        medium: spacing.lg,
-        large: spacing.xl,
-    };
+    const shadowStyle = shadows[shadow];
 
-    const shadowMap = {
-        soft: minimalistShadows.cardSoft,
-        medium: minimalistShadows.cardMedium,
-        hover: minimalistShadows.cardHover,
-    };
+    return (
+        <View style={[styles.card, shadowStyle, style]}>
+            {children}
+        </View>
+    );
+};
 
-    const cardStyle = [
-        styles.card,
-        { backgroundColor },
-        shadowMap[shadow],
-        { padding: paddingMap[padding] },
-        style,
-    ];
-
-    if (imageSource) {
-        return (
-            <View style={cardStyle}>
-                <ImageBackground
-                    source={imageSource}
-                    style={[styles.image, { height: imageHeight }]}
-                    imageStyle={styles.imageStyle}
-                />
-                {children}
-            </View>
-        );
-    }
-
-    return <View style={cardStyle}>{children}</View>;
+const shadows = {
+    soft: Platform.select({
+        ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 8,
+        },
+        android: {
+            elevation: 2,
+        },
+    }),
+    medium: Platform.select({
+        ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.12,
+            shadowRadius: 12,
+        },
+        android: {
+            elevation: 4,
+        },
+    }),
+    large: Platform.select({
+        ios: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.16,
+            shadowRadius: 16,
+        },
+        android: {
+            elevation: 8,
+        },
+    }),
 };
 
 const styles = StyleSheet.create({
     card: {
-        borderRadius: 20,
-        overflow: 'hidden',
-    },
-    image: {
-        width: '100%',
-        marginBottom: spacing.md,
-        marginTop: -spacing.lg,
-        marginHorizontal: -spacing.lg,
-    },
-    imageStyle: {
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 16,
+        padding: 16,
     },
 });

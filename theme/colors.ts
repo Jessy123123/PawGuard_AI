@@ -81,28 +81,45 @@ export const colors = {
 
   // Minimalist Theme Colors (for new UI redesign)
   minimalist: {
+    // Neutral base
     white: '#FFFFFF',
     offWhite: '#FAFAF9',
+    warmGray: '#F5F5F4',
     bgLight: '#F9FAFB',
 
-    // Warm accents
+    // Warm accents (main palette)
+    softRed: '#EF4444',
+    mutedOrange: '#F59E0B',
+    orange: '#F59E0B', // Alias for mutedOrange or consistent naming
+    gentleYellow: '#FDE68A',
     coral: '#F5A491',
-    orange: '#E89B6D',
-    yellow: '#F4D79B',
-    peachLight: '#FFE5DB',
+    peach: '#FFB4A2',
+    peachLight: '#FFD7D0', // Added for backgrounds/highlights
 
-    // Neutral tones
-    textDark: '#1F2937',
-    textMedium: '#4B5563',
-    textLight: '#9CA3AF',
+    // Status colors (soft, humane)
+    successGreen: '#10B981',
+    green: '#10B981', // Alias
+    greenDark: '#065F46', // Darker green for status
+    warningOrange: '#F59E0B',
+    errorRed: '#EF4444',
+    infoBlue: '#3B82F6',
+    blue: '#3B82F6', // Alias
 
-    // Status colors (muted)
-    green: '#86EFAC',
-    greenDark: '#4ADE80',
-    blue: '#93C5FD',
-    blueDark: '#60A5FA',
-    red: '#FCA5A5',
-    redDark: '#F87171',
+    // Special states
+    vaccinated: '#10B981',
+    neutered: '#6366F1',
+    atRisk: '#EF4444',
+    lost: '#F59E0B',
+    found: '#10B981',
+
+    // Text colors
+    textDark: '#1C1917',
+    textMedium: '#78716C',
+    textLight: '#A8A29E',
+
+    // Borders
+    border: '#E7E5E4',
+    borderLight: '#F5F5F4',
   },
 };
 

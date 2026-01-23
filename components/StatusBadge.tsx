@@ -1,52 +1,33 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../theme';
+import { colors } from '../theme/colors';
+
+type StatusType = 'vaccinated' | 'neutered' | 'at-risk' | 'lost' | 'found' | 'rescued';
 
 interface StatusBadgeProps {
-    label: string;
-    variant?: 'danger' | 'success' | 'info' | 'warning';
-    icon?: keyof typeof Ionicons.glyphMap;
+    status: StatusType;
+    style?: ViewStyle;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({
-    label,
-    variant = 'info',
-    icon,
-}) => {
-    const getColors = () => {
-        switch (variant) {
-            case 'danger':
-                return {
-                    bg: theme.colors.danger,
-                    text: theme.colors.textPrimary,
-                };
-            case 'success':
-                return {
-                    bg: theme.colors.success,
-                    text: theme.colors.textPrimary,
-                };
-            case 'info':
-                return {
-                    bg: theme.colors.info,
-                    text: theme.colors.textPrimary,
-                };
-            case 'warning':
-                return {
-                    bg: theme.colors.warning,
-                    text: theme.colors.textDark,
-                };
-        }
-    };
+const statusConfig: Record<StatusType, { label: string; color: string; icon?: keyof typeof Ionicons.glyphMap }> = {
+    vaccinated: { label: 'Vaccinated', color: colors.minimalist.vaccinated, icon: 'shield-checkmark' },
+    neutered: { label: 'Neutered', color: colors.minimalist.neutered, icon: 'checkmark-circle' },
+    'at-risk': { label: 'At Risk', color: colors.minimalist.atRisk, icon: 'alert-circle' },
+    lost: { label: 'Lost', color: colors.minimalist.lost, icon: 'location' },
+    found: { label: 'Found', color: colors.minimalist.found, icon: 'checkmark-circle' },
+    rescued: { label: 'Rescued', color: colors.minimalist.successGreen, icon: 'heart' },
+};
 
-    const colors = getColors();
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, style }) => {
+    const config = statusConfig[status];
 
     return (
-        <View style={[styles.badge, { backgroundColor: colors.bg }]}>
-            {icon && (
-                <Ionicons name={icon} size={14} color={colors.text} style={styles.icon} />
+        <View style={[styles.badge, { backgroundColor: `${config.color}20` }, style]}>
+            {config.icon && (
+                <Ionicons name={config.icon} size={14} color={config.color} />
             )}
-            <Text style={[styles.text, { color: colors.text }]}>{label}</Text>
+            <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
         </View>
     );
 };
@@ -55,17 +36,13 @@ const styles = StyleSheet.create({
     badge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: 4,
-        borderRadius: theme.radius.sm,
-        marginRight: theme.spacing.xs,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
     },
-    icon: {
-        marginRight: 4,
-    },
-    text: {
-        ...theme.textStyles.caption,
+    label: {
+        fontSize: 12,
         fontWeight: '600',
-        textTransform: 'uppercase',
     },
 });
