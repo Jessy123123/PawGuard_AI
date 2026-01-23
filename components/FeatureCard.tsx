@@ -15,6 +15,8 @@ interface FeatureCardProps {
     onPress?: () => void;
     style?: ViewStyle;
     variant?: 'light' | 'dark';
+    buttonColors?: [string, string];
+    iconBackgroundColor?: string;
 }
 
 export const FeatureCard: React.FC<FeatureCardProps> = ({
@@ -28,8 +30,14 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
     onPress,
     style,
     variant = 'light',
+    buttonColors,
+    iconBackgroundColor,
 }) => {
-    const isLight = variant === 'light';
+    // Force light variant for this design
+    const isLight = true;
+
+    // Safe default for colors
+    const gradientColors = buttonColors || [theme.colors.greenPrimary, theme.colors.greenLight] as [string, string];
 
     return (
         <View style={[
@@ -42,7 +50,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
                 {/* Icon Badge */}
                 <View style={[
                     styles.iconBadge,
-                    { backgroundColor: isLight ? 'rgba(45, 122, 94, 0.1)' : theme.colors.glassLight }
+                    { backgroundColor: iconBackgroundColor || (isLight ? 'rgba(45, 122, 94, 0.1)' : theme.colors.glassLight) }
                 ]}>
                     <Ionicons name={icon} size={20} color={iconColor} />
                 </View>
@@ -64,7 +72,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
                 {/* Action Button */}
                 <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}>
                     <LinearGradient
-                        colors={[theme.colors.greenPrimary, theme.colors.greenLight]}
+                        colors={gradientColors}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.button}
@@ -91,10 +99,11 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        borderRadius: theme.borderRadius.card,
-        padding: theme.spacing.lg,
-        marginBottom: theme.spacing.md,
+        borderRadius: 24,
+        marginBottom: theme.spacing.lg,
         overflow: 'hidden',
+        minHeight: 180,
+        alignItems: 'stretch',
     },
     containerLight: {
         backgroundColor: '#F5F5F0',
@@ -106,7 +115,10 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
+        padding: theme.spacing.lg,
         paddingRight: theme.spacing.md,
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
     },
     iconBadge: {
         width: 40,
@@ -114,7 +126,7 @@ const styles = StyleSheet.create({
         borderRadius: theme.radius.md,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: theme.spacing.md,
+        marginBottom: theme.spacing.sm,
     },
     title: {
         ...theme.textStyles.h4,
@@ -140,10 +152,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     imageContainer: {
-        width: 120,
-        height: 140,
-        borderRadius: theme.radius.lg,
-        overflow: 'hidden',
+        width: '40%',
+        backgroundColor: '#E5E5E5', // Fallback color
     },
     image: {
         width: '100%',
