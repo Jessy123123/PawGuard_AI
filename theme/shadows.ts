@@ -87,4 +87,29 @@ export const glassEffect: ViewStyle = {
 };
 
 export type ShadowKey = keyof typeof shadows;
+
+// Minimalist soft shadows for new UI
+export const minimalistShadows = {
+    cardSoft: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
+    },
+    cardMedium: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 5,
+    },
+    cardHover: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 8,
+    },
+};
 export type ColoredShadowKey = keyof typeof coloredShadows;

@@ -102,4 +102,24 @@ export const textStyles = {
     },
 };
 
+// Minimalist serif typography (Playfair Display)
+export const serifTextStyles = {
+    serifHero: {
+        fontSize: typography.fontSize.giant,
+        fontWeight: typography.fontWeight.bold,
+        lineHeight: typography.lineHeight.tight * typography.fontSize.giant,
+    },
+    serifHeading: {
+        fontSize: typography.fontSize.xxxl,
+        fontWeight: typography.fontWeight.bold,
+        lineHeight: typography.lineHeight.tight * typography.fontSize.xxxl,
+    },
+    serifSubheading: {
+        fontSize: typography.fontSize.xxl,
+        fontWeight: typography.fontWeight.semibold,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.xxl,
+    },
+};
+
 export type TextStyleKey = keyof typeof textStyles;
+export type SerifStyleKey = keyof typeof serifTextStyles;

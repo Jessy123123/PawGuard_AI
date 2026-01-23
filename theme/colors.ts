@@ -78,6 +78,32 @@ export const colors = {
   gray700: '#374151',
   gray800: '#1F2937',
   gray900: '#111827',
+
+  // Minimalist Theme Colors (for new UI redesign)
+  minimalist: {
+    white: '#FFFFFF',
+    offWhite: '#FAFAF9',
+    bgLight: '#F9FAFB',
+
+    // Warm accents
+    coral: '#F5A491',
+    orange: '#E89B6D',
+    yellow: '#F4D79B',
+    peachLight: '#FFE5DB',
+
+    // Neutral tones
+    textDark: '#1F2937',
+    textMedium: '#4B5563',
+    textLight: '#9CA3AF',
+
+    // Status colors (muted)
+    green: '#86EFAC',
+    greenDark: '#4ADE80',
+    blue: '#93C5FD',
+    blueDark: '#60A5FA',
+    red: '#FCA5A5',
+    redDark: '#F87171',
+  },
 };
 
 // Gradient definitions

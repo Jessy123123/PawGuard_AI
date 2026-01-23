@@ -5,8 +5,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps';
-import { PhotoUploadBox, ToggleButtonGroup, TriStateSelector, CustomButton } from '../components';
-import { theme } from '../theme';
+import { PhotoUploadBox } from '../components';
+import { colors } from '../theme/colors';
+import { serifTextStyles } from '../theme/typography';
+import { spacing } from '../theme/spacing';
+import { FloatingCard } from '../components/FloatingCard';
 
 interface ReportSightingScreenProps {
     navigation: any;
@@ -26,7 +29,6 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
         longitude: -122.4194,
     });
 
-    // Simulate location detection
     useEffect(() => {
         const timer = setTimeout(() => {
             setIsDetectingLocation(false);
@@ -37,28 +39,18 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
     const reportId = 'REPORT_08';
 
     const handleSubmit = () => {
-        console.log('Submitting report:', {
-            photoUri,
-            animalType,
-            condition,
-            temperament,
-            vaccinationStatus,
-            neuteringStatus,
-            additionalDetails,
-            location,
-        });
-        // Navigate back or show success
+        console.log('Submitting report');
         navigation.goBack();
     };
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
 
             {/* Header */}
             <View style={styles.header}>
                 <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+                    <Ionicons name="arrow-back" size={24} color={colors.minimalist.textDark} />
                 </Pressable>
                 <Text style={styles.headerTitle}>Report a Sighting</Text>
                 <View style={styles.reportIdBadge}>
@@ -72,116 +64,227 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
                 showsVerticalScrollIndicator={false}
             >
                 {/* Photo Upload */}
-                <PhotoUploadBox
-                    onImageSelected={setPhotoUri}
-                    imageUri={photoUri}
-                    required
-                />
+                <FloatingCard shadow="soft" style={styles.section}>
+                    <Text style={styles.sectionLabel}>Photo Evidence</Text>
+                    <PhotoUploadBox onImageSelected={setPhotoUri} imageUri={photoUri} required />
+                </FloatingCard>
 
                 {/* Animal Type */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>ANIMAL TYPE</Text>
-                    <View style={styles.animalTypeContainer}>
-                        <Ionicons name="paw" size={20} color={theme.colors.greenPrimary} />
-                        <Text style={styles.animalTypeText}>
-                            {animalType === 'dog' ? 'Dog' : 'Cat'}
-                        </Text>
-                        <Ionicons name="lock-closed" size={16} color={theme.colors.textMuted} />
-                    </View>
+                    <Text style={styles.sectionLabel}>Animal Type</Text>
+                    <FloatingCard shadow="soft">
+                        <View style={styles.animalTypeContainer}>
+                            <Ionicons name="paw" size={20} color={colors.minimalist.coral} />
+                            <Text style={styles.animalTypeText}>
+                                {animalType === 'dog' ? 'Dog' : 'Cat'}
+                            </Text>
+                            <Ionicons name="lock-closed" size={16} color={colors.minimalist.textLight} />
+                        </View>
+                    </FloatingCard>
                 </View>
 
-                {/* Detection Status with Map */}
+                {/* Location Detection */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>DETECTION STATUS</Text>
-                    <View style={styles.mapContainer}>
-                        <MapView
-                            style={styles.map}
-                            initialRegion={{
-                                ...location,
-                                latitudeDelta: 0.1,
-                                longitudeDelta: 0.1,
-                            }}
-                            scrollEnabled={false}
-                            zoomEnabled={false}
-                        >
-                            <Marker coordinate={location} />
-                        </MapView>
-                    </View>
-                    <View style={styles.locationRow}>
-                        <View style={styles.locationStatus}>
-                            <View style={[
-                                styles.statusDot,
-                                { backgroundColor: isDetectingLocation ? theme.colors.warning : theme.colors.success }
-                            ]} />
-                            <Text style={styles.locationText}>
-                                {isDetectingLocation ? 'Detecting location...' : 'Location detected'}
-                            </Text>
+                    <Text style={styles.sectionLabel}>Detection Location</Text>
+                    <FloatingCard shadow="soft">
+                        <View style={styles.mapContainer}>
+                            <MapView
+                                style={styles.map}
+                                initialRegion={{
+                                    ...location,
+                                    latitudeDelta: 0.1,
+                                    longitudeDelta: 0.1,
+                                }}
+                                scrollEnabled={false}
+                                zoomEnabled={false}
+                            >
+                                <Marker coordinate={location} />
+                            </MapView>
                         </View>
-                        <Pressable>
-                            <Text style={styles.editAddressText}>Edit Address</Text>
-                        </Pressable>
-                    </View>
-                    <Text style={styles.locationSubtext}>GPS coordinates being fetched</Text>
+                        <View style={styles.locationRow}>
+                            <View style={styles.locationStatus}>
+                                <View
+                                    style={[
+                                        styles.statusDot,
+                                        {
+                                            backgroundColor: isDetectingLocation
+                                                ? colors.minimalist.yellow
+                                                : colors.minimalist.greenDark,
+                                        },
+                                    ]}
+                                />
+                                <Text style={styles.locationText}>
+                                    {isDetectingLocation ? 'Detecting location...' : 'Location detected'}
+                                </Text>
+                            </View>
+                            <Pressable>
+                                <Text style={styles.editAddressText}>Edit Address</Text>
+                            </Pressable>
+                        </View>
+                    </FloatingCard>
                 </View>
 
                 {/* Condition & Temperament */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>CONDITION & TEMPERAMENT</Text>
-                    <ToggleButtonGroup
-                        options={[
-                            { label: 'Injured', value: 'injured', icon: 'medical' },
-                            { label: 'Not Injured', value: 'not_injured', icon: 'checkmark-circle' },
-                        ]}
-                        selectedValue={condition}
-                        onSelect={setCondition}
-                        style={styles.toggleRow}
-                    />
-                    <ToggleButtonGroup
-                        options={[
-                            { label: 'Calm', value: 'calm', icon: 'happy' },
-                            { label: 'Aggressive', value: 'aggressive', icon: 'warning' },
-                        ]}
-                        selectedValue={temperament}
-                        onSelect={setTemperament}
-                        style={styles.toggleRow}
-                    />
+                    <Text style={styles.sectionLabel}>Condition & Temperament</Text>
+                    <View style={styles.toggleRow}>
+                        <Pressable
+                            style={[styles.toggleButton, condition === 'injured' && styles.toggleButtonActive]}
+                            onPress={() => setCondition('injured')}
+                        >
+                            <Ionicons
+                                name="medical"
+                                size={20}
+                                color={
+                                    condition === 'injured' ? colors.minimalist.white : colors.minimalist.textMedium
+                                }
+                            />
+                            <Text
+                                style={[styles.toggleText, condition === 'injured' && styles.toggleTextActive]}
+                            >
+                                Injured
+                            </Text>
+                        </Pressable>
+                        <Pressable
+                            style={[
+                                styles.toggleButton,
+                                condition === 'not_injured' && styles.toggleButtonActive,
+                            ]}
+                            onPress={() => setCondition('not_injured')}
+                        >
+                            <Ionicons
+                                name="checkmark-circle"
+                                size={20}
+                                color={
+                                    condition === 'not_injured'
+                                        ? colors.minimalist.white
+                                        : colors.minimalist.textMedium
+                                }
+                            />
+                            <Text
+                                style={[
+                                    styles.toggleText,
+                                    condition === 'not_injured' && styles.toggleTextActive,
+                                ]}
+                            >
+                                Not Injured
+                            </Text>
+                        </Pressable>
+                    </View>
+
+                    <View style={styles.toggleRow}>
+                        <Pressable
+                            style={[styles.toggleButton, temperament === 'calm' && styles.toggleButtonActive]}
+                            onPress={() => setTemperament('calm')}
+                        >
+                            <Ionicons
+                                name="happy"
+                                size={20}
+                                color={
+                                    temperament === 'calm' ? colors.minimalist.white : colors.minimalist.textMedium
+                                }
+                            />
+                            <Text style={[styles.toggleText, temperament === 'calm' && styles.toggleTextActive]}>
+                                Calm
+                            </Text>
+                        </Pressable>
+                        <Pressable
+                            style={[
+                                styles.toggleButton,
+                                temperament === 'aggressive' && styles.toggleButtonActive,
+                            ]}
+                            onPress={() => setTemperament('aggressive')}
+                        >
+                            <Ionicons
+                                name="warning"
+                                size={20}
+                                color={
+                                    temperament === 'aggressive'
+                                        ? colors.minimalist.white
+                                        : colors.minimalist.textMedium
+                                }
+                            />
+                            <Text
+                                style={[
+                                    styles.toggleText,
+                                    temperament === 'aggressive' && styles.toggleTextActive,
+                                ]}
+                            >
+                                Aggressive
+                            </Text>
+                        </Pressable>
+                    </View>
                 </View>
 
                 {/* Vaccination Status */}
                 <View style={styles.section}>
-                    <View style={styles.sectionHeaderRow}>
-                        <Text style={styles.sectionLabel}>VACCINATION STATUS</Text>
-                        <Text style={styles.sectionHint}>Visible tags or marks</Text>
+                    <Text style={styles.sectionLabel}>Vaccination Status</Text>
+                    <Text style={styles.sectionHint}>Visible tags or marks</Text>
+                    <View style={styles.triStateRow}>
+                        {(['unknown', 'yes', 'no'] as const).map((value) => (
+                            <Pressable
+                                key={value}
+                                style={[
+                                    styles.triStateButton,
+                                    vaccinationStatus === value && styles.triStateButtonActive,
+                                ]}
+                                onPress={() => setVaccinationStatus(value)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.triStateText,
+                                        vaccinationStatus === value && styles.triStateTextActive,
+                                    ]}
+                                >
+                                    {value === 'unknown' ? 'Unknown' : value === 'yes' ? 'Yes' : 'No'}
+                                </Text>
+                            </Pressable>
+                        ))}
                     </View>
-                    <TriStateSelector
-                        value={vaccinationStatus}
-                        onChange={setVaccinationStatus}
-                    />
                 </View>
 
                 {/* Neutering / Spaying */}
                 <View style={styles.section}>
-                    <View style={styles.sectionHeaderRow}>
-                        <Text style={styles.sectionLabel}>NEUTERING / SPAYING</Text>
-                        <Text style={styles.sectionHint}>Ear-tip notch or scar</Text>
+                    <Text style={styles.sectionLabel}>Neutering / Spaying</Text>
+                    <Text style={styles.sectionHint}>Ear-tip notch or scar</Text>
+                    <View style={styles.triStateRow}>
+                        {(['unknown', 'yes', 'no'] as const).map((value) => (
+                            <Pressable
+                                key={value}
+                                style={[
+                                    styles.triStateButton,
+                                    neuteringStatus === value && styles.triStateButtonActive,
+                                ]}
+                                onPress={() => setNeuteringStatus(value)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.triStateText,
+                                        neuteringStatus === value && styles.triStateTextActive,
+                                    ]}
+                                >
+                                    {value === 'unknown' ? 'Unknown' : value === 'yes' ? 'Yes' : 'No'}
+                                </Text>
+                            </Pressable>
+                        ))}
                     </View>
-                    <TriStateSelector
-                        value={neuteringStatus}
-                        onChange={setNeuteringStatus}
-                    />
                     <View style={styles.hintRow}>
-                        <Ionicons name="information-circle-outline" size={14} color={theme.colors.textMuted} />
+                        <Ionicons
+                            name="information-circle-outline"
+                            size={14}
+                            color={colors.minimalist.textLight}
+                        />
                         <Text style={styles.hintText}>If unsure, select Unknown</Text>
                     </View>
                 </View>
 
                 {/* Additional Details */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>ADDITIONAL DETAILS</Text>
+                    <Text style={styles.sectionLabel}>Additional Details</Text>
                     <TextInput
                         style={styles.textArea}
                         placeholder="Distinctive marks, specific behavior, collar color..."
-                        placeholderTextColor={theme.colors.textMuted}
+                        placeholderTextColor={colors.minimalist.textLight}
                         multiline
                         numberOfLines={4}
                         value={additionalDetails}
@@ -192,7 +295,7 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
 
                 {/* Info Disclaimer */}
                 <View style={styles.disclaimerRow}>
-                    <Ionicons name="information-circle" size={16} color={theme.colors.textMuted} />
+                    <Ionicons name="information-circle" size={16} color={colors.minimalist.textMedium} />
                     <Text style={styles.disclaimerText}>
                         Information will be reviewed by verified rescue NGOs
                     </Text>
@@ -201,15 +304,15 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
 
             {/* Submit Button */}
             <View style={styles.submitContainer}>
-                <Pressable onPress={handleSubmit} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+                <Pressable onPress={handleSubmit}>
                     <LinearGradient
-                        colors={[theme.colors.greenPrimary, theme.colors.greenLight]}
+                        colors={[colors.minimalist.coral, colors.minimalist.orange]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.submitButton}
                     >
-                        <Ionicons name="send" size={20} color={theme.colors.textPrimary} />
-                        <Text style={styles.submitButtonText}>SUBMIT REPORT</Text>
+                        <Ionicons name="send" size={20} color={colors.minimalist.white} />
+                        <Text style={styles.submitButtonText}>Submit Report</Text>
                     </LinearGradient>
                 </Pressable>
             </View>
@@ -220,93 +323,80 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: theme.colors.background,
+        backgroundColor: colors.minimalist.bgLight,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: theme.spacing.lg,
-        paddingVertical: theme.spacing.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.minimalist.white,
     },
     backButton: {
-        width: 40,
-        height: 40,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.minimalist.bgLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     headerTitle: {
-        ...theme.textStyles.h4,
-        color: theme.colors.textPrimary,
-        fontWeight: 'bold',
+        ...serifTextStyles.serifSubheading,
+        color: colors.minimalist.textDark,
         flex: 1,
         textAlign: 'center',
     },
     reportIdBadge: {
-        backgroundColor: theme.colors.surface,
-        paddingHorizontal: theme.spacing.sm,
-        paddingVertical: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
-        borderWidth: 1,
-        borderColor: theme.colors.greenPrimary,
+        backgroundColor: colors.minimalist.peachLight,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
     reportIdText: {
-        ...theme.textStyles.caption,
-        color: theme.colors.greenPrimary,
+        fontSize: 11,
+        color: colors.minimalist.coral,
         fontWeight: '600',
-        fontSize: 10,
     },
     container: {
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: theme.spacing.xl,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
         paddingBottom: 120,
     },
     section: {
-        marginTop: theme.spacing.xl,
+        marginBottom: spacing.xl,
     },
     sectionLabel: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
+        fontSize: 12,
         fontWeight: '600',
-        fontSize: 11,
-        letterSpacing: 1,
+        color: colors.minimalist.textMedium,
         textTransform: 'uppercase',
-        marginBottom: theme.spacing.sm,
-    },
-    sectionHeaderRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: theme.spacing.sm,
+        letterSpacing: 0.5,
+        marginBottom: spacing.sm,
     },
     sectionHint: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
-        fontSize: 11,
+        fontSize: 12,
+        color: colors.minimalist.textLight,
+        marginBottom: spacing.sm,
     },
     animalTypeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: theme.colors.surface,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.md,
-        borderRadius: theme.borderRadius.input,
-        gap: theme.spacing.sm,
-        borderWidth: 1,
-        borderColor: theme.colors.borderGlass,
+        gap: spacing.sm,
     },
     animalTypeText: {
-        ...theme.textStyles.body,
-        color: theme.colors.textPrimary,
+        fontSize: 16,
+        color: colors.minimalist.textDark,
         flex: 1,
+        fontWeight: '500',
     },
     mapContainer: {
         height: 120,
-        borderRadius: theme.radius.md,
+        borderRadius: 12,
         overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: theme.colors.borderGlass,
+        marginBottom: spacing.sm,
     },
     map: {
         flex: 1,
@@ -315,12 +405,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: theme.spacing.sm,
     },
     locationStatus: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: theme.spacing.xs,
+        gap: spacing.xs,
     },
     statusDot: {
         width: 8,
@@ -328,59 +417,99 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     locationText: {
-        ...theme.textStyles.body,
-        color: theme.colors.textPrimary,
-        fontWeight: '500',
         fontSize: 14,
+        color: colors.minimalist.textDark,
+        fontWeight: '500',
     },
     editAddressText: {
-        ...theme.textStyles.body,
-        color: theme.colors.greenPrimary,
-        fontWeight: '500',
-        fontSize: 13,
-    },
-    locationSubtext: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
-        marginTop: 2,
-        fontSize: 12,
+        fontSize: 14,
+        color: colors.minimalist.coral,
+        fontWeight: '600',
     },
     toggleRow: {
-        marginBottom: theme.spacing.sm,
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginBottom: spacing.sm,
+    },
+    toggleButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+        backgroundColor: colors.minimalist.white,
+        paddingVertical: spacing.md,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: colors.gray200,
+    },
+    toggleButtonActive: {
+        backgroundColor: colors.minimalist.coral,
+        borderColor: colors.minimalist.coral,
+    },
+    toggleText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.minimalist.textMedium,
+    },
+    toggleTextActive: {
+        color: colors.minimalist.white,
+    },
+    triStateRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginBottom: spacing.sm,
+    },
+    triStateButton: {
+        flex: 1,
+        backgroundColor: colors.minimalist.white,
+        paddingVertical: spacing.md,
+        borderRadius: 12,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: colors.gray200,
+    },
+    triStateButtonActive: {
+        backgroundColor: colors.minimalist.peachLight,
+        borderColor: colors.minimalist.coral,
+    },
+    triStateText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.minimalist.textMedium,
+    },
+    triStateTextActive: {
+        color: colors.minimalist.coral,
     },
     hintRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: theme.spacing.xs,
-        marginTop: theme.spacing.sm,
+        gap: spacing.xs,
     },
     hintText: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
         fontSize: 12,
+        color: colors.minimalist.textLight,
     },
     textArea: {
-        backgroundColor: theme.colors.surface,
-        borderRadius: theme.borderRadius.input,
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: theme.colors.borderGlass,
-        paddingHorizontal: theme.spacing.md,
-        paddingVertical: theme.spacing.md,
+        borderColor: colors.gray200,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
         minHeight: 100,
-        color: theme.colors.textPrimary,
-        ...theme.textStyles.body,
+        color: colors.minimalist.textDark,
+        fontSize: 16,
     },
     disclaimerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: theme.spacing.xs,
-        marginTop: theme.spacing.xl,
-        marginBottom: theme.spacing.md,
+        gap: spacing.xs,
+        marginBottom: spacing.md,
     },
     disclaimerText: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
         fontSize: 12,
+        color: colors.minimalist.textMedium,
         flex: 1,
     },
     submitContainer: {
@@ -388,24 +517,23 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        paddingHorizontal: theme.spacing.xl,
-        paddingVertical: theme.spacing.lg,
-        backgroundColor: theme.colors.background,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.lg,
+        backgroundColor: colors.minimalist.white,
         borderTopWidth: 1,
-        borderTopColor: theme.colors.borderGlass,
+        borderTopColor: colors.gray200,
     },
     submitButton: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: theme.spacing.lg,
-        borderRadius: theme.borderRadius.button,
-        gap: theme.spacing.sm,
+        paddingVertical: spacing.lg,
+        borderRadius: 16,
+        gap: spacing.sm,
     },
     submitButtonText: {
-        ...theme.textStyles.button,
-        color: theme.colors.textPrimary,
-        fontWeight: '700',
-        letterSpacing: 0.5,
+        fontSize: 18,
+        color: colors.minimalist.white,
+        fontWeight: '600',
     },
 });

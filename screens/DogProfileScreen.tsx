@@ -1,18 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { StatusBadge, InfoCard, CustomButton, ActivityItem } from '../components';
-import { theme } from '../theme';
-import { ActivityItem as ActivityItemType } from '../types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '../theme/colors';
+import { serifTextStyles } from '../theme/typography';
+import { spacing } from '../theme/spacing';
+import { FloatingCard } from '../components/FloatingCard';
+import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
 
-const mockActivities: ActivityItemType[] = [
+interface ActivityItem {
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    timestamp: string;
+    icon: keyof typeof Ionicons.glyphMap;
+}
+
+const mockActivities: ActivityItem[] = [
     {
         id: '1',
         type: 'location',
         title: 'Downtown Metro - Gate 4',
         description: 'Spotted by Volunteer Sarah near the west entrance. Appeared calm but slightly dehydrated.',
-        timestamp: 'LAST SEEN • 2 HOURS AGO',
+        timestamp: 'Last seen • 2 hours ago',
         icon: 'location',
     },
     {
@@ -20,7 +33,7 @@ const mockActivities: ActivityItemType[] = [
         type: 'medical',
         title: 'Rabies Vaccination',
         description: 'Administered at PawGuard Field Clinic #2. Batch: RX-9921',
-        timestamp: 'MEDICAL LOG • SEPT 15',
+        timestamp: 'Medical log • Sept 15',
         icon: 'medical',
     },
     {
@@ -28,90 +41,112 @@ const mockActivities: ActivityItemType[] = [
         type: 'intake',
         title: 'Profile Created via AI Scan',
         description: 'Initial recognition profile generated from mobile upload.',
-        timestamp: 'INITIAL INTAKE • SEPT 10',
+        timestamp: 'Initial intake • Sept 10',
         icon: 'camera',
     },
 ];
 
 export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar style="light" />
-            <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                {/* Header with Image */}
-                <View style={styles.imageContainer}>
-                    <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+        <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+            <StatusBar style="dark" />
+            <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {/* Back and Share Buttons */}
+                <View style={styles.headerButtons}>
+                    <Pressable onPress={() => navigation.goBack()} style={styles.iconButton}>
+                        <Ionicons name="arrow-back" size={24} color={colors.minimalist.textDark} />
                     </Pressable>
-                    <Pressable style={styles.shareButton}>
-                        <Ionicons name="share-social" size={24} color={theme.colors.textPrimary} />
+                    <Pressable style={styles.iconButton}>
+                        <Ionicons name="share-social" size={24} color={colors.minimalist.textDark} />
                     </Pressable>
-
-                    {/* Image Placeholder */}
-                    <View style={styles.imagePlaceholder}>
-                        <Ionicons name="paw" size={80} color={theme.colors.textTertiary} />
-                    </View>
                 </View>
 
-                {/* Profile Info */}
+                {/* Image Card */}
+                <FloatingCard style={styles.imageCard} shadow="medium">
+                    <View style={styles.imagePlaceholder}>
+                        <Ionicons name="paw" size={80} color={colors.minimalist.textLight} />
+                    </View>
+                </FloatingCard>
+
+                {/* Profile Content */}
                 <View style={styles.content}>
-                    {/* Priority Badge */}
-                    <StatusBadge label="HIGH PRIORITY" variant="danger" />
+                    {/* Status Badges */}
+                    <View style={styles.badgeRow}>
+                        <MinimalistStatusBadge label="High Priority" variant="atRisk" />
+                    </View>
 
                     {/* Name & ID */}
                     <Text style={styles.name}>Buddy</Text>
                     <Text style={styles.id}>
-                        ID: <Text style={styles.idValue}>#PG-8821</Text> •
-                        <Text style={styles.spotted}> Spotted 2h ago</Text>
+                        ID: <Text style={styles.idValue}>#PG-8821</Text> • Spotted 2h ago
                     </Text>
 
-                    {/* Status Badges */}
+                    {/* Status Row */}
                     <View style={styles.statusRow}>
-                        <StatusBadge label="AT RISK" variant="danger" icon="alert-circle" />
-                        <StatusBadge label="VACCINATED" variant="success" icon="checkmark-circle" />
-                        <StatusBadge label="NEUTERED" variant="info" icon="information-circle" />
+                        <MinimalistStatusBadge label="At Risk" variant="atRisk" icon="alert-circle" />
+                        <MinimalistStatusBadge label="Vaccinated" variant="vaccinated" icon="checkmark-circle" />
+                        <MinimalistStatusBadge label="Neutered" variant="neutered" icon="checkmark-circle" />
                     </View>
 
                     {/* AI Identity Section */}
-                    <View style={styles.section}>
+                    <FloatingCard style={styles.section} shadow="soft">
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="sparkles" size={20} color={theme.colors.primary} />
-                            <Text style={styles.sectionTitle}>AI-Generated Identity</Text>
+                            <Ionicons name="sparkles" size={20} color={colors.minimalist.coral} />
+                            <Text style={styles.sectionTitle}>AI-Generated  Identity</Text>
                         </View>
 
                         <View style={styles.infoGrid}>
-                            <InfoCard label="BREED" value="Labrador Mix" subtitle="94% Match" />
-                            <InfoCard label="SIZE" value="Medium" subtitle="~18.5 kg" />
-                            <InfoCard label="COLOR" value="Golden Tan" />
+                            <View style={styles.infoItem}>
+                                <Text style={styles.infoLabel}>Breed</Text>
+                                <Text style={styles.infoValue}>Labrador Mix</Text>
+                                <Text style={styles.infoSubtitle}>94% Match</Text>
+                            </View>
+                            <View style={styles.infoItem}>
+                                <Text style={styles.infoLabel}>Size</Text>
+                                <Text style={styles.infoValue}>Medium</Text>
+                                <Text style={styles.infoSubtitle}>~18.5 kg</Text>
+                            </View>
+                            <View style={styles.infoItem}>
+                                <Text style={styles.infoLabel}>Color</Text>
+                                <Text style={styles.infoValue}>Golden Tan</Text>
+                            </View>
                         </View>
-                    </View>
+                    </FloatingCard>
 
                     {/* Activity History */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Activity & Medical History</Text>
-                        {mockActivities.map((activity) => (
-                            <ActivityItem key={activity.id} activity={activity} />
-                        ))}
-                    </View>
+                    <Text style={styles.activityTitle}>Activity & Medical History</Text>
+                    {mockActivities.map((activity) => (
+                        <FloatingCard key={activity.id} style={styles.activityCard} shadow="soft">
+                            <View style={styles.activityRow}>
+                                <View style={styles.activityIcon}>
+                                    <Ionicons name={activity.icon} size={20} color={colors.minimalist.coral} />
+                                </View>
+                                <View style={styles.activityContent}>
+                                    <Text style={styles.activityTitle}>{activity.title}</Text>
+                                    <Text style={styles.activityDescription}>{activity.description}</Text>
+                                    <Text style={styles.activityTimestamp}>{activity.timestamp}</Text>
+                                </View>
+                            </View>
+                        </FloatingCard>
+                    ))}
 
                     {/* Action Buttons */}
-                    <View style={styles.actionButtons}>
-                        <CustomButton
-                            title="Initiate Rescue"
-                            icon="shield-checkmark"
-                            iconPosition="left"
-                            onPress={() => { }}
-                            style={styles.actionButton}
-                        />
-                        <CustomButton
-                            title="Adoption"
-                            variant="outline"
-                            icon="heart"
-                            iconPosition="left"
-                            onPress={() => { }}
-                            style={styles.actionButton}
-                        />
-                    </View>
+                    <Pressable style={styles.primaryButton}>
+                        <LinearGradient
+                            colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.buttonGradient}
+                        >
+                            <Ionicons name="shield-checkmark" size={20} color={colors.minimalist.white} />
+                            <Text style={styles.buttonText}>Initiate Rescue</Text>
+                        </LinearGradient>
+                    </Pressable>
+
+                    <Pressable style={styles.secondaryButton}>
+                        <Ionicons name="heart" size={20} color={colors.minimalist.coral} />
+                        <Text style={styles.secondaryButtonText}>Adoption</Text>
+                    </Pressable>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -121,98 +156,180 @@ export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) 
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: theme.colors.background,
+        backgroundColor: colors.minimalist.bgLight,
     },
     container: {
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: theme.spacing.xxxl,
+        paddingBottom: spacing.xxxl,
     },
-    imageContainer: {
-        height: 300,
-        backgroundColor: theme.colors.surfaceDark,
-        position: 'relative',
+    headerButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.lg,
+        marginBottom: spacing.lg,
     },
-    backButton: {
-        position: 'absolute',
-        top: theme.spacing.lg,
-        left: theme.spacing.lg,
-        width: 40,
-        height: 40,
-        borderRadius: theme.radius.full,
-        backgroundColor: theme.colors.blackOverlay,
+    iconButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.minimalist.white,
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    shareButton: {
-        position: 'absolute',
-        top: theme.spacing.lg,
-        right: theme.spacing.lg,
-        width: 40,
-        height: 40,
-        borderRadius: theme.radius.full,
-        backgroundColor: theme.colors.blackOverlay,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 1,
+    imageCard: {
+        marginHorizontal: spacing.lg,
+        padding: 0,
+        overflow: 'hidden',
+        marginBottom: spacing.lg,
     },
     imagePlaceholder: {
-        flex: 1,
+        height: 300,
+        backgroundColor: colors.minimalist.bgLight,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: theme.colors.gray300,
     },
     content: {
-        padding: theme.spacing.xl,
+        paddingHorizontal: spacing.lg,
+    },
+    badgeRow: {
+        flexDirection: 'row',
+        marginBottom: spacing.sm,
     },
     name: {
-        ...theme.textStyles.h1,
-        color: theme.colors.textPrimary,
-        fontWeight: 'bold',
-        marginTop: theme.spacing.md,
+        ...serifTextStyles.serifHeading,
+        color: colors.minimalist.textDark,
+        marginBottom: 4,
     },
     id: {
-        ...theme.textStyles.body,
-        color: theme.colors.textSecondary,
-        marginTop: theme.spacing.xs,
-        marginBottom: theme.spacing.lg,
+        fontSize: 14,
+        color: colors.minimalist.textMedium,
+        marginBottom: spacing.lg,
     },
     idValue: {
-        color: theme.colors.primary,
+        color: colors.minimalist.coral,
         fontWeight: '600',
-    },
-    spotted: {
-        color: theme.colors.primary,
     },
     statusRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginBottom: theme.spacing.xl,
+        marginBottom: spacing.xl,
     },
     section: {
-        marginBottom: theme.spacing.xxxl,
+        marginBottom: spacing.xl,
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: theme.spacing.lg,
+        marginBottom: spacing.lg,
     },
     sectionTitle: {
-        ...theme.textStyles.h4,
-        color: theme.colors.textPrimary,
-        fontWeight: 'bold',
-        marginLeft: theme.spacing.sm,
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+        marginLeft: spacing.sm,
     },
     infoGrid: {
         flexDirection: 'row',
-        marginHorizontal: -theme.spacing.xs,
+        gap: spacing.md,
     },
-    actionButtons: {
-        gap: theme.spacing.md,
+    infoItem: {
+        flex: 1,
     },
-    actionButton: {
-        width: '100%',
+    infoLabel: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: colors.minimalist.textLight,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 4,
+    },
+    infoValue: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+        marginBottom: 2,
+    },
+    infoSubtitle: {
+        fontSize: 12,
+        color: colors.minimalist.textMedium,
+    },
+    activityTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+        marginBottom: spacing.md,
+    },
+    activityCard: {
+        marginBottom: spacing.sm,
+    },
+    activityRow: {
+        flexDirection: 'row',
+    },
+    activityIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.minimalist.peachLight,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    activityContent: {
+        flex: 1,
+    },
+    activityDescription: {
+        fontSize: 14,
+        color: colors.minimalist.textMedium,
+        lineHeight: 20,
+        marginTop: 2,
+    },
+    activityTimestamp: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: colors.minimalist.textLight,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginTop: spacing.xs,
+    },
+    primaryButton: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: spacing.xl,
+    },
+    buttonGradient: {
+        flexDirection: 'row',
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+    },
+    buttonText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.minimalist.white,
+    },
+    secondaryButton: {
+        flexDirection: 'row',
+        backgroundColor: colors.minimalist.white,
+        paddingVertical: spacing.lg,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+        borderWidth: 2,
+        borderColor: colors.minimalist.coral,
+    },
+    secondaryButtonText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.minimalist.coral,
     },
 });

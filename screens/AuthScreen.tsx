@@ -1,16 +1,93 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { RoleSelector, CustomInput, CustomButton, LoadingOverlay } from '../components';
-import { theme } from '../theme';
+import { LoadingOverlay, FloatingCard } from '../components';
+import { colors } from '../theme/colors';
+import { serifTextStyles } from '../theme/typography';
+import { spacing } from '../theme/spacing';
+import { minimalistShadows } from '../theme/shadows';
 import { UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { loginSchema, signupSchema, LoginFormData, SignupFormData } from '../utils/validation';
+
+interface MinimalistInputProps {
+    label: string;
+    placeholder: string;
+    value?: string;
+    onChangeText?: (text: string) => void;
+    onBlur?: () => void;
+    secureTextEntry?: boolean;
+    keyboardType?: 'default' | 'email-address';
+    autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+    error?: string;
+}
+
+const MinimalistInput: React.FC<MinimalistInputProps> = ({
+    label,
+    placeholder,
+    value,
+    onChangeText,
+    onBlur,
+    secureTextEntry,
+    keyboardType = 'default',
+    autoCapitalize = 'sentences',
+    error,
+}) => {
+    return (
+        <View style={inputStyles.container}>
+            <Text style={inputStyles.label}>{label}</Text>
+            <TextInput
+                style={[inputStyles.input, error && inputStyles.inputError]}
+                placeholder={placeholder}
+                placeholderTextColor={colors.minimalist.textLight}
+                value={value}
+                onChangeText={onChangeText}
+                onBlur={onBlur}
+                secureTextEntry={secureTextEntry}
+                keyboardType={keyboardType}
+                autoCapitalize={autoCapitalize}
+            />
+            {error && <Text style={inputStyles.errorText}>{error}</Text>}
+        </View>
+    );
+};
+
+const inputStyles = StyleSheet.create({
+    container: {
+        marginBottom: spacing.lg,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.minimalist.textMedium,
+        marginBottom: spacing.xs,
+        letterSpacing: 0.5,
+        textTransform: 'uppercase',
+    },
+    input: {
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 12,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        fontSize: 16,
+        color: colors.minimalist.textDark,
+        borderWidth: 1,
+        borderColor: colors.gray200,
+    },
+    inputError: {
+        borderColor: colors.minimalist.red,
+    },
+    errorText: {
+        fontSize: 12,
+        color: colors.minimalist.redDark,
+        marginTop: spacing.xs,
+    },
+});
 
 export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
@@ -53,7 +130,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
-            <StatusBar style="light" />
+            <StatusBar style="dark" />
             <LoadingOverlay visible={isLoading} message={isSignUp ? 'Creating account...' : 'Logging in...'} />
 
             <ScrollView
@@ -62,20 +139,52 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                {/* Gradient Header */}
-                <LinearGradient
-                    colors={[theme.colors.peach, theme.colors.coral, theme.colors.softOrange]}
-                    start={theme.gradientPositions.diagonal.start}
-                    end={theme.gradientPositions.diagonal.end}
-                    style={styles.logoContainer}
-                >
-                    <Ionicons name="paw" size={40} color={theme.colors.textPrimary} />
-                </LinearGradient>
-                <Text style={styles.title}>PawGuard AI</Text>
-                <Text style={styles.subtitle}>Animal Rescue Intelligence</Text>
+                {/* Back Button */}
+                <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color={colors.minimalist.textDark} />
+                </Pressable>
+
+                {/* Header */}
+                <View style={styles.header}>
+                    <FloatingCard style={styles.logoCard} shadow="medium">
+                        <Ionicons name="paw" size={40} color={colors.minimalist.coral} />
+                    </FloatingCard>
+                    <Text style={styles.title}>Welcome to PawGuard AI</Text>
+                    <Text style={styles.subtitle}>
+                        {isSignUp ? 'Create your account' : 'Sign in to continue'}
+                    </Text>
+                </View>
 
                 {/* Role Selector */}
-                <RoleSelector selectedRole={selectedRole} onSelectRole={setSelectedRole} />
+                <View style={styles.roleContainer}>
+                    <Pressable
+                        style={[styles.roleCard, selectedRole === 'citizen' && styles.roleCardActive]}
+                        onPress={() => setSelectedRole('citizen')}
+                    >
+                        <Ionicons
+                            name="person"
+                            size={24}
+                            color={selectedRole === 'citizen' ? colors.minimalist.white : colors.minimalist.textMedium}
+                        />
+                        <Text style={[styles.roleText, selectedRole === 'citizen' && styles.roleTextActive]}>
+                            Citizen
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={[styles.roleCard, selectedRole === 'ngo' && styles.roleCardActive]}
+                        onPress={() => setSelectedRole('ngo')}
+                    >
+                        <Ionicons
+                            name="business"
+                            size={24}
+                            color={selectedRole === 'ngo' ? colors.minimalist.white : colors.minimalist.textMedium}
+                        />
+                        <Text style={[styles.roleText, selectedRole === 'ngo' && styles.roleTextActive]}>
+                            NGO
+                        </Text>
+                    </Pressable>
+                </View>
 
                 {/* Tab Toggle */}
                 <View style={styles.tabContainer}>
@@ -84,7 +193,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         onPress={() => setIsSignUp(false)}
                     >
                         <Text style={[styles.tabText, !isSignUp && styles.tabTextActive]}>
-                            LOGIN
+                            Log In
                         </Text>
                     </Pressable>
                     <Pressable
@@ -92,7 +201,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         onPress={() => setIsSignUp(true)}
                     >
                         <Text style={[styles.tabText, isSignUp && styles.tabTextActive]}>
-                            SIGN UP
+                            Sign Up
                         </Text>
                     </Pressable>
                 </View>
@@ -103,9 +212,9 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         control={control}
                         name="email"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <CustomInput
-                                label="EMAIL ADDRESS"
-                                placeholder="contact@organization.org"
+                            <MinimalistInput
+                                label="Email Address"
+                                placeholder="your@email.com"
                                 value={value}
                                 onChangeText={onChange}
                                 onBlur={onBlur}
@@ -120,8 +229,8 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         control={control}
                         name="password"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <CustomInput
-                                label="PASSWORD"
+                            <MinimalistInput
+                                label="Password"
                                 placeholder="••••••••"
                                 value={value}
                                 onChangeText={onChange}
@@ -138,8 +247,8 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 control={control}
                                 name="organizationName"
                                 render={({ field: { onChange, onBlur, value } }) => (
-                                    <CustomInput
-                                        label="ORGANIZATION NAME"
+                                    <MinimalistInput
+                                        label="Organization Name"
                                         placeholder="Global Rescue Corp"
                                         value={value}
                                         onChangeText={onChange}
@@ -155,8 +264,8 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                         control={control}
                                         name="regNumber"
                                         render={({ field: { onChange, onBlur, value } }) => (
-                                            <CustomInput
-                                                label="REG NUMBER"
+                                            <MinimalistInput
+                                                label="Registration Number"
                                                 placeholder="REG-29384"
                                                 value={value}
                                                 onChangeText={onChange}
@@ -171,13 +280,12 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                         control={control}
                                         name="country"
                                         render={({ field: { onChange, onBlur, value } }) => (
-                                            <CustomInput
-                                                label="COUNTRY"
+                                            <MinimalistInput
+                                                label="Country"
                                                 placeholder="USA"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
-                                                icon="chevron-down"
                                                 error={errors.country?.message}
                                             />
                                         )}
@@ -187,13 +295,20 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         </>
                     )}
 
-                    <CustomButton
-                        title="Access Platform"
-                        icon="arrow-forward"
-                        onPress={handleSubmit(onSubmit)}
-                        style={styles.submitButton}
-                        disabled={isLoading}
-                    />
+                    {/* Submit Button */}
+                    <Pressable style={styles.submitButton} onPress={handleSubmit(onSubmit)} disabled={isLoading}>
+                        <LinearGradient
+                            colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.buttonGradient}
+                        >
+                            <Text style={styles.submitButtonText}>
+                                {isSignUp ? 'Create Account' : 'Sign In'}
+                            </Text>
+                            <Ionicons name="arrow-forward" size={20} color={colors.minimalist.white} />
+                        </LinearGradient>
+                    </Pressable>
 
                     {/* Divider */}
                     <View style={styles.dividerContainer}>
@@ -203,13 +318,10 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     </View>
 
                     {/* Google Button */}
-                    <CustomButton
-                        title="Google"
-                        variant="glass"
-                        icon="logo-google"
-                        iconPosition="left"
-                        onPress={() => { }}
-                    />
+                    <Pressable style={styles.googleButton}>
+                        <Ionicons name="logo-google" size={20} color={colors.minimalist.textDark} />
+                        <Text style={styles.googleButtonText}>Google</Text>
+                    </Pressable>
 
                     {/* Footer */}
                     <Text style={styles.copyright}>© 2026 PAWGUARD AI</Text>
@@ -222,104 +334,168 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: theme.colors.background,
+        backgroundColor: colors.minimalist.bgLight,
     },
     container: {
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: theme.spacing.xl,
-        paddingTop: theme.spacing.md,
-        paddingBottom: theme.spacing.xxxl,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xxxl,
     },
-    logoContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: theme.radius.xxl,
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: colors.minimalist.white,
         justifyContent: 'center',
         alignItems: 'center',
-        alignSelf: 'center',
-        marginTop: theme.spacing.xxl,
-        marginBottom: theme.spacing.lg,
-        ...theme.shadows.lg,
+        marginBottom: spacing.lg,
+        ...minimalistShadows.cardSoft,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: spacing.xxl,
+    },
+    logoCard: {
+        width: 80,
+        height: 80,
+        backgroundColor: colors.minimalist.peachLight,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.lg,
     },
     title: {
-        ...theme.textStyles.h1,
-        color: theme.colors.textPrimary,
-        fontWeight: 'bold',
+        ...serifTextStyles.serifSubheading,
+        color: colors.minimalist.textDark,
         textAlign: 'center',
-        marginBottom: theme.spacing.xs,
+        marginBottom: spacing.xs,
     },
     subtitle: {
-        ...theme.textStyles.body,
-        color: theme.colors.textMuted,
+        fontSize: 16,
+        color: colors.minimalist.textMedium,
         textAlign: 'center',
-        marginBottom: theme.spacing.xxxl,
+    },
+    roleContainer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginBottom: spacing.xl,
+    },
+    roleCard: {
+        flex: 1,
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 16,
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: colors.gray200,
+        ...minimalistShadows.cardSoft,
+    },
+    roleCardActive: {
+        backgroundColor: colors.minimalist.coral,
+        borderColor: colors.minimalist.coral,
+    },
+    roleText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.minimalist.textMedium,
+        marginTop: spacing.xs,
+    },
+    roleTextActive: {
+        color: colors.minimalist.white,
     },
     tabContainer: {
         flexDirection: 'row',
-        gap: theme.spacing.md,
-        marginBottom: theme.spacing.xxl,
-        backgroundColor: theme.colors.glassLight,
-        borderRadius: theme.borderRadius.button,
-        padding: theme.spacing.xs,
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: spacing.xl,
+        ...minimalistShadows.cardSoft,
     },
     tab: {
         flex: 1,
-        paddingVertical: theme.spacing.md,
-        borderRadius: theme.borderRadius.button - 4,
+        paddingVertical: spacing.md,
+        borderRadius: 10,
         alignItems: 'center',
     },
     tabActive: {
-        backgroundColor: theme.colors.surface,
+        backgroundColor: colors.minimalist.peachLight,
     },
     tabText: {
-        ...theme.textStyles.button,
-        color: theme.colors.textMuted,
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
+        color: colors.minimalist.textMedium,
     },
     tabTextActive: {
-        color: theme.colors.textAccent,
-        fontWeight: '700',
+        color: colors.minimalist.textDark,
     },
     form: {
-        marginTop: theme.spacing.md,
+        marginTop: spacing.md,
     },
     row: {
         flexDirection: 'row',
-        gap: theme.spacing.md,
+        gap: spacing.md,
     },
     halfWidth: {
         flex: 1,
     },
     submitButton: {
-        marginTop: theme.spacing.lg,
-        marginBottom: theme.spacing.xxl,
+        borderRadius: 16,
+        overflow: 'hidden',
+        marginTop: spacing.lg,
+        marginBottom: spacing.xl,
+    },
+    buttonGradient: {
+        flexDirection: 'row',
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+    },
+    submitButtonText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.minimalist.white,
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: theme.spacing.xxl,
+        marginVertical: spacing.xl,
     },
     divider: {
         flex: 1,
         height: 1,
-        backgroundColor: theme.colors.borderGlass,
+        backgroundColor: colors.gray200,
     },
     dividerText: {
-        ...theme.textStyles.caption,
-        color: theme.colors.textMuted,
-        marginHorizontal: theme.spacing.md,
         fontSize: 11,
+        color: colors.minimalist.textLight,
+        marginHorizontal: spacing.md,
         letterSpacing: 1,
+        fontWeight: '600',
+    },
+    googleButton: {
+        flexDirection: 'row',
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 12,
+        paddingVertical: spacing.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.gray200,
+    },
+    googleButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
     },
     copyright: {
-        ...theme.textStyles.small,
-        color: theme.colors.textMuted,
-        textAlign: 'center',
-        marginTop: theme.spacing.xxl,
         fontSize: 10,
+        color: colors.minimalist.textLight,
+        textAlign: 'center',
+        marginTop: spacing.xxl,
         letterSpacing: 1,
     },
 });
