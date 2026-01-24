@@ -7,6 +7,7 @@ interface CustomInputProps extends TextInputProps {
     label: string;
     icon?: keyof typeof Ionicons.glyphMap;
     error?: string;
+    variant?: 'glass' | 'minimalist';
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
@@ -14,19 +15,22 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     icon,
     error,
     secureTextEntry,
+    variant = 'glass',
     ...props
 }) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const isPassword = secureTextEntry;
 
+    const isMinimalist = variant === 'minimalist';
+
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>{label}</Text>
+            <Text style={[styles.label, isMinimalist && styles.labelMinimalist]}>{label}</Text>
             <View style={[
                 styles.inputContainer,
-                theme.glassEffect,
-                isFocused && styles.inputContainerFocused,
+                isMinimalist ? styles.inputContainerMinimalist : theme.glassEffect,
+                isFocused && (isMinimalist ? styles.inputContainerFocusedMinimalist : styles.inputContainerFocused),
                 error && styles.inputContainerError,
             ]}>
                 {icon && (
@@ -38,8 +42,8 @@ export const CustomInput: React.FC<CustomInputProps> = ({
                     />
                 )}
                 <TextInput
-                    style={styles.input}
-                    placeholderTextColor={theme.colors.textMuted}
+                    style={[styles.input, isMinimalist && styles.inputMinimalist]}
+                    placeholderTextColor={isMinimalist ? theme.colors.minimalist.textLight : theme.colors.textMuted}
                     secureTextEntry={isPassword && !isPasswordVisible}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
@@ -76,6 +80,11 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         letterSpacing: 1,
     },
+    labelMinimalist: {
+        fontSize: 12,
+        color: theme.colors.minimalist.textMedium,
+        letterSpacing: 0.5,
+    },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -89,6 +98,17 @@ const styles = StyleSheet.create({
         borderColor: theme.colors.borderGradient,
         borderWidth: 2,
     },
+    inputContainerMinimalist: {
+        backgroundColor: theme.colors.minimalist.white,
+        borderWidth: 1,
+        borderColor: theme.colors.gray200,
+        height: 50, // Slightly taller for minimalist
+        borderRadius: 12, // Match minimalist radius
+    },
+    inputContainerFocusedMinimalist: {
+        borderColor: theme.colors.minimalist.coral,
+        borderWidth: 1,
+    },
     inputContainerError: {
         borderColor: theme.colors.danger,
         borderWidth: 1.5,
@@ -101,6 +121,10 @@ const styles = StyleSheet.create({
         ...theme.textStyles.body,
         color: theme.colors.textPrimary,
         fontSize: 14,
+    },
+    inputMinimalist: {
+        fontSize: 16,
+        color: theme.colors.minimalist.textDark,
     },
     eyeIcon: {
         padding: theme.spacing.xs,

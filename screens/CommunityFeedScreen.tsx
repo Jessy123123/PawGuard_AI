@@ -17,29 +17,38 @@ const communityPosts = [
     {
         id: '1',
         type: 'lost',
-        animal: 'Golden Retriever, "Buddy", 2 yrs',
-        description: 'Red collar. Last seen near Elm Park, Boston, MA.',
-        location: 'Oct 26, 10:30 AM',
-        image: 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=300&h=300&fit=crop',
+        animal: 'Golden Retriever Mix, "Rusty"',
+        description: 'Wearing a red bandana. Friendly but shy. Last seen near Central Park entrance.',
+        location: 'Today, 8:30 AM',
+        image: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&fit=crop', // Real Golden Retriever
         verified: false
     },
     {
         id: '2',
         type: 'found',
-        animal: 'Calico cat, female',
-        description: 'Found without collar. Now safe at Pet Haven Shelter, Cambridge, MA.',
-        location: 'Oct 25, 4:15 PM',
-        image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=300&h=300&fit=crop',
+        animal: 'Stray Calico Cat',
+        description: 'Found sheltering under a car. Has a notched ear (neutered). Currently at City Animal Shelter.',
+        location: 'Yesterday, 6:15 PM',
+        image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&fit=crop', // Real Cat
         verified: true
     },
     {
         id: '3',
         type: 'lost',
-        animal: 'Black Labrador, "Daisy", 5 yrs',
-        description: 'Purple harness. Last seen near Charles River Esplanade, Boston, MA.',
-        location: 'Oct 24, 2:50 AM',
-        image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=300&h=300&fit=crop',
+        animal: 'Black Lab, "Shadow"',
+        description: 'Very energetic, loves balls. Slipped collar near the river.',
+        location: 'Oct 24, 2:50 PM',
+        image: 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600&fit=crop', // Real Black Dog
         verified: false
+    },
+    {
+        id: '4',
+        type: 'found',
+        animal: 'Scruffy Terrier Mix',
+        description: 'Found wandering near the market. No chip detected. Safe with foster family.',
+        location: 'Oct 24, 9:00 AM',
+        image: 'https://images.unsplash.com/photo-1596492784531-6e6eb5ea9205?w=600&fit=crop', // Scruffy stray dog
+        verified: true
     },
 ];
 
@@ -88,8 +97,7 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                 {communityPosts.map((post) => (
                     <FloatingCard
                         key={post.id}
-                        style={styles.postCard}
-                        backgroundColor={post.verified ? colors.minimalist.peachLight : colors.minimalist.white}
+                        style={[styles.postCard, { backgroundColor: post.verified ? colors.minimalist.peachLight : colors.minimalist.white }]}
                         shadow="soft"
                     >
                         <View style={styles.postContent}>
