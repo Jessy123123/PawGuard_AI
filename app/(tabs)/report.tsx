@@ -15,9 +15,8 @@ export default function ReportScreen() {
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
     const handleCreateReport = () => {
-        // TODO: Implement camera-first reporting flow
-        // For now, show success popup immediately
-        setShowSuccessPopup(true);
+        // Navigate to AI Camera screen for photo capture and analysis
+        router.push('/AIReportCamera');
     };
 
     return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,39 +9,11 @@ import { StatusBadge } from '../components/StatusBadge';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
-
-const mockReports = [
-    {
-        id: '1',
-        animalType: 'Dog',
-        breed: 'Labrador Mix',
-        status: 'verified',
-        date: 'Oct 12, 2023',
-        location: 'Marina Bay Sands',
-        image: null,
-    },
-    {
-        id: '2',
-        animalType: 'Cat',
-        breed: 'Tabby',
-        status: 'resolved',
-        date: 'Sept 28, 2023',
-        location: 'Orchard Road',
-        image: null,
-    },
-    {
-        id: '3',
-        animalType: 'Dog',
-        breed: 'Golden Retriever',
-        status: 'atRisk',
-        date: 'Sept 15, 2023',
-        location: 'Jurong East',
-        image: null,
-    },
-];
+import { useReports } from '../contexts/ReportContext';
 
 export default function ReportHistoryScreen() {
     const router = useRouter();
+    const { reports } = useReports();
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -55,8 +27,8 @@ export default function ReportHistoryScreen() {
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                {mockReports.length > 0 ? (
-                    mockReports.map((report) => (
+                {reports.length > 0 ? (
+                    reports.map((report) => (
                         <Pressable
                             key={report.id}
                             onPress={() => router.push({
@@ -66,12 +38,30 @@ export default function ReportHistoryScreen() {
                         >
                             {({ pressed }) => (
                                 <FloatingCard shadow="soft" style={[styles.reportCard, pressed && styles.pressed]}>
-                                    <View style={styles.cardHeader}>
-                                        <View style={styles.animalInfo}>
-                                            <Text style={styles.animalName}>{report.animalType}: {report.breed}</Text>
-                                            <Text style={styles.reportDate}>{report.date} • {report.location}</Text>
+                                    <View style={styles.cardContent}>
+                                        {report.imageUri && (
+                                            <Image
+                                                source={{ uri: report.imageUri }}
+                                                style={styles.thumbnail}
+                                            />
+                                        )}
+                                        <View style={styles.cardInfo}>
+                                            <View style={styles.cardHeader}>
+                                                <View style={styles.animalInfo}>
+                                                    <Text style={styles.animalName}>
+                                                        {report.animalType === 'dog' ? '🐕' : '🐈'} {report.breed}
+                                                    </Text>
+                                                    <Text style={styles.reportDate}>
+                                                        {report.date} • {report.location || 'Unknown Location'}
+                                                    </Text>
+                                                </View>
+                                                <StatusBadge status={report.status} />
+                                            </View>
+
+                                            {report.color && (
+                                                <Text style={styles.colorText}>Color: {report.color}</Text>
+                                            )}
                                         </View>
-                                        <StatusBadge status={report.status as any} />
                                     </View>
 
                                     <View style={styles.divider} />
@@ -90,7 +80,7 @@ export default function ReportHistoryScreen() {
                         <Text style={styles.emptyText}>No reports yet</Text>
                         <Pressable
                             style={styles.ctaButton}
-                            onPress={() => router.push('/(tabs)/report')}
+                            onPress={() => router.push('/AIReportCamera')}
                         >
                             <Text style={styles.ctaText}>Create Your First Report</Text>
                         </Pressable>
@@ -190,5 +180,23 @@ const styles = StyleSheet.create({
         color: colors.minimalist.white,
         fontWeight: '600',
         fontSize: 16,
+    },
+    cardContent: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    thumbnail: {
+        width: 60,
+        height: 60,
+        borderRadius: 12,
+        backgroundColor: colors.gray200,
+    },
+    cardInfo: {
+        flex: 1,
+    },
+    colorText: {
+        fontSize: 13,
+        color: colors.minimalist.textMedium,
+        marginTop: 4,
     },
 });
