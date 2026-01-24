@@ -16,7 +16,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, role?: UserRole) => Promise<void>;
     logout: () => Promise<void>;
     register: (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => Promise<void>;
     updateProfile: (updates: Partial<User>) => Promise<void>;
@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string, role: UserRole = 'citizen') => {
         setIsLoading(true);
         try {
             // Simulate API call
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 id: Math.random().toString(36).substr(2, 9),
                 email,
                 name: email.split('@')[0], // Default name from email
-                role: 'citizen',
+                role, // Use the selected role
                 profileComplete: false, // Login requires profile completion
             };
 

@@ -125,13 +125,13 @@ export const colors = {
 
 // Gradient definitions
 export const gradients = {
-  primary: [colors.peach, colors.coral, colors.softOrange],
-  secondary: [colors.lightTeal, colors.mint],
-  tertiary: [colors.roseGold, colors.sunset],
-  warm: [colors.peach, colors.softOrange],
-  cool: [colors.lightTeal, colors.mint],
-  accent: [colors.coral, colors.sunset],
-  glass: ['rgba(255, 180, 162, 0.15)', 'rgba(109, 213, 213, 0.15)'],
+  primary: [colors.peach, colors.coral, colors.softOrange] as const,
+  secondary: [colors.lightTeal, colors.mint] as const,
+  tertiary: [colors.roseGold, colors.sunset] as const,
+  warm: [colors.peach, colors.softOrange] as const,
+  cool: [colors.lightTeal, colors.mint] as const,
+  accent: [colors.coral, colors.sunset] as const,
+  glass: ['rgba(255, 180, 162, 0.15)', 'rgba(109, 213, 213, 0.15)'] as const,
 };
 
 // Gradient positions for LinearGradient

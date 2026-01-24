@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,37 +10,109 @@ import { colors } from '../theme/colors';
 import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-interface ReportSightingScreenProps {
-    navigation: any;
-}
+import { useReports } from '../contexts/ReportContext';
+import { getCurrentLocation } from '../services/locationService';
 
-export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navigation }) => {
-    const [photoUri, setPhotoUri] = useState<string>('');
-    const [animalType, setAnimalType] = useState<string>('dog');
-    const [condition, setCondition] = useState<string>('not_injured');
+export const ReportSightingScreen = () => {
+    const router = useRouter();
+    const { addReport } = useReports();
+    const params = useLocalSearchParams<{ imageUri?: string; aiResult?: string }>();
+
+    // Parse AI result from JSON string if provided
+    const aiResult = params.aiResult ? JSON.parse(params.aiResult) : null;
+
+    // Initialize state with AI data if available
+    const [photoUri, setPhotoUri] = useState<string>(params.imageUri || '');
+    const [animalType, setAnimalType] = useState<string>(
+        aiResult?.species === 'cat' ? 'cat' : 'dog'
+    );
+    const [condition, setCondition] = useState<string>(
+        aiResult?.condition === 'injured' ? 'injured' : 'not_injured'
+    );
+
+    // Construct initial details based on AI analysis
+    const initialDetails = aiResult ?
+        `Breed: ${aiResult.breed}\nColor: ${aiResult.color}\nFeatures: ${aiResult.distinctiveFeatures?.join(', ') || 'N/A'}`
+        : '';
+
     const [temperament, setTemperament] = useState<string>('calm');
     const [vaccinationStatus, setVaccinationStatus] = useState<'unknown' | 'yes' | 'no'>('unknown');
     const [neuteringStatus, setNeuteringStatus] = useState<'unknown' | 'yes' | 'no'>('unknown');
-    const [additionalDetails, setAdditionalDetails] = useState<string>('');
+    const [additionalDetails, setAdditionalDetails] = useState<string>(initialDetails);
     const [isDetectingLocation, setIsDetectingLocation] = useState(true);
     const [location, setLocation] = useState({
         latitude: 37.7749,
         longitude: -122.4194,
     });
+    const [locationName, setLocationName] = useState('Detecting location...');
+    const [manualAddress, setManualAddress] = useState('');
+
+    const handleEditAddress = () => {
+        Alert.prompt(
+            'Edit Address',
+            'Enter the location manually:',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Save',
+                    onPress: (text?: string) => {
+                        if (text && text.trim()) {
+                            setManualAddress(text.trim());
+                            setLocationName(text.trim());
+                        }
+                    }
+                }
+            ],
+            'plain-text',
+            manualAddress || locationName
+        );
+    };
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsDetectingLocation(false);
-        }, 3000);
-        return () => clearTimeout(timer);
+        // Get real GPS location on mount
+        const fetchLocation = async () => {
+            try {
+                const result = await getCurrentLocation();
+                if (result && result.coordinates) {
+                    setLocation({
+                        latitude: result.coordinates.latitude,
+                        longitude: result.coordinates.longitude
+                    });
+                    setLocationName(`${result.coordinates.latitude.toFixed(4)}, ${result.coordinates.longitude.toFixed(4)}`);
+                }
+            } catch (error) {
+                console.log('Location permission denied, using default');
+                setLocationName('Location unavailable');
+            } finally {
+                setIsDetectingLocation(false);
+            }
+        };
+
+        fetchLocation();
     }, []);
 
-    const reportId = 'REPORT_08';
+    const reportId = 'REPORT-' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
 
     const handleSubmit = () => {
-        console.log('Submitting report');
-        navigation.goBack();
+        // Save to context
+        addReport({
+            animalType: animalType as 'dog' | 'cat',
+            breed: aiResult?.breed || 'Unknown',
+            color: aiResult?.color || 'Unknown',
+            location: 'Current Location', // simplified for now
+            imageUri: photoUri,
+            aiData: aiResult
+        });
+
+        console.log('Report saved to context');
+
+        // Navigate to report history to see the new report
+        router.push('/report-history');
     };
 
     return (
@@ -49,7 +121,7 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
 
             {/* Header */}
             <View style={styles.header}>
-                <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Pressable style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color={colors.minimalist.textDark} />
                 </Pressable>
                 <Text style={styles.headerTitle}>Report a Sighting</Text>
@@ -66,8 +138,34 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
                 {/* Photo Upload */}
                 <FloatingCard shadow="soft" style={styles.section}>
                     <Text style={styles.sectionLabel}>Photo Evidence</Text>
-                    <PhotoUploadBox onImageSelected={setPhotoUri} imageUri={photoUri} required />
+                    <PhotoUploadBox
+                        onImageSelected={setPhotoUri}
+                        imageUri={photoUri}
+                        required
+                    />
+                    {aiResult && (
+                        <View style={styles.aiBadge}>
+                            <Ionicons name="sparkles" size={14} color={colors.minimalist.white} />
+                            <Text style={styles.aiBadgeText}>AI Analyzed</Text>
+                        </View>
+                    )}
                 </FloatingCard>
+
+                {/* AI Analysis Summary if available */}
+                {aiResult && (
+                    <View style={styles.section}>
+                        <FloatingCard shadow="soft" style={{ backgroundColor: colors.minimalist.peachLight }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                <Ionicons name="scan-circle" size={24} color={colors.minimalist.coral} />
+                                <Text style={{ fontWeight: 'bold', color: colors.minimalist.textDark }}>Gemini Analysis</Text>
+                            </View>
+                            <Text style={styles.aiSummaryText}>
+                                Identified as {aiResult.size} {aiResult.color} {aiResult.breed}.
+                                Confidence: {(aiResult.confidence * 100).toFixed(0)}%
+                            </Text>
+                        </FloatingCard>
+                    </View>
+                )}
 
                 {/* Animal Type */}
                 <View style={styles.section}>
@@ -108,7 +206,7 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
                                         styles.statusDot,
                                         {
                                             backgroundColor: isDetectingLocation
-                                                ? colors.minimalist.yellow
+                                                ? colors.minimalist.gentleYellow
                                                 : colors.minimalist.greenDark,
                                         },
                                     ]}
@@ -117,7 +215,7 @@ export const ReportSightingScreen: React.FC<ReportSightingScreenProps> = ({ navi
                                     {isDetectingLocation ? 'Detecting location...' : 'Location detected'}
                                 </Text>
                             </View>
-                            <Pressable>
+                            <Pressable onPress={handleEditAddress}>
                                 <Text style={styles.editAddressText}>Edit Address</Text>
                             </Pressable>
                         </View>
@@ -535,5 +633,28 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: colors.minimalist.white,
         fontWeight: '600',
+    },
+    aiBadge: {
+        position: 'absolute',
+        top: 12,
+        right: 12,
+        backgroundColor: colors.minimalist.coral,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        zIndex: 10,
+    },
+    aiBadgeText: {
+        color: colors.minimalist.white,
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    aiSummaryText: {
+        color: colors.minimalist.textDark,
+        fontSize: 14,
+        lineHeight: 20,
     },
 });

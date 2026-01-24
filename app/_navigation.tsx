@@ -7,11 +7,8 @@ import { theme } from '../theme';
 
 // Import screens
 import { AuthScreen } from '../screens/AuthScreen';
-import { HomeScreen } from '../screens/HomeScreen';
 import { ReportSightingScreen } from '../screens/ReportSightingScreen';
-import { AdoptionListScreen } from '../screens/AdoptionListScreen';
 import { AdoptionExitScreen } from '../screens/AdoptionExitScreen';
-import { DashboardScreen } from '../screens/DashboardScreen';
 import { DogProfileScreen } from '../screens/DogProfileScreen';
 
 // New minimalist UI screens
@@ -21,6 +18,8 @@ import { AnimalProfileScreen } from '../screens/AnimalProfileScreen';
 import { DisasterModeScreen } from '../screens/DisasterModeScreen';
 import { NewAdoptionListing } from '../screens/NewAdoptionListing';
 import { CommunityFeedScreen } from '../screens/CommunityFeedScreen';
+import { AIReportCameraScreen } from '../screens/AIReportCameraScreen';
+import { AnimalMatchResultScreen } from '../screens/AnimalMatchResultScreen';
 
 // Type definitions
 export type RootStackParamList = {
@@ -35,6 +34,12 @@ export type RootStackParamList = {
     DisasterMode: undefined;
     NewAdoption: undefined;
     CommunityFeed: undefined;
+    AIReportCamera: undefined;
+    AnimalMatchResult: {
+        capturedImage: string;
+        aiResult: any;
+        matches: any[];
+    };
 };
 
 export type MainTabParamList = {
@@ -166,6 +171,16 @@ export const AppNavigation: React.FC = () => {
                 <Stack.Screen
                     name="DogProfile"
                     component={DogProfileScreen}
+                    options={{ presentation: 'card' }}
+                />
+                <Stack.Screen
+                    name="AIReportCamera"
+                    component={AIReportCameraScreen}
+                    options={{ presentation: 'fullScreenModal', headerShown: false }}
+                />
+                <Stack.Screen
+                    name="AnimalMatchResult"
+                    component={AnimalMatchResultScreen}
                     options={{ presentation: 'card' }}
                 />
             </Stack.Navigator>

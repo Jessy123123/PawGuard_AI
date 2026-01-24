@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { LoadingOverlay, FloatingCard } from '../components';
+import { LoadingOverlay, FloatingCard, CustomButton, CustomInput } from '../components';
 import { colors } from '../theme/colors';
 import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
@@ -15,79 +14,6 @@ import { UserRole } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { loginSchema, signupSchema, LoginFormData, SignupFormData } from '../utils/validation';
 
-interface MinimalistInputProps {
-    label: string;
-    placeholder: string;
-    value?: string;
-    onChangeText?: (text: string) => void;
-    onBlur?: () => void;
-    secureTextEntry?: boolean;
-    keyboardType?: 'default' | 'email-address';
-    autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-    error?: string;
-}
-
-const MinimalistInput: React.FC<MinimalistInputProps> = ({
-    label,
-    placeholder,
-    value,
-    onChangeText,
-    onBlur,
-    secureTextEntry,
-    keyboardType = 'default',
-    autoCapitalize = 'sentences',
-    error,
-}) => {
-    return (
-        <View style={inputStyles.container}>
-            <Text style={inputStyles.label}>{label}</Text>
-            <TextInput
-                style={[inputStyles.input, error && inputStyles.inputError]}
-                placeholder={placeholder}
-                placeholderTextColor={colors.minimalist.textLight}
-                value={value}
-                onChangeText={onChangeText}
-                onBlur={onBlur}
-                secureTextEntry={secureTextEntry}
-                keyboardType={keyboardType}
-                autoCapitalize={autoCapitalize}
-            />
-            {error && <Text style={inputStyles.errorText}>{error}</Text>}
-        </View>
-    );
-};
-
-const inputStyles = StyleSheet.create({
-    container: {
-        marginBottom: spacing.lg,
-    },
-    label: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: colors.minimalist.textMedium,
-        marginBottom: spacing.xs,
-        letterSpacing: 0.5,
-        textTransform: 'uppercase',
-    },
-    input: {
-        backgroundColor: colors.minimalist.white,
-        borderRadius: 12,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-        fontSize: 16,
-        color: colors.minimalist.textDark,
-        borderWidth: 1,
-        borderColor: colors.gray200,
-    },
-    inputError: {
-        borderColor: colors.minimalist.red,
-    },
-    errorText: {
-        fontSize: 12,
-        color: colors.minimalist.redDark,
-        marginTop: spacing.xs,
-    },
-});
 
 export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
@@ -111,7 +37,9 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 await register(
                     data.email,
                     data.password,
+                    data.email.split('@')[0], // Derive name from email since form has no name field
                     selectedRole,
+                    undefined, // phone not in form
                     'organizationName' in data ? data.organizationName : undefined
                 );
             } else {
@@ -212,7 +140,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         control={control}
                         name="email"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <MinimalistInput
+                            <CustomInput
                                 label="Email Address"
                                 placeholder="your@email.com"
                                 value={value}
@@ -221,6 +149,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 error={errors.email?.message}
+                                variant="minimalist"
                             />
                         )}
                     />
@@ -229,7 +158,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         control={control}
                         name="password"
                         render={({ field: { onChange, onBlur, value } }) => (
-                            <MinimalistInput
+                            <CustomInput
                                 label="Password"
                                 placeholder="••••••••"
                                 value={value}
@@ -237,6 +166,7 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 onBlur={onBlur}
                                 secureTextEntry
                                 error={errors.password?.message}
+                                variant="minimalist"
                             />
                         )}
                     />
@@ -247,13 +177,14 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                 control={control}
                                 name="organizationName"
                                 render={({ field: { onChange, onBlur, value } }) => (
-                                    <MinimalistInput
+                                    <CustomInput
                                         label="Organization Name"
                                         placeholder="Global Rescue Corp"
                                         value={value}
                                         onChangeText={onChange}
                                         onBlur={onBlur}
                                         error={errors.organizationName?.message}
+                                        variant="minimalist"
                                     />
                                 )}
                             />
@@ -264,13 +195,14 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                         control={control}
                                         name="regNumber"
                                         render={({ field: { onChange, onBlur, value } }) => (
-                                            <MinimalistInput
+                                            <CustomInput
                                                 label="Registration Number"
                                                 placeholder="REG-29384"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
                                                 error={errors.regNumber?.message}
+                                                variant="minimalist"
                                             />
                                         )}
                                     />
@@ -280,13 +212,14 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                                         control={control}
                                         name="country"
                                         render={({ field: { onChange, onBlur, value } }) => (
-                                            <MinimalistInput
+                                            <CustomInput
                                                 label="Country"
                                                 placeholder="USA"
                                                 value={value}
                                                 onChangeText={onChange}
                                                 onBlur={onBlur}
                                                 error={errors.country?.message}
+                                                variant="minimalist"
                                             />
                                         )}
                                     />
@@ -296,19 +229,15 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     )}
 
                     {/* Submit Button */}
-                    <Pressable style={styles.submitButton} onPress={handleSubmit(onSubmit)} disabled={isLoading}>
-                        <LinearGradient
-                            colors={[colors.minimalist.coral, colors.minimalist.orange]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.buttonGradient}
-                        >
-                            <Text style={styles.submitButtonText}>
-                                {isSignUp ? 'Create Account' : 'Sign In'}
-                            </Text>
-                            <Ionicons name="arrow-forward" size={20} color={colors.minimalist.white} />
-                        </LinearGradient>
-                    </Pressable>
+                    <CustomButton
+                        title={isSignUp ? 'Create Account' : 'Sign In'}
+                        onPress={handleSubmit(onSubmit)}
+                        disabled={isLoading}
+                        variant="primary"
+                        icon="arrow-forward"
+                        iconPosition="right"
+                        style={styles.submitButton}
+                    />
 
                     {/* Divider */}
                     <View style={styles.dividerContainer}>
@@ -441,22 +370,8 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     submitButton: {
-        borderRadius: 16,
-        overflow: 'hidden',
         marginTop: spacing.lg,
         marginBottom: spacing.xl,
-    },
-    buttonGradient: {
-        flexDirection: 'row',
-        paddingVertical: spacing.lg,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: spacing.sm,
-    },
-    submitButtonText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.minimalist.white,
     },
     dividerContainer: {
         flexDirection: 'row',
