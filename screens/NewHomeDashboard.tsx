@@ -91,13 +91,16 @@ export const NewHomeDashboard: React.FC = () => {
 
                     <Pressable
                         style={styles.quickAccessCard}
-                        onPress={() => router.push('/CommunityFeed')}
+                        onPress={() => router.push({
+                            pathname: '/ReportSighting',
+                            params: { type: 'lost' }
+                        })}
                     >
                         <FloatingCard style={styles.quickCardInner} shadow="medium">
-                            <Ionicons name="search" size={32} color={colors.minimalist.orange} />
-                            <Text style={styles.quickCardTitle}>Lost Pets</Text>
+                            <Ionicons name="megaphone" size={32} color={colors.minimalist.orange} />
+                            <Text style={styles.quickCardTitle}>Report Lost Pet</Text>
                             <Text style={styles.quickCardDescription}>
-                                Report or view missing animals near you.
+                                Post a lost alert for your missing pet.
                             </Text>
                         </FloatingCard>
                     </Pressable>

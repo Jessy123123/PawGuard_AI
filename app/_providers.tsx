@@ -3,6 +3,7 @@ import { Text, TextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../contexts/AuthContext';
 import { DataProvider } from '../contexts/DataContext';
+import { ReportProvider } from '../contexts/ReportContext';
 
 // Disable font scaling globally (TS-safe)
 (Text as any).defaultProps = (Text as any).defaultProps || {};
@@ -18,7 +19,9 @@ export const Providers = ({ children }: ProvidersProps) => {
         <SafeAreaProvider>
             <AuthProvider>
                 <DataProvider>
-                    {children}
+                    <ReportProvider>
+                        {children}
+                    </ReportProvider>
                 </DataProvider>
             </AuthProvider>
         </SafeAreaProvider>
