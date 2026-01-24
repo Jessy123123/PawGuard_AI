@@ -116,50 +116,51 @@ If no animal is detected, set isAnimal to false and leave other fields with defa
         // Check for Quota Exceeded (HTTP 429) or other API errors
         // Also fallback if error is a fetch failure (e.g. network issue)
         const errorMessage = error.message || '';
-        if (errorMessage.includes('429') || errorMessage.includes('Quota') || errorMessage.includes('Fetch failure') || errorMessage.includes('network')) {
-            console.log('Gemini API quota exceeded or offline. Switching to Offline AI...');
+        // Fallback to Offline AI for ANY error during this phase to ensure it works
+        console.log('Gemini API failed (Quota/Network/Other). Switching to Offline AI...');
 
-            try {
-                // Initialize if needed
-                await offlineAI.initialize();
+        try {
+            // Initialize if needed
+            await offlineAI.initialize();
 
-                // Run offline classification
-                const offlineResults = await offlineAI.classifyImage(imageUri);
+            // Run offline classification
+            const offlineResults = await offlineAI.classifyImage(imageUri);
 
-                if (offlineResults.length > 0) {
-                    const bestMatch = offlineResults[0];
-                    const labelLower = bestMatch.label.toLowerCase();
+            if (offlineResults.length > 0) {
+                const bestMatch = offlineResults[0];
+                const labelLower = bestMatch.label.toLowerCase();
 
-                    const isDog = labelLower.includes('dog') ||
-                        labelLower.includes('retriever') ||
-                        labelLower.includes('terrier') ||
-                        labelLower.includes('hound') ||
-                        labelLower.includes('spaniel') ||
-                        labelLower.includes('bulldog') ||
-                        labelLower.includes('shepherd');
+                const isDog = labelLower.includes('dog') ||
+                    labelLower.includes('retriever') ||
+                    labelLower.includes('terrier') ||
+                    labelLower.includes('hound') ||
+                    labelLower.includes('spaniel') ||
+                    labelLower.includes('bulldog') ||
+                    labelLower.includes('shepherd');
 
-                    const isCat = labelLower.includes('cat') ||
-                        labelLower.includes('tabby') ||
-                        labelLower.includes('siamese') ||
-                        labelLower.includes('persian') ||
-                        labelLower.includes('kitty');
+                const isCat = labelLower.includes('cat') ||
+                    labelLower.includes('tabby') ||
+                    labelLower.includes('siamese') ||
+                    labelLower.includes('persian') ||
+                    labelLower.includes('kitty');
 
-                    return {
-                        isAnimal: true,
-                        species: isDog ? 'dog' : (isCat ? 'cat' : 'unknown'),
-                        breed: bestMatch.label, // Use ImageNet label as breed guess
-                        color: 'Unknown (Offline Mode)',
-                        distinctiveFeatures: ['Identified via Offline AI'],
-                        estimatedAge: 'unknown',
-                        size: 'medium',
-                        condition: 'unknown',
-                        confidence: bestMatch.confidence,
-                        rawResponse: `Offline TFLite: ${bestMatch.label}`
-                    };
-                }
-            } catch (offlineError) {
-                console.error('Offline AI also failed:', offlineError);
+                return {
+                    isAnimal: true,
+                    species: isDog ? 'dog' : (isCat ? 'cat' : 'unknown'),
+                    breed: bestMatch.label, // Use ImageNet label as breed guess
+                    color: 'Unknown (Offline Mode)',
+                    distinctiveFeatures: ['Identified via Offline AI'],
+                    estimatedAge: 'unknown',
+                    size: 'medium',
+                    condition: 'unknown',
+                    confidence: bestMatch.confidence,
+                    rawResponse: `Offline TFLite: ${bestMatch.label}`
+                };
+            } else {
+                console.log('Offline AI returned no results.');
             }
+        } catch (offlineError) {
+            console.error('Offline AI also failed:', offlineError);
         }
 
         throw error;
