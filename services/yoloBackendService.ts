@@ -3,7 +3,9 @@
  * Communicates with Python Flask backend for YOLO detection
  */
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_YOLO_BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = (process.env.EXPO_PUBLIC_YOLO_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
+
+console.log(`[YOLO Service] Configured BACKEND_URL: ${BACKEND_URL}`);
 
 interface BackendDetection {
     class_id: number;
@@ -57,23 +59,30 @@ class YOLOBackendService {
     }
 
     /**
-     * Convert image URI to base64
+     * Convert image URI to base64 using expo-file-system (more reliable)
      */
     private async imageToBase64(imageUri: string): Promise<string> {
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
-
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64 = reader.result as string;
-                // Remove data:image/...;base64, prefix
-                const base64Data = base64.split(',')[1];
-                resolve(base64Data);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+        try {
+            const FileSystem = require('expo-file-system');
+            const base64 = await FileSystem.readAsStringAsync(imageUri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            return base64;
+        } catch (error) {
+            console.error('[YOLO Service] Error reading image file:', error);
+            // Fallback to fetch if FileSystem fails
+            const response = await fetch(imageUri);
+            const blob = await response.blob();
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const res = reader.result as string;
+                    resolve(res.split(',')[1]);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
     }
 
     /**
@@ -82,13 +91,12 @@ class YOLOBackendService {
     async detectAnimals(imageUri: string): Promise<BackendResponse> {
         console.log(`[Backend YOLO] Detecting animals...`);
 
-        // Check if backend is available (only first time)
-        if (this.backendAvailable === null) {
-            await this.checkHealth();
-        }
-
-        if (!this.backendAvailable) {
-            throw new Error('Backend YOLO service not available');
+        // Check if backend is available (re-check if it was previously false)
+        if (this.backendAvailable === null || this.backendAvailable === false) {
+            const isAvailable = await this.checkHealth();
+            if (!isAvailable) {
+                throw new Error(`YOLO Backend not reachable at ${BACKEND_URL}. Check network & server.`);
+            }
         }
 
         try {
@@ -96,7 +104,9 @@ class YOLOBackendService {
             const base64Image = await this.imageToBase64(imageUri);
 
             // Send to backend
-            console.log(`📤 Sending image to backend (${base64Image.length} bytes)...`);
+            console.log(`📤 Sending image to: ${BACKEND_URL}/detect`);
+            console.log(`📦 Base64 length: ${base64Image.length} characters`);
+
             const response = await fetch(`${BACKEND_URL}/detect`, {
                 method: 'POST',
                 headers: {
@@ -105,11 +115,16 @@ class YOLOBackendService {
                 body: JSON.stringify({ image: base64Image }),
             });
 
+            console.log(`📡 Server response status: ${response.status}`);
+
             if (!response.ok) {
-                throw new Error(`Backend returned ${response.status}`);
+                const errorText = await response.text();
+                console.error(`❌ Backend error text: ${errorText}`);
+                throw new Error(`Backend returned ${response.status}: ${errorText}`);
             }
 
             const result: BackendResponse = await response.json();
+            console.log(`📥 Received result:`, JSON.stringify(result, null, 2));
 
             if (!result.success) {
                 throw new Error(result.error || 'Detection failed');
