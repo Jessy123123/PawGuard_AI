@@ -9,6 +9,7 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 import { FloatingCard } from '../components/FloatingCard';
+import { offlineAI } from '../services/offlineAIService';
 import { identifyAnimal } from '../services/geminiService';
 import { searchSimilarAnimals } from '../services/animalService';
 import { AnimalIdentificationResult } from '../services/geminiService';
@@ -60,48 +61,124 @@ export const AIReportCameraScreen = () => {
         }
     };
 
+
     const analyzeImage = async (uri: string) => {
         setImageUri(uri);
         setIsAnalyzing(true);
         setAnalysisResult(null);
 
+        let result: AnimalIdentificationResult | null = null;
+        let usedTensorFlow = false;
+
         try {
-            // 1. Identify Animal using Gemini
-            const result = await identifyAnimal(uri);
-            setAnalysisResult(result);
+            // Try TensorFlow Lite first (offline AI)
+            console.log('🔍 Attempting TensorFlow AI detection...');
+            await offlineAI.initialize();
+            const tfliteResults = await offlineAI.classifyImage(uri);
 
-            if (result.isAnimal && result.species !== 'unknown') {
-                // 2. Search for matches in background (optional feature)
-                try {
-                    const matches = await searchSimilarAnimals(
-                        result.species,
-                        result.breed,
-                        result.color
-                    );
+            if (tfliteResults.length > 0) {
+                usedTensorFlow = true;
+                console.log('✅ TensorFlow AI successful');
 
-                    if (matches.length > 0) {
-                        // Navigate to match result screen if duplicates found
-                        setTimeout(() => {
-                            router.push({
-                                pathname: '/AnimalMatchResult',
-                                params: {
-                                    capturedImage: uri,
-                                    aiResult: JSON.stringify(result),
-                                    matches: JSON.stringify(matches)
-                                }
-                            });
-                        }, 1500); // Small delay to let user see "Identified!"
-                    }
-                } catch (error) {
-                    // Firestore not configured yet - skip duplicate detection
-                    console.log('Duplicate detection skipped (Firestore not configured)');
+                // Convert TFLite results to AnimalIdentificationResult format
+                const bestMatch = tfliteResults[0];
+                const labelLower = bestMatch.label.toLowerCase();
+
+                // Detect if it's a dog or cat based on ImageNet labels
+                const isDog = labelLower.includes('dog') ||
+                    labelLower.includes('retriever') ||
+                    labelLower.includes('terrier') ||
+                    labelLower.includes('hound') ||
+                    labelLower.includes('spaniel') ||
+                    labelLower.includes('bulldog') ||
+                    labelLower.includes('shepherd') ||
+                    labelLower.includes('poodle') ||
+                    labelLower.includes('chihuahua') ||
+                    labelLower.includes('beagle') ||
+                    labelLower.includes('pug');
+
+                const isCat = labelLower.includes('cat') ||
+                    labelLower.includes('tabby') ||
+                    labelLower.includes('siamese') ||
+                    labelLower.includes('persian') ||
+                    labelLower.includes('kitty') ||
+                    labelLower.includes('kitten');
+
+                const isAnimal = isDog || isCat;
+
+                if (isAnimal) {
+                    result = {
+                        isAnimal: true,
+                        species: isDog ? 'dog' : 'cat',
+                        breed: bestMatch.label,
+                        color: 'Detected via TensorFlow',
+                        distinctiveFeatures: ['Identified using Offline TensorFlow AI'],
+                        estimatedAge: 'unknown',
+                        size: 'medium',
+                        condition: 'unknown',
+                        confidence: bestMatch.confidence,
+                        rawResponse: `TensorFlow: ${bestMatch.label} (${(bestMatch.confidence * 100).toFixed(1)}%)`
+                    };
+                } else {
+                    console.log('⚠️ TensorFlow detected something, but not a dog/cat');
                 }
-            } else if (!result.isAnimal) {
-                Alert.alert('No Animal Detected', 'Please try taking a clearer photo of the animal.');
+            }
+        } catch (tensorflowError) {
+            console.log('⚠️ TensorFlow unavailable, falling back to Gemini API...');
+        }
+
+        // Fallback to Gemini API if TensorFlow didn't work
+        if (!result) {
+            try {
+                console.log('🌐 Using Gemini API...');
+                result = await identifyAnimal(uri);
+                console.log('✅ Gemini API successful');
+            } catch (geminiError: any) {
+                const errorMsg = geminiError?.message || 'Unknown error';
+                console.error('❌ Both TensorFlow and Gemini failed');
+                console.error('Gemini error:', errorMsg);
+                Alert.alert(
+                    'Analysis Failed',
+                    `Could not analyze the image.\n\nError: ${errorMsg.substring(0, 100)}`
+                );
+                setIsAnalyzing(false);
+                return;
+            }
+        }
+
+        // Validate result
+        if (!result || !result.isAnimal) {
+            Alert.alert('No Animal Detected', 'Please try taking a clearer photo of the animal.');
+            setIsAnalyzing(false);
+            return;
+        }
+
+        setAnalysisResult(result);
+
+        // Search for matches in background (optional feature)
+        try {
+            const matches = await searchSimilarAnimals(
+                result.species,
+                result.breed,
+                result.color
+            );
+
+            if (matches.length > 0) {
+                // Navigate to match result screen if duplicates found
+                setTimeout(() => {
+                    router.push({
+                        pathname: '/AnimalMatchResult',
+                        params: {
+                            capturedImage: uri,
+                            aiResult: JSON.stringify(result),
+                            matches: JSON.stringify(matches)
+                        }
+                    });
+                }, 1500);
             }
         } catch (error) {
-            Alert.alert('Analysis Failed', 'Could not analyze the image. Please try again.');
-            console.error(error);
+            // Firestore not configured yet - skip duplicate detection
+            console.log('Duplicate detection skipped (Firestore not configured)');
         } finally {
             setIsAnalyzing(false);
         }
@@ -167,7 +244,7 @@ export const AIReportCameraScreen = () => {
                         {isAnalyzing ? (
                             <View style={styles.analyzingOverlay}>
                                 <ActivityIndicator size="large" color={colors.minimalist.white} />
-                                <Text style={styles.analyzingText}>Analyzing with Gemini AI...</Text>
+                                <Text style={styles.analyzingText}>Analyzing with AI...</Text>
                             </View>
                         ) : analysisResult ? (
                             <View style={styles.resultCard}>
