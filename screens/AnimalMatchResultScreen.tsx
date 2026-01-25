@@ -9,7 +9,7 @@ import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 import { FloatingCard } from '../components/FloatingCard';
 import { AnimalIdentity } from '../types';
-import { AnimalIdentificationResult } from '../services/geminiService';
+import { AnimalIdentificationResult } from '../types/yolo';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 interface AnimalMatchResultScreenParams {
