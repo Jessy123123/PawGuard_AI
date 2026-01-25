@@ -16,7 +16,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { AnimalIdentity, ReportEntry, CareEntry } from '../types';
-import { AnimalIdentificationResult, generateFeatureHash } from './geminiService';
+import { AnimalIdentificationResult } from '../types/yolo';
 
 const ANIMALS_COLLECTION = 'animalIdentities';
 const REPORTS_COLLECTION = 'reports';
@@ -28,6 +28,20 @@ function generateAnimalId(): string {
     const year = new Date().getFullYear();
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     return `PG-${year}-${random}`;
+}
+
+/**
+ * Generate a simple feature hash for animal identification
+ */
+function generateFeatureHash(aiResult: AnimalIdentificationResult): string {
+    const features = `${aiResult.species}-${aiResult.breed}-${aiResult.color}`.toLowerCase();
+    let hash = 0;
+    for (let i = 0; i < features.length; i++) {
+        const char = features.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16);
 }
 
 /**

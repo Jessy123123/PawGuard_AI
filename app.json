@@ -35,7 +35,6 @@
     },
     "plugins": [
       "expo-font",
-      "react-native-fast-tflite",
       [
         "expo-camera",
         {
