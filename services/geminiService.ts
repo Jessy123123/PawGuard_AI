@@ -1,6 +1,6 @@
 // Gemini AI Service for Animal Recognition
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { offlineAI } from './offlineAIService';
+// Dynamic import of offlineAI to prevent module evaluation crashes
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
 
@@ -55,7 +55,7 @@ async function imageToBase64(imageUri: string): Promise<string> {
  */
 export async function identifyAnimal(imageUri: string): Promise<AnimalIdentificationResult> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
 
         const base64Image = await imageToBase64(imageUri);
 
@@ -120,6 +120,9 @@ If no animal is detected, set isAnimal to false and leave other fields with defa
         console.log('Gemini API failed (Quota/Network/Other). Switching to Offline AI...');
 
         try {
+            // Dynamically import offlineAI only when needed
+            const { offlineAI } = await import('./offlineAIService');
+
             // Initialize if needed
             await offlineAI.initialize();
 
@@ -191,7 +194,7 @@ export async function compareAnimals(
     imageUri2: string
 ): Promise<FeatureMatchResult> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
 
         const [base64Image1, base64Image2] = await Promise.all([
             imageToBase64(imageUri1),
