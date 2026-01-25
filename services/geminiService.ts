@@ -55,7 +55,7 @@ async function imageToBase64(imageUri: string): Promise<string> {
  */
 export async function identifyAnimal(imageUri: string): Promise<AnimalIdentificationResult> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const base64Image = await imageToBase64(imageUri);
 
@@ -83,7 +83,7 @@ If no animal is detected, set isAnimal to false and leave other fields with defa
                     data: base64Image
                 }
             },
-            prompt
+            { text: prompt }
         ]);
 
         const responseText = result.response.text().trim();
@@ -111,7 +111,9 @@ If no animal is detected, set isAnimal to false and leave other fields with defa
 
 
     } catch (error: any) {
-        console.error('Error identifying animal:', error);
+        console.error('❌ Error identifying animal:', error);
+        console.error('Error message:', error.message);
+        console.error('Error details:', JSON.stringify(error, null, 2));
 
         // Check for Quota Exceeded (HTTP 429) or other API errors
         // Also fallback if error is a fetch failure (e.g. network issue)
@@ -194,7 +196,7 @@ export async function compareAnimals(
     imageUri2: string
 ): Promise<FeatureMatchResult> {
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const [base64Image1, base64Image2] = await Promise.all([
             imageToBase64(imageUri1),
@@ -231,7 +233,7 @@ Respond ONLY with a valid JSON object (no markdown):
                     data: base64Image2
                 }
             },
-            prompt
+            { text: prompt }
         ]);
 
         const responseText = result.response.text().trim();
