@@ -102,6 +102,7 @@ export const colors = {
     greenDark: '#065F46', // Darker green for status
     warningOrange: '#F59E0B',
     errorRed: '#EF4444',
+    redDark: '#DC2626', // Dark red for disaster alerts and high priority
     infoBlue: '#3B82F6',
     blue: '#3B82F6', // Alias
 
