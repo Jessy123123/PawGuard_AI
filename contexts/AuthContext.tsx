@@ -1,5 +1,14 @@
+
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+} from "firebase/auth";
+
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/firebase";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserRole } from '../types';
 
 interface User {
@@ -16,7 +25,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (email: string, password: string, role?: UserRole) => Promise<void>;
+    login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     register: (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => Promise<void>;
     updateProfile: (updates: Partial<User>) => Promise<void>;
@@ -29,101 +38,161 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        loadStoredUser();
+        if (!auth) {
+            console.error('❌ Firebase auth is undefined');
+            setIsLoading(false);
+            return () => { }; // always return a cleanup function
+        }
+
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (!firebaseUser) {
+                setUser(null);
+                setIsLoading(false);
+                return;
+            }
+
+            const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
+            if (snap.exists()) {
+                setUser({
+                    id: firebaseUser.uid,
+                    ...snap.data(),
+                } as User);
+            }
+
+            setIsLoading(false);
+        });
+
+        return unsubscribe; // cleanup function
     }, []);
 
-    const loadStoredUser = async () => {
-        try {
-            const storedUser = await AsyncStorage.getItem('@user');
-            if (storedUser) {
-                setUser(JSON.parse(storedUser));
-            }
-        } catch (error) {
-            console.error('Failed to load user:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
-    const login = async (email: string, password: string, role: UserRole = 'citizen') => {
+
+
+
+    const login = async (email: string, password: string) => {
         setIsLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const newUser: User = {
-                id: Math.random().toString(36).substr(2, 9),
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
                 email,
-                name: email.split('@')[0], // Default name from email
-                role, // Use the selected role
-                profileComplete: false, // Login requires profile completion
-            };
+                password
+            );
 
-            await AsyncStorage.setItem('@user', JSON.stringify(newUser));
-            await AsyncStorage.setItem('@token', 'mock-jwt-token');
-            setUser(newUser);
+            const firebaseUser = userCredential.user;
+
+            const snap = await getDoc(doc(db, "users", firebaseUser.uid));
+            if (snap.exists()) {
+                setUser({
+                    id: firebaseUser.uid,
+                    ...snap.data(),
+                } as User);
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
-    const register = async (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => {
+
+    const register = async (
+        email: string,
+        password: string,
+        name: string,
+        role: UserRole,
+        phone?: string,
+        orgName?: string
+    ) => {
         setIsLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
 
-            const profileComplete = !!(name && role && (role === 'ngo' ? orgName : true) && phone);
+            const firebaseUser = userCredential.user;
 
-            const newUser: User = {
-                id: Math.random().toString(36).substr(2, 9),
+            const profileComplete = !!(
+                name &&
+                role &&
+                phone &&
+                (role === "ngo" ? orgName : true)
+            );
+
+            const userData: User = {
+                id: firebaseUser.uid,
                 email,
                 name,
                 role,
                 phone,
-                organizationName: orgName,
                 profileComplete,
             };
 
-            await AsyncStorage.setItem('@user', JSON.stringify(newUser));
-            await AsyncStorage.setItem('@token', 'mock-jwt-token');
-            setUser(newUser);
+            if (role === "ngo" && orgName) {
+                userData.organizationName = orgName;
+            }
+
+
+            await setDoc(doc(db, "users", firebaseUser.uid), userData);
+            setUser(userData);
+
+        } catch (error: any) {
+            console.error("🔥 SIGN UP ERROR:", error);
+
+            // TEMP: show real Firebase error
+            alert(error.code || error.message);
+            throw error;
+
         } finally {
             setIsLoading(false);
         }
     };
+
+
 
     const updateProfile = async (updates: Partial<User>) => {
         if (!user) return;
 
         try {
-            const updatedUser = { ...user, ...updates };
+            const updatedUser: User = {
+                ...user,
+                ...updates,
+                profileComplete: false, // temp, recompute below
+            };
 
-            // Check if profile is complete
-            const profileComplete = !!(
+            updatedUser.profileComplete = !!(
                 updatedUser.name &&
                 updatedUser.role &&
                 updatedUser.phone &&
-                (updatedUser.role === 'ngo' ? updatedUser.organizationName : true)
+                (updatedUser.role === "ngo"
+                    ? updatedUser.organizationName
+                    : true)
             );
 
-            updatedUser.profileComplete = profileComplete;
+            const cleanUser: User = {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                name: updatedUser.name,
+                role: updatedUser.role,
+                phone: updatedUser.phone,
+                profileComplete: updatedUser.profileComplete,
+                ...(updatedUser.role === "ngo" && updatedUser.organizationName
+                    ? { organizationName: updatedUser.organizationName }
+                    : {}),
+            };
 
-            await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
-            setUser(updatedUser);
+            await setDoc(doc(db, "users", user.id), cleanUser);
+            setUser(cleanUser);
         } catch (error) {
-            console.error('Failed to update profile:', error);
+            console.error("Failed to update profile:", error);
         }
     };
+
 
     const logout = async () => {
-        try {
-            await AsyncStorage.multiRemove(['@user', '@token']);
-            setUser(null);
-        } catch (error) {
-            console.error('Failed to logout:', error);
-        }
+        await signOut(auth);
+        setUser(null);
     };
+
 
     return (
         <AuthContext.Provider
