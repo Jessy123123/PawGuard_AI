@@ -7,16 +7,52 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAuth } from "../../contexts/AuthContext";
+import { Alert } from "react-native";
+
+//For Forgot password
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../firebase";
+
 
 export default function LoginScreen() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleLogin = () => {
-        // TODO: Implement login logic
-        router.replace('/(tabs)/home');
+    const { login, isLoading } = useAuth();
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert("Missing fields", "Please enter email and password");
+            return;
+        }
+
+        try {
+            await login(email, password); // AuthContext
+            router.replace('/(tabs)/home');
+        } catch (error: any) {
+            Alert.alert("Login failed", error.message || "Invalid credentials");
+        }
     };
+
+    const handleForgotPassword = async () => {
+        if (!email) {
+            Alert.alert("Email required", "Please enter your email first");
+            return;
+        }
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            Alert.alert(
+                "Password reset sent",
+                "Check your email for a password reset link"
+            );
+        } catch (error: any) {
+            Alert.alert("Error", error.message);
+        }
+    };
+
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -59,9 +95,10 @@ export default function LoginScreen() {
                         />
                     </View>
 
-                    <Pressable style={styles.forgotButton}>
+                    <Pressable style={styles.forgotButton} onPress={handleForgotPassword}>
                         <Text style={styles.forgotText}>Forgot password?</Text>
                     </Pressable>
+
                 </View>
 
                 {/* Login Button */}
