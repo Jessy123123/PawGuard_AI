@@ -2,7 +2,8 @@
 import { Asset } from 'expo-asset';
 import * as FileSystem from 'expo-file-system';
 
-import { loadTensorflowModel } from 'react-native-fast-tflite';
+// Don't import at top level - it will crash if native module isn't available
+// import { loadTensorflowModel } from 'react-native-fast-tflite';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as jpeg from 'jpeg-js';
 import { Buffer } from 'buffer';
@@ -20,6 +21,32 @@ class OfflineAIService {
     private model: any = null;
     private labels: string[] = [];
     private isReady = false;
+    private loadTensorflowModel: any = null;
+    private tfliteAvailable: boolean | null = null;
+
+    /**
+     * Lazy load TFLite module only when actually needed
+     * This prevents the module from being loaded at import time
+     */
+    private async loadTFLiteModule(): Promise<boolean> {
+        if (this.tfliteAvailable !== null) {
+            return this.tfliteAvailable;
+        }
+
+        try {
+            // Dynamically require the module only when this function is called
+            const tfliteModule = require('react-native-fast-tflite');
+            this.loadTensorflowModel = tfliteModule.loadTensorflowModel;
+            this.tfliteAvailable = true;
+            console.log('✅ TFLite module loaded successfully');
+            return true;
+        } catch (error) {
+            console.warn('⚠️ TFLite native module not available. Offline AI will be disabled.');
+            console.warn('To use offline AI, build a development build: npx expo run:android');
+            this.tfliteAvailable = false;
+            return false;
+        }
+    }
 
     async initialize() {
         if (this.isReady) return;
@@ -27,19 +54,25 @@ class OfflineAIService {
         try {
             console.log('Initializing Offline AI...');
 
+            // Try to load TFLite module
+            const canUseTFLite = await this.loadTFLiteModule();
+            if (!canUseTFLite) {
+                console.log('Skipping Offline AI initialization (TFLite not available)');
+                return;
+            }
+
             // Load labels
             const labelsUri = Asset.fromModule(labelsAsset).uri;
             const labelsContent = await FileSystem.readAsStringAsync(labelsUri);
             this.labels = labelsContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
             // Load model
-            // Native load
-            this.model = await loadTensorflowModel(modelAsset);
+            this.model = await this.loadTensorflowModel(modelAsset);
 
             this.isReady = true;
-            console.log('Offline AI Initialized');
+            console.log('✅ Offline AI Initialized successfully');
         } catch (error) {
-            console.error('Failed to init Offline AI:', error);
+            console.error('❌ Failed to init Offline AI:', error);
         }
     }
 
