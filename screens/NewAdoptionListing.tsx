@@ -38,7 +38,7 @@ export const NewAdoptionListing: React.FC<NewAdoptionListingProps> = ({ navigati
                 </View>
 
                 {/* Ethical Notice Banner */}
-                <FloatingCard style={styles.noticeBanner} backgroundColor={colors.minimalist.yellow}>
+                <FloatingCard style={styles.noticeBanner} backgroundColor={colors.minimalist.gentleYellow}>
                     <View style={styles.noticeContent}>
                         <Ionicons name="information-circle" size={20} color={colors.minimalist.textDark} />
                         <Text style={styles.noticeText}>
