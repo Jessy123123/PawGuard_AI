@@ -8,17 +8,19 @@ interface FloatingCardProps {
     children: React.ReactNode;
     style?: StyleProp<ViewStyle>;
     shadow?: ShadowLevel;
+    backgroundColor?: string;
 }
 
 export const FloatingCard: React.FC<FloatingCardProps> = ({
     children,
     style,
-    shadow = 'soft'
+    shadow = 'soft',
+    backgroundColor
 }) => {
     const shadowStyle = shadows[shadow];
 
     return (
-        <View style={[styles.card, shadowStyle, style]}>
+        <View style={[styles.card, shadowStyle, backgroundColor && { backgroundColor }, style]}>
             {children}
         </View>
     );
