@@ -15,5 +15,31 @@ __pycache__/
 .idea/
 .vscode/
 
+<<<<<<< HEAD
 # Large models
 *.pt
+=======
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# Python virtual environments
+.venv/
+backend/venv/
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+.env.*
+>>>>>>> yolo
