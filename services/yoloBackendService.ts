@@ -3,6 +3,8 @@
  * Communicates with Python Flask backend for YOLO detection
  */
 
+import * as FileSystem from 'expo-file-system/legacy';
+
 const BACKEND_URL = (process.env.EXPO_PUBLIC_YOLO_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
 
 console.log(`[YOLO Service] Configured BACKEND_URL: ${BACKEND_URL}`);
@@ -63,9 +65,8 @@ class YOLOBackendService {
      */
     private async imageToBase64(imageUri: string): Promise<string> {
         try {
-            const FileSystem = require('expo-file-system');
             const base64 = await FileSystem.readAsStringAsync(imageUri, {
-                encoding: FileSystem.EncodingType.Base64,
+                encoding: 'base64',
             });
             return base64;
         } catch (error) {
