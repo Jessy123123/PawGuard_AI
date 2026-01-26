@@ -9,10 +9,8 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 import { FloatingCard } from '../components/FloatingCard';
-import { offlineAI } from '../services/offlineAIService';
-import { identifyAnimal } from '../services/geminiService';
-import { searchSimilarAnimals } from '../services/animalService';
-import { AnimalIdentificationResult } from '../services/geminiService';
+import { yoloBackendService } from '../services/yoloBackendService';
+import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
 
 export const AIReportCameraScreen = () => {
@@ -67,119 +65,47 @@ export const AIReportCameraScreen = () => {
         setIsAnalyzing(true);
         setAnalysisResult(null);
 
-        let result: AnimalIdentificationResult | null = null;
-        let usedTensorFlow = false;
-
         try {
-            // Try TensorFlow Lite first (offline AI)
-            console.log('🔍 Attempting TensorFlow AI detection...');
-            await offlineAI.initialize();
-            const tfliteResults = await offlineAI.classifyImage(uri);
+            console.log('🎯 Starting YOLO backend detection...');
+            const backendResult = await yoloBackendService.detectAnimals(uri);
 
-            if (tfliteResults.length > 0) {
-                usedTensorFlow = true;
-                console.log('✅ TensorFlow AI successful');
-
-                // Convert TFLite results to AnimalIdentificationResult format
-                const bestMatch = tfliteResults[0];
-                const labelLower = bestMatch.label.toLowerCase();
-
-                // Detect if it's a dog or cat based on ImageNet labels
-                const isDog = labelLower.includes('dog') ||
-                    labelLower.includes('retriever') ||
-                    labelLower.includes('terrier') ||
-                    labelLower.includes('hound') ||
-                    labelLower.includes('spaniel') ||
-                    labelLower.includes('bulldog') ||
-                    labelLower.includes('shepherd') ||
-                    labelLower.includes('poodle') ||
-                    labelLower.includes('chihuahua') ||
-                    labelLower.includes('beagle') ||
-                    labelLower.includes('pug');
-
-                const isCat = labelLower.includes('cat') ||
-                    labelLower.includes('tabby') ||
-                    labelLower.includes('siamese') ||
-                    labelLower.includes('persian') ||
-                    labelLower.includes('kitty') ||
-                    labelLower.includes('kitten');
-
-                const isAnimal = isDog || isCat;
-
-                if (isAnimal) {
-                    result = {
-                        isAnimal: true,
-                        species: isDog ? 'dog' : 'cat',
-                        breed: bestMatch.label,
-                        color: 'Detected via TensorFlow',
-                        distinctiveFeatures: ['Identified using Offline TensorFlow AI'],
-                        estimatedAge: 'unknown',
-                        size: 'medium',
-                        condition: 'unknown',
-                        confidence: bestMatch.confidence,
-                        rawResponse: `TensorFlow: ${bestMatch.label} (${(bestMatch.confidence * 100).toFixed(1)}%)`
-                    };
-                } else {
-                    console.log('⚠️ TensorFlow detected something, but not a dog/cat');
-                }
-            }
-        } catch (tensorflowError) {
-            console.log('⚠️ TensorFlow unavailable, falling back to Gemini API...');
-        }
-
-        // Fallback to Gemini API if TensorFlow didn't work
-        if (!result) {
-            try {
-                console.log('🌐 Using Gemini API...');
-                result = await identifyAnimal(uri);
-                console.log('✅ Gemini API successful');
-            } catch (geminiError: any) {
-                const errorMsg = geminiError?.message || 'Unknown error';
-                console.error('❌ Both TensorFlow and Gemini failed');
-                console.error('Gemini error:', errorMsg);
-                Alert.alert(
-                    'Analysis Failed',
-                    `Could not analyze the image.\n\nError: ${errorMsg.substring(0, 100)}`
-                );
+            if (!backendResult.primary_detection) {
+                console.log('⚠️ YOLO: No dog/cat detected');
+                Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
                 setIsAnalyzing(false);
                 return;
             }
-        }
 
-        // Validate result
-        if (!result || !result.isAnimal) {
-            Alert.alert('No Animal Detected', 'Please try taking a clearer photo of the animal.');
+            console.log('✅ YOLO detected animal!');
+            const detection = backendResult.primary_detection;
+
+            // Create result from YOLO detection
+            const result: AnimalIdentificationResult = {
+                isAnimal: true,
+                species: detection.class_name,
+                breed: detection.class_name.charAt(0).toUpperCase() + detection.class_name.slice(1),
+                color: 'Detected via YOLO',
+                distinctiveFeatures: [
+                    `Detected with ${(detection.confidence * 100).toFixed(1)}% confidence`,
+                    'YOLOv8 Backend Detection'
+                ],
+                estimatedAge: 'unknown',
+                size: 'medium',
+                condition: 'unknown',
+                confidence: detection.confidence,
+                rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`
+            };
+
+            setAnalysisResult(result);
             setIsAnalyzing(false);
-            return;
-        }
 
-        setAnalysisResult(result);
-
-        // Search for matches in background (optional feature)
-        try {
-            const matches = await searchSimilarAnimals(
-                result.species,
-                result.breed,
-                result.color
+        } catch (error: any) {
+            const errorMsg = error?.message || 'Unknown error';
+            console.error('❌ YOLO detection failed:', errorMsg);
+            Alert.alert(
+                'Detection Failed',
+                `Could not analyze the image. Make sure the YOLO backend server is running.\n\nError: ${errorMsg}`
             );
-
-            if (matches.length > 0) {
-                // Navigate to match result screen if duplicates found
-                setTimeout(() => {
-                    router.push({
-                        pathname: '/AnimalMatchResult',
-                        params: {
-                            capturedImage: uri,
-                            aiResult: JSON.stringify(result),
-                            matches: JSON.stringify(matches)
-                        }
-                    });
-                }, 1500);
-            }
-        } catch (error) {
-            // Firestore not configured yet - skip duplicate detection
-            console.log('Duplicate detection skipped (Firestore not configured)');
-        } finally {
             setIsAnalyzing(false);
         }
     };
