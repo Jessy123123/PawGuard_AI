@@ -11,6 +11,7 @@ export { SkeletonLoader } from './SkeletonLoader';
 export { ErrorBoundary } from './ErrorBoundary';
 export { OfflineBanner } from './OfflineBanner';
 
+
 // Components for UI integration
 export { FeatureCard } from './FeatureCard';
 export { PetCard } from './PetCard';
@@ -22,3 +23,7 @@ export { PhotoUploadBox } from './PhotoUploadBox';
 export { FloatingCard } from './FloatingCard';
 export { SearchBar } from './SearchBar';
 export { MinimalistStatusBadge } from './MinimalistStatusBadge';
+
+// Adoption screen components
+export { CertificationCard } from './CertificationCard';
+export { SwitchRow } from './SwitchRow';
