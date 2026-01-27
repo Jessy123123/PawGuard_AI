@@ -1,5 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Pressable,
+    Modal,
+    Animated,
+    Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,19 +18,157 @@ import { useAuth } from '../../contexts/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+interface MenuItem {
+    id: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    route: string;
+}
+
+const menuItems: MenuItem[] = [
+    { id: 'edit', icon: 'person-outline', label: 'Edit Profile', route: '/edit-profile' },
+    { id: 'notifications', icon: 'notifications-outline', label: 'Notifications', route: '/notifications-settings' },
+    { id: 'settings', icon: 'settings-outline', label: 'Settings', route: '/app-settings' },
+    { id: 'help', icon: 'help-circle-outline', label: 'Help & Support', route: '/help-support' },
+];
+
 export default function ProfileScreen() {
     const router = useRouter();
     const { user, logout } = useAuth();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    // Animation values
+    const avatarScale = useRef(new Animated.Value(0.3)).current;
+    const avatarOpacity = useRef(new Animated.Value(0)).current;
+    const statsAnimations = useRef([
+        new Animated.Value(0),
+        new Animated.Value(0),
+        new Animated.Value(0),
+    ]).current;
+    const menuAnimations = useRef(
+        menuItems.map(() => new Animated.Value(0))
+    ).current;
+    const logoutButtonAnim = useRef(new Animated.Value(0)).current;
+    const modalBackdropAnim = useRef(new Animated.Value(0)).current;
+    const modalScaleAnim = useRef(new Animated.Value(0.8)).current;
+    const logoutShakeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        // Avatar animation
+        Animated.parallel([
+            Animated.spring(avatarScale, {
+                toValue: 1,
+                friction: 6,
+                tension: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(avatarOpacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        // Stats stagger animation
+        Animated.stagger(100, statsAnimations.map(anim =>
+            Animated.spring(anim, {
+                toValue: 1,
+                friction: 8,
+                tension: 80,
+                useNativeDriver: true,
+            })
+        )).start();
+
+        // Menu items slide-in animation
+        Animated.stagger(80, menuAnimations.map(anim =>
+            Animated.spring(anim, {
+                toValue: 1,
+                friction: 8,
+                tension: 60,
+                useNativeDriver: true,
+            })
+        )).start();
+
+        // Logout button fade in
+        Animated.timing(logoutButtonAnim, {
+            toValue: 1,
+            duration: 500,
+            delay: 400,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
+    const openLogoutModal = () => {
+        setShowLogoutModal(true);
+        Animated.parallel([
+            Animated.timing(modalBackdropAnim, {
+                toValue: 1,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+            Animated.spring(modalScaleAnim, {
+                toValue: 1,
+                friction: 8,
+                tension: 100,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
+
+    const closeLogoutModal = () => {
+        Animated.parallel([
+            Animated.timing(modalBackdropAnim, {
+                toValue: 0,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+            Animated.timing(modalScaleAnim, {
+                toValue: 0.8,
+                duration: 150,
+                useNativeDriver: true,
+            }),
+        ]).start(() => {
+            setShowLogoutModal(false);
+        });
+    };
 
     const handleLogout = async () => {
+        setIsLoggingOut(true);
         await logout();
+        closeLogoutModal();
         router.replace('/(auth)/landing');
+    };
+
+    const handleLogoutPress = () => {
+        // Shake animation on press
+        Animated.sequence([
+            Animated.timing(logoutShakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(logoutShakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(logoutShakeAnim, { toValue: 8, duration: 50, useNativeDriver: true }),
+            Animated.timing(logoutShakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
+            Animated.timing(logoutShakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]).start(() => {
+            openLogoutModal();
+        });
     };
 
     const getInitials = (name: string) => {
         if (!name) return 'U';
         return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     };
+
+    const handleMenuPress = (route: string) => {
+        router.push(route as any);
+    };
+
+    const stats = [
+        { label: 'Reports', value: '12' },
+        { label: 'Helped', value: '5' },
+        { label: 'Points', value: '48' },
+    ];
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -34,91 +181,172 @@ export default function ProfileScreen() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.avatar}>
+                    <Animated.View style={[
+                        styles.avatar,
+                        {
+                            opacity: avatarOpacity,
+                            transform: [{ scale: avatarScale }],
+                        }
+                    ]}>
                         <Text style={styles.avatarText}>{getInitials(user?.name || '')}</Text>
-                    </View>
-                    <Text style={styles.name}>{user?.name || 'User Name'}</Text>
-                    <Text style={styles.role}>{user?.role === 'ngo' ? 'NGO / Shelter' : 'Citizen'}</Text>
+                    </Animated.View>
+                    <Animated.Text style={[styles.name, { opacity: avatarOpacity }]}>
+                        {user?.name || 'User Name'}
+                    </Animated.Text>
+                    <Animated.Text style={[styles.role, { opacity: avatarOpacity }]}>
+                        {user?.role === 'ngo' ? 'NGO / Shelter' : 'Citizen'}
+                    </Animated.Text>
                 </View>
 
                 {/* Stats */}
                 <View style={styles.statsRow}>
-                    <Pressable style={styles.statCardContainer} onPress={() => router.push('/report-history')}>
-                        <FloatingCard shadow="soft" style={styles.statCard}>
-                            <Text style={styles.statNumber}>12</Text>
-                            <Text style={styles.statLabel}>Reports</Text>
-                        </FloatingCard>
-                    </Pressable>
-                    <Pressable style={styles.statCardContainer} onPress={() => router.push('/report-history')}>
-                        <FloatingCard shadow="soft" style={styles.statCard}>
-                            <Text style={styles.statNumber}>5</Text>
-                            <Text style={styles.statLabel}>Helped</Text>
-                        </FloatingCard>
-                    </Pressable>
-                    <Pressable style={styles.statCardContainer} onPress={() => router.push('/report-history')}>
-                        <FloatingCard shadow="soft" style={styles.statCard}>
-                            <Text style={styles.statNumber}>48</Text>
-                            <Text style={styles.statLabel}>Points</Text>
-                        </FloatingCard>
-                    </Pressable>
+                    {stats.map((stat, index) => (
+                        <Animated.View
+                            key={stat.label}
+                            style={[
+                                styles.statCardContainer,
+                                {
+                                    opacity: statsAnimations[index],
+                                    transform: [{
+                                        translateY: statsAnimations[index].interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [30, 0],
+                                        }),
+                                    }],
+                                }
+                            ]}
+                        >
+                            <Pressable
+                                onPress={() => router.push('/report-history')}
+                                style={({ pressed }) => pressed && styles.cardPressed}
+                            >
+                                <FloatingCard shadow="medium" style={styles.statCard}>
+                                    <Text style={styles.statNumber}>{stat.value}</Text>
+                                    <Text style={styles.statLabel}>{stat.label}</Text>
+                                </FloatingCard>
+                            </Pressable>
+                        </Animated.View>
+                    ))}
                 </View>
 
                 {/* Menu Items */}
                 <View style={styles.section}>
-                    <Pressable>
-                        {({ pressed }) => (
-                            <FloatingCard shadow="soft" style={[styles.menuItem, pressed && styles.menuItemPressed]}>
-                                <Ionicons name="person-outline" size={24} color={colors.minimalist.textDark} />
-                                <Text style={styles.menuText}>Edit Profile</Text>
-                                <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
-                            </FloatingCard>
-                        )}
-                    </Pressable>
-
-                    <Pressable>
-                        {({ pressed }) => (
-                            <FloatingCard shadow="soft" style={[styles.menuItem, pressed && styles.menuItemPressed]}>
-                                <Ionicons name="notifications-outline" size={24} color={colors.minimalist.textDark} />
-                                <Text style={styles.menuText}>Notifications</Text>
-                                <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
-                            </FloatingCard>
-                        )}
-                    </Pressable>
-
-                    <Pressable>
-                        {({ pressed }) => (
-                            <FloatingCard shadow="soft" style={[styles.menuItem, pressed && styles.menuItemPressed]}>
-                                <Ionicons name="settings-outline" size={24} color={colors.minimalist.textDark} />
-                                <Text style={styles.menuText}>Settings</Text>
-                                <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
-                            </FloatingCard>
-                        )}
-                    </Pressable>
-
-                    <Pressable>
-                        {({ pressed }) => (
-                            <FloatingCard shadow="soft" style={[styles.menuItem, pressed && styles.menuItemPressed]}>
-                                <Ionicons name="help-circle-outline" size={24} color={colors.minimalist.textDark} />
-                                <Text style={styles.menuText}>Help & Support</Text>
-                                <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
-                            </FloatingCard>
-                        )}
-                    </Pressable>
+                    {menuItems.map((item, index) => (
+                        <Animated.View
+                            key={item.id}
+                            style={{
+                                opacity: menuAnimations[index],
+                                transform: [{
+                                    translateX: menuAnimations[index].interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [50, 0],
+                                    }),
+                                }],
+                            }}
+                        >
+                            <Pressable
+                                onPress={() => handleMenuPress(item.route)}
+                                style={({ pressed }) => [
+                                    pressed && styles.menuItemPressedContainer
+                                ]}
+                            >
+                                {({ pressed }) => (
+                                    <Animated.View style={pressed && { transform: [{ scale: 0.96 }] }}>
+                                        <FloatingCard shadow="soft" style={[styles.menuItem, pressed && styles.menuItemPressed]}>
+                                            <View style={styles.menuIconContainer}>
+                                                <Ionicons name={item.icon} size={24} color={colors.minimalist.coral} />
+                                            </View>
+                                            <Text style={styles.menuText}>{item.label}</Text>
+                                            <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
+                                        </FloatingCard>
+                                    </Animated.View>
+                                )}
+                            </Pressable>
+                        </Animated.View>
+                    ))}
                 </View>
 
                 {/* Logout Button */}
-                <Pressable onPress={handleLogout} style={styles.logoutButton}>
-                    {({ pressed }) => (
-                        <View style={[styles.logoutButtonInner, pressed && styles.buttonPressed]}>
-                            <Ionicons name="log-out-outline" size={20} color={colors.minimalist.errorRed} />
-                            <Text style={styles.logoutText}>Log Out</Text>
-                        </View>
-                    )}
-                </Pressable>
+                <Animated.View style={{
+                    opacity: logoutButtonAnim,
+                    transform: [{ translateX: logoutShakeAnim }],
+                }}>
+                    <Pressable
+                        onPress={handleLogoutPress}
+                        style={({ pressed }) => [
+                            styles.logoutButton,
+                            pressed && styles.logoutButtonPressed
+                        ]}
+                    >
+                        <Ionicons name="log-out-outline" size={22} color={colors.minimalist.errorRed} />
+                        <Text style={styles.logoutText}>Log Out</Text>
+                    </Pressable>
+                </Animated.View>
 
                 {/* Bottom Spacing */}
                 <View style={styles.bottomSpacing} />
             </ScrollView>
+
+            {/* Logout Confirmation Modal */}
+            <Modal
+                visible={showLogoutModal}
+                transparent
+                animationType="none"
+                onRequestClose={closeLogoutModal}
+            >
+                <Animated.View style={[
+                    styles.modalBackdrop,
+                    { opacity: modalBackdropAnim }
+                ]}>
+                    <Pressable style={styles.modalBackdropPress} onPress={closeLogoutModal}>
+                        <Animated.View
+                            style={[
+                                styles.modalContent,
+                                {
+                                    opacity: modalBackdropAnim,
+                                    transform: [{ scale: modalScaleAnim }],
+                                }
+                            ]}
+                        >
+                            <Pressable>
+                                <View style={styles.modalIconContainer}>
+                                    <Ionicons name="log-out" size={32} color={colors.minimalist.errorRed} />
+                                </View>
+                                <Text style={styles.modalTitle}>Log Out?</Text>
+                                <Text style={styles.modalMessage}>
+                                    Are you sure you want to log out of your account?
+                                </Text>
+                                <View style={styles.modalButtons}>
+                                    <Pressable
+                                        onPress={closeLogoutModal}
+                                        style={({ pressed }) => [
+                                            styles.modalButton,
+                                            styles.modalButtonCancel,
+                                            pressed && styles.modalButtonPressed
+                                        ]}
+                                    >
+                                        <Text style={styles.modalButtonCancelText}>Cancel</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={handleLogout}
+                                        disabled={isLoggingOut}
+                                        style={({ pressed }) => [
+                                            styles.modalButton,
+                                            styles.modalButtonConfirm,
+                                            pressed && styles.modalButtonPressed,
+                                            isLoggingOut && styles.modalButtonDisabled
+                                        ]}
+                                    >
+                                        <Text style={styles.modalButtonConfirmText}>
+                                            {isLoggingOut ? 'Logging out...' : 'Log Out'}
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            </Pressable>
+                        </Animated.View>
+                    </Pressable>
+                </Animated.View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -133,103 +361,214 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: spacing.xl,
+        paddingTop: spacing.xxxl,
     },
     header: {
         alignItems: 'center',
-        marginBottom: spacing.xl,
+        marginBottom: spacing.xxxl,
     },
     avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 100,
+        height: 100,
+        borderRadius: 50,
         backgroundColor: colors.minimalist.coral,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: spacing.md,
+        marginBottom: spacing.lg,
+        shadowColor: colors.minimalist.coral,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
+        elevation: 8,
     },
     avatarText: {
-        fontSize: 32,
+        fontSize: 40,
         fontWeight: '700',
         color: colors.minimalist.white,
     },
     name: {
-        fontFamily: 'PlayfairDisplay_700Bold',
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: '700',
         color: colors.minimalist.textDark,
         marginBottom: spacing.xs,
+        letterSpacing: 0.3,
     },
     role: {
-        fontSize: 14,
+        fontSize: 15,
         color: colors.minimalist.textMedium,
+        fontWeight: '500',
     },
     statsRow: {
         flexDirection: 'row',
         gap: spacing.md,
-        marginBottom: spacing.xl,
+        marginBottom: spacing.xxxl,
     },
     statCardContainer: {
         flex: 1,
     },
+    cardPressed: {
+        transform: [{ scale: 0.96 }],
+    },
     statCard: {
-        flex: 1,
-        padding: spacing.md,
+        padding: spacing.lg + 4,
         alignItems: 'center',
+        borderRadius: 16,
     },
     statNumber: {
-        fontSize: 24,
-        fontWeight: '700',
+        fontSize: 28,
+        fontWeight: '800',
         color: colors.minimalist.textDark,
         marginBottom: 4,
     },
     statLabel: {
         fontSize: 12,
-        color: colors.minimalist.textMedium,
+        fontWeight: '600',
+        color: colors.minimalist.textLight,
         textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
     section: {
-        gap: spacing.sm,
-        marginBottom: spacing.xl,
+        gap: spacing.md,
+        marginBottom: spacing.xxxl,
+    },
+    menuItemPressedContainer: {
+        transform: [{ scale: 0.98 }],
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: spacing.md,
-        gap: spacing.md,
+        padding: spacing.lg,
+        gap: spacing.lg,
+        borderRadius: 16,
     },
     menuItemPressed: {
-        opacity: 0.7,
+        backgroundColor: colors.minimalist.bgLight,
+    },
+    menuIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        backgroundColor: 'rgba(245, 164, 145, 0.12)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     menuText: {
         flex: 1,
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: '600',
         color: colors.minimalist.textDark,
     },
     logoutButton: {
-        marginTop: spacing.md,
-    },
-    logoutButtonInner: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: spacing.xs,
-        paddingVertical: 14,
-        borderRadius: 12,
+        gap: spacing.sm,
+        paddingVertical: 16,
+        borderRadius: 14,
         backgroundColor: colors.minimalist.white,
-        borderWidth: 1,
+        borderWidth: 1.5,
         borderColor: colors.minimalist.errorRed,
+        shadowColor: colors.minimalist.errorRed,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 2,
     },
-    buttonPressed: {
-        opacity: 0.7,
+    logoutButtonPressed: {
+        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+        transform: [{ scale: 0.98 }],
     },
     logoutText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '700',
         color: colors.minimalist.errorRed,
     },
     bottomSpacing: {
-        height: spacing.xxl,
+        height: spacing.mega,
+    },
+    // Modal Styles
+    modalBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalBackdropPress: {
+        flex: 1,
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: SCREEN_WIDTH - 48,
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 24,
+        padding: spacing.xxxl,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 20 },
+        shadowOpacity: 0.25,
+        shadowRadius: 40,
+        elevation: 20,
+    },
+    modalIconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: spacing.xl,
+        alignSelf: 'center',
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: colors.minimalist.textDark,
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: 15,
+        color: colors.minimalist.textMedium,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: spacing.xxl,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        width: '100%',
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    modalButtonCancel: {
+        backgroundColor: colors.minimalist.bgLight,
+        borderWidth: 1,
+        borderColor: colors.minimalist.borderLight,
+    },
+    modalButtonConfirm: {
+        backgroundColor: colors.minimalist.errorRed,
+    },
+    modalButtonPressed: {
+        opacity: 0.8,
+        transform: [{ scale: 0.98 }],
+    },
+    modalButtonDisabled: {
+        opacity: 0.6,
+    },
+    modalButtonCancelText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: colors.minimalist.textMedium,
+    },
+    modalButtonConfirmText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: colors.minimalist.white,
     },
 });
