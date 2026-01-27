@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 email,
                 name: email.split('@')[0], // Default name from email
                 role, // Use the selected role
-                profileComplete: false, // Login requires profile completion
+                profileComplete: true, // Login assumes existing user with complete profile
             };
 
             await AsyncStorage.setItem('@user', JSON.stringify(newUser));
