@@ -27,6 +27,7 @@ interface BackendResponse {
     dog_detected: boolean;
     cat_detected: boolean;
     primary_detection: BackendDetection | null;
+    embedding:number[] | null;
     error?: string;
 }
 

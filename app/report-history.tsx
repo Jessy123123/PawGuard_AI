@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,11 +9,51 @@ import { StatusBadge } from '../components/StatusBadge';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
-import { useReports } from '../contexts/ReportContext';
+import { getAnimalsByUser } from '../services/animalService';
+import { useAuth } from '../contexts/AuthContext';
+import { AnimalIdentity } from '../types';
 
 export default function ReportHistoryScreen() {
     const router = useRouter();
-    const { reports } = useReports();
+    const { user } = useAuth();
+    const [animals, setAnimals] = useState<AnimalIdentity[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        loadUserAnimals();
+    }, [user]);
+
+    const loadUserAnimals = async () => {
+        if (!user) {
+            setAnimals([]);
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            console.log('📥 Loading animals for user:', user.id);
+            const userAnimals = await getAnimalsByUser(user.id);
+            console.log('✅ Loaded', userAnimals.length, 'animals');
+
+            // Debug: Check if images are loaded
+            userAnimals.forEach((animal, index) => {
+                console.log(`Animal ${index + 1}:`, {
+                    id: animal.systemId,
+                    species: animal.species,
+                    breed: animal.breed,
+                    imageUrl: animal.primaryImageUrl ? 'Has image ✅' : 'No image ❌',
+                    embedding: animal.embedding ? 'Has embedding ✅' : 'No embedding ❌'
+                });
+            });
+
+            setAnimals(userAnimals);
+        } catch (error) {
+            console.error('❌ Error loading animals:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -26,22 +66,28 @@ export default function ReportHistoryScreen() {
                 <Text style={styles.title}>Report History</Text>
             </View>
 
+
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                {reports.length > 0 ? (
-                    reports.map((report) => (
+                {isLoading ? (
+                    <View style={styles.loadingState}>
+                        <ActivityIndicator size="large" color={colors.minimalist.coral} />
+                        <Text style={styles.loadingText}>Loading your animals...</Text>
+                    </View>
+                ) : animals.length > 0 ? (
+                    animals.map((animal) => (
                         <Pressable
-                            key={report.id}
+                            key={animal.id}
                             onPress={() => router.push({
                                 pathname: '/animal-profile',
-                                params: { id: report.id }
+                                params: { id: animal.id }
                             })}
                         >
                             {({ pressed }) => (
                                 <FloatingCard shadow="soft" style={[styles.reportCard, pressed && styles.pressed]}>
                                     <View style={styles.cardContent}>
-                                        {report.imageUri && (
+                                        {animal.primaryImageUrl && (
                                             <Image
-                                                source={{ uri: report.imageUri }}
+                                                source={{ uri: animal.primaryImageUrl }}
                                                 style={styles.thumbnail}
                                             />
                                         )}
@@ -49,17 +95,26 @@ export default function ReportHistoryScreen() {
                                             <View style={styles.cardHeader}>
                                                 <View style={styles.animalInfo}>
                                                     <Text style={styles.animalName}>
-                                                        {report.animalType === 'dog' ? '🐕' : '🐈'} {report.breed}
+                                                        {animal.species === 'dog' ? '🐕' : '🐈'} {animal.breed}
+                                                    </Text>
+                                                    <Text style={styles.animalId}>
+                                                        ID: {animal.systemId}
                                                     </Text>
                                                     <Text style={styles.reportDate}>
-                                                        {report.date} • {report.location || 'Unknown Location'}
+                                                        {new Date(animal.lastSeenAt).toLocaleDateString()} • {animal.lastSeenLocation}
                                                     </Text>
                                                 </View>
-                                                <StatusBadge status={report.status} />
+                                                <StatusBadge status={animal.status as any} />
                                             </View>
 
-                                            {report.color && (
-                                                <Text style={styles.colorText}>Color: {report.color}</Text>
+                                            {animal.color && (
+                                                <Text style={styles.colorText}>Color: {animal.color}</Text>
+                                            )}
+                                            {animal.embedding && (
+                                                <View style={styles.embeddingBadge}>
+                                                    <Ionicons name="finger-print" size={12} color={colors.minimalist.coral} />
+                                                    <Text style={styles.embeddingText}>Identity Saved</Text>
+                                                </View>
                                             )}
                                         </View>
                                     </View>
@@ -77,12 +132,12 @@ export default function ReportHistoryScreen() {
                 ) : (
                     <View style={styles.emptyState}>
                         <Ionicons name="document-text-outline" size={64} color={colors.minimalist.textLight} />
-                        <Text style={styles.emptyText}>No reports yet</Text>
+                        <Text style={styles.emptyText}>No animals scanned yet</Text>
                         <Pressable
                             style={styles.ctaButton}
                             onPress={() => router.push('/AIReportCamera')}
                         >
-                            <Text style={styles.ctaText}>Create Your First Report</Text>
+                            <Text style={styles.ctaText}>Scan Your First Animal</Text>
                         </Pressable>
                     </View>
                 )}
@@ -198,5 +253,38 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: colors.minimalist.textMedium,
         marginTop: 4,
+    },
+    loadingState: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 100,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: colors.minimalist.textMedium,
+        marginTop: spacing.md,
+    },
+    animalId: {
+        fontSize: 12,
+        color: colors.minimalist.coral,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    embeddingBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 6,
+        backgroundColor: colors.minimalist.peachLight,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
+    },
+    embeddingText: {
+        fontSize: 11,
+        color: colors.minimalist.coral,
+        fontWeight: '600',
     },
 });

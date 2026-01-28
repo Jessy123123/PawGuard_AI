@@ -163,6 +163,7 @@ export async function createAnimalIdentity(
         distinctiveFeatures: aiResult.distinctiveFeatures,
         featureHash: generateFeatureHash(aiResult),
         primaryImageUrl: imageUrl,
+        embedding: aiResult.embedding,
 
         status: 'waiting',
         isVaccinated: false,
@@ -170,6 +171,7 @@ export async function createAnimalIdentity(
 
         firstReportedAt: now,
         firstReportedBy: reporterInfo.userName,
+        createdBy: reporterInfo.userId,
         lastSeenAt: now,
         lastSeenLocation: location.address,
 
@@ -302,6 +304,33 @@ export async function getAllAnimals(statusFilter?: string): Promise<AnimalIdenti
     }
 }
 
+/**
+ * Get all animals created by a specific user
+ */
+export async function getAnimalsByUser(userId: string): Promise<AnimalIdentity[]> {
+    try {
+        const animalsRef = collection(db, ANIMALS_COLLECTION);
+        const q = query(
+            animalsRef,
+            where('createdBy', '==', userId),
+            orderBy('lastSeenAt', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        const animals: AnimalIdentity[] = [];
+
+        snapshot.forEach((doc) => {
+            animals.push({ ...doc.data(), id: doc.id } as AnimalIdentity);
+        });
+
+        return animals;
+    } catch (error) {
+        console.error('Error getting user animals:', error);
+        return [];
+    }
+}
+
+
 export default {
     uploadAnimalImage,
     searchSimilarAnimals,
@@ -311,5 +340,6 @@ export default {
     addReportToAnimal,
     updateAnimalStatus,
     addCareEntry,
-    getAllAnimals
+    getAllAnimals,
+    getAnimalsByUser
 };

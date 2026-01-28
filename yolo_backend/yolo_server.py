@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 import os
 import torch
+import clip
 from datetime import datetime
 
 # Fix for PyTorch 2.6+ weights_only security change
@@ -37,6 +38,11 @@ try:
 finally:
     # Restore original torch.load after model is loaded
     torch.load = original_load
+
+# Load CLIP model for generating embeddings (identity fingerprints)
+print("🔄 Loading CLIP model...")
+clip_model, preprocess = clip.load("ViT-B/32", device="cpu")
+print("✅ CLIP model loaded successfully!")
 
 # COCO class names (15 is cat, 16 is dog in standard COCO)
 ANIMAL_CLASSES = {
@@ -168,13 +174,41 @@ def detect():
         else:
             print(f"⚠️ FAILURE: No animals passed the 0.25 threshold.")
 
+        # Generate embedding for the primary detection
+        embedding_list = None
+        if primary_detection:
+            print("🔍 Generating CLIP embedding for primary detection...")
+            bbox = primary_detection['bbox']
+            x1 = int(bbox['x'])
+            y1 = int(bbox['y'])
+            x2 = int(x1 + bbox['width'])
+            y2 = int(y1 + bbox['height'])
+            
+            # Crop the animal from the image
+            cropped_img = img[y1:y2, x1:x2]
+            
+            # Convert BGR (OpenCV) to RGB (PIL/CLIP)
+            from PIL import Image
+            cropped_rgb = cv2.cvtColor(cropped_img, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(cropped_rgb)
+            
+            # Preprocess and generate embedding
+            image_input = preprocess(pil_image).unsqueeze(0)
+            with torch.no_grad():
+                embedding = clip_model.encode_image(image_input)
+                # Normalize the embedding
+                embedding = embedding / embedding.norm(dim=-1, keepdim=True)
+                embedding_list = embedding.squeeze().cpu().numpy().tolist()
+            
+            print(f"✅ Embedding generated: {len(embedding_list)} dimensions")
         
         return jsonify({
             "success": True,
             "detections": detections,
             "dog_detected": dog_detected,
             "cat_detected": cat_detected,
-            "primary_detection": primary_detection
+            "primary_detection": primary_detection,
+            "embedding": embedding_list
         })
         
     except Exception as e:
