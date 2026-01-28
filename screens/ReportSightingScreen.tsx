@@ -14,10 +14,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useReports } from '../contexts/ReportContext';
 import { getCurrentLocation } from '../services/locationService';
+import { createAnimalIdentity, uploadAnimalImage } from '../services/animalService';
+import { useAuth } from '../contexts/AuthContext';
 
 export const ReportSightingScreen = () => {
     const router = useRouter();
     const { addReport } = useReports();
+    const { user } = useAuth();
     const params = useLocalSearchParams<{ imageUri?: string; aiResult?: string }>();
 
     // Parse AI result from JSON string if provided
@@ -96,23 +99,80 @@ export const ReportSightingScreen = () => {
         fetchLocation();
     }, []);
 
-    const reportId = 'REPORT-' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const [reportId, setReportId] = useState('Generating...');
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSubmit = () => {
-        // Save to context
-        addReport({
-            animalType: animalType as 'dog' | 'cat',
-            breed: aiResult?.breed || 'Unknown',
-            color: aiResult?.color || 'Unknown',
-            location: 'Current Location', // simplified for now
-            imageUri: photoUri,
-            aiData: aiResult
-        });
+    const handleSubmit = async () => {
+        if (!photoUri) {
+            Alert.alert('Missing Photo', 'Please upload a photo of the animal');
+            return;
+        }
 
-        console.log('Report saved to context');
+        if (!aiResult) {
+            Alert.alert('Missing AI Analysis', 'Please use AI identification first');
+            return;
+        }
 
-        // Navigate to report history to see the new report
-        router.push('/report-history');
+        if (!user) {
+            Alert.alert('Not Logged In', 'Please log in to submit reports');
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            console.log('📤 Uploading image to Firebase Storage...');
+            // Upload image to Firebase Storage first
+            const tempAnimalId = 'temp-' + Date.now();
+            const imageUrl = await uploadAnimalImage(photoUri, tempAnimalId);
+            console.log('✅ Image uploaded:', imageUrl);
+
+            console.log('💾 Creating animal identity in Firestore...');
+            // Create animal identity in Firestore (with embedding!)
+            const createdAnimal = await createAnimalIdentity(
+                aiResult,
+                imageUrl,
+                { userId: user.id, userName: user.name },
+                {
+                    address: manualAddress || locationName,
+                    coordinates: { lat: location.latitude, lng: location.longitude }
+                }
+            );
+            console.log('✅ Animal created with ID:', createdAnimal.systemId);
+
+            // Update the displayed report ID with the real system ID
+            console.log('🔄 Updating badge from', reportId, 'to', createdAnimal.systemId);
+            setReportId(createdAnimal.systemId);
+
+            // Also save to context for local viewing
+            addReport({
+                animalType: animalType as 'dog' | 'cat',
+                breed: aiResult?.breed || 'Unknown',
+                color: aiResult?.color || 'Unknown',
+                location: manualAddress || locationName,
+                imageUri: photoUri,
+                aiData: aiResult
+            });
+
+            Alert.alert(
+                'Success! 🎉',
+                `Animal saved with ID: ${createdAnimal.systemId}\n\nThe embedding has been saved to Firestore!`,
+                [
+                    {
+                        text: 'View Reports',
+                        onPress: () => router.push('/report-history')
+                    }
+                ]
+            );
+        } catch (error: any) {
+            console.error('❌ Error saving animal:', error);
+            Alert.alert(
+                'Save Failed',
+                `Could not save the animal report.\n\nError: ${error.message || 'Unknown error'}`
+            );
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -402,15 +462,23 @@ export const ReportSightingScreen = () => {
 
             {/* Submit Button */}
             <View style={styles.submitContainer}>
-                <Pressable onPress={handleSubmit}>
+                <Pressable onPress={handleSubmit} disabled={isSaving}>
                     <LinearGradient
                         colors={[colors.minimalist.coral, colors.minimalist.orange]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={styles.submitButton}
+                        style={[styles.submitButton, isSaving && { opacity: 0.6 }]}
                     >
-                        <Ionicons name="send" size={20} color={colors.minimalist.white} />
-                        <Text style={styles.submitButtonText}>Submit Report</Text>
+                        {isSaving ? (
+                            <>
+                                <Text style={styles.submitButtonText}>Saving to Firebase...</Text>
+                            </>
+                        ) : (
+                            <>
+                                <Ionicons name="send" size={20} color={colors.minimalist.white} />
+                                <Text style={styles.submitButtonText}>Submit Report</Text>
+                            </>
+                        )}
                     </LinearGradient>
                 </Pressable>
             </View>

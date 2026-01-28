@@ -47,7 +47,7 @@ export const AIReportCameraScreen = () => {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: 'images',
                 allowsEditing: true,
-                quality: 0.8,
+                quality: 0.5,
             });
 
             if (!result.canceled) {
@@ -93,7 +93,8 @@ export const AIReportCameraScreen = () => {
                 size: 'medium',
                 condition: 'unknown',
                 confidence: detection.confidence,
-                rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`
+                rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`,
+                embedding:backendResult.embedding || undefined
             };
 
             setAnalysisResult(result);

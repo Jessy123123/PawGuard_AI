@@ -51,8 +51,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
 
+            // Use email as consistent ID (simple hash for demo)
+            const userId = email.toLowerCase().replace(/[^a-z0-9]/g, '');
+
             const newUser: User = {
-                id: Math.random().toString(36).substr(2, 9),
+                id: userId,
                 email,
                 name: email.split('@')[0], // Default name from email
                 role, // Use the selected role
@@ -75,8 +78,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             const profileComplete = !!(name && role && (role === 'ngo' ? orgName : true) && phone);
 
+            // Use email as consistent ID (simple hash for demo)
+            const userId = email.toLowerCase().replace(/[^a-z0-9]/g, '');
+
             const newUser: User = {
-                id: Math.random().toString(36).substr(2, 9),
+                id: userId,
                 email,
                 name,
                 role,

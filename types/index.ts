@@ -67,6 +67,7 @@ export interface AnimalIdentity {
     distinctiveFeatures: string[];       // AI-detected marks
     featureHash: string;                 // Searchable hash for matching
     primaryImageUrl: string;
+    embedding?: number[];                // 512-number fingerprint for identity matching
 
     // Status tracking
     status: AnimalStatus;
@@ -82,6 +83,7 @@ export interface AnimalIdentity {
     // Timeline
     firstReportedAt: string;
     firstReportedBy: string;
+    createdBy: string;                   // User ID who created this animal
     lastSeenAt: string;
     lastSeenLocation: string;
 
@@ -100,6 +102,7 @@ export interface ReportEntry {
     condition: string;
     notes: string;
     timestamp: string;
+    embedding?: number[];
 }
 
 export type CareAction = 'intake' | 'vaccination' | 'neutering' | 'treatment' | 'release' | 'adoption';

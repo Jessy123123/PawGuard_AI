@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
@@ -11,6 +11,8 @@ import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
 import { useAuth } from '../contexts/AuthContext';
+import { getAnimalById } from '../services/animalService';
+import { AnimalIdentity } from '../types';
 
 interface ActivityItem {
     id: string;
@@ -51,6 +53,65 @@ const mockActivities: ActivityItem[] = [
 export default function AnimalProfileScreen() {
     const router = useRouter();
     const { user } = useAuth();
+    const params = useLocalSearchParams();
+    const animalId = params.id as string;
+
+    const [animal, setAnimal] = useState<AnimalIdentity | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        loadAnimal();
+    }, [animalId]);
+
+    const loadAnimal = async () => {
+        if (!animalId) {
+            console.error('❌ No animal ID provided');
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            console.log('📥 Loading animal:', animalId);
+            const animalData = await getAnimalById(animalId);
+
+            if (animalData) {
+                console.log('✅ Animal loaded:', animalData.systemId);
+                setAnimal(animalData);
+            } else {
+                console.error('❌ Animal not found');
+            }
+        } catch (error) {
+            console.error('❌ Error loading animal:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.minimalist.coral} />
+                    <Text style={styles.loadingText}>Loading animal profile...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!animal) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.loadingContainer}>
+                    <Ionicons name="alert-circle" size={64} color={colors.minimalist.textLight} />
+                    <Text style={styles.loadingText}>Animal not found</Text>
+                    <Pressable style={styles.backButtonAlt} onPress={() => router.back()}>
+                        <Text style={styles.backButtonText}>Go Back</Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -68,54 +129,81 @@ export default function AnimalProfileScreen() {
 
                 {/* Image Card */}
                 <FloatingCard style={styles.imageCard} shadow="medium">
-                    <View style={styles.imagePlaceholder}>
-                        <Ionicons name="paw" size={80} color={colors.minimalist.textLight} />
-                    </View>
+                    {animal.primaryImageUrl ? (
+                        <Image
+                            source={{ uri: animal.primaryImageUrl }}
+                            style={styles.animalImage}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View style={styles.imagePlaceholder}>
+                            <Ionicons name="paw" size={80} color={colors.minimalist.textLight} />
+                        </View>
+                    )}
                 </FloatingCard>
 
                 {/* Profile Content */}
                 <View style={styles.content}>
                     {/* Status Badges */}
                     <View style={styles.badgeRow}>
-                        <MinimalistStatusBadge label="High Priority" variant="atRisk" />
+                        <MinimalistStatusBadge
+                            label={animal.status === 'waiting' ? 'High Priority' : animal.status}
+                            variant="atRisk"
+                        />
                     </View>
 
                     {/* Name & ID */}
-                    <Text style={styles.name}>Buddy</Text>
+                    <Text style={styles.name}>{animal.breed || 'Unknown'}</Text>
                     <Text style={styles.id}>
-                        ID: <Text style={styles.idValue}>#PG-8821</Text> • Spotted 2h ago
+                        ID: <Text style={styles.idValue}>#{animal.systemId}</Text> • Spotted {new Date(animal.lastSeenAt).toLocaleDateString()}
                     </Text>
 
                     {/* Status Row */}
                     <View style={styles.statusRow}>
-                        <MinimalistStatusBadge label="At Risk" variant="atRisk" icon="alert-circle" />
-                        <MinimalistStatusBadge label="Vaccinated" variant="vaccinated" icon="checkmark-circle" />
-                        <MinimalistStatusBadge label="Neutered" variant="neutered" icon="checkmark-circle" />
+                        {animal.status === 'waiting' && (
+                            <MinimalistStatusBadge label="At Risk" variant="atRisk" icon="alert-circle" />
+                        )}
+                        {animal.isVaccinated && (
+                            <MinimalistStatusBadge label="Vaccinated" variant="vaccinated" icon="checkmark-circle" />
+                        )}
+                        {animal.isNeutered && (
+                            <MinimalistStatusBadge label="Neutered" variant="neutered" icon="checkmark-circle" />
+                        )}
                     </View>
 
                     {/* AI Identity Section */}
                     <FloatingCard style={styles.section} shadow="soft">
                         <View style={styles.sectionHeader}>
                             <Ionicons name="sparkles" size={20} color={colors.minimalist.coral} />
-                            <Text style={styles.sectionTitle}>AI-Generated  Identity</Text>
+                            <Text style={styles.sectionTitle}>AI-Generated Identity</Text>
                         </View>
 
                         <View style={styles.infoGrid}>
                             <View style={styles.infoItem}>
                                 <Text style={styles.infoLabel}>Breed</Text>
-                                <Text style={styles.infoValue}>Labrador Mix</Text>
-                                <Text style={styles.infoSubtitle}>94% Match</Text>
+                                <Text style={styles.infoValue}>{animal.breed}</Text>
+                                {animal.embedding && (
+                                    <Text style={styles.infoSubtitle}>AI Verified ✓</Text>
+                                )}
                             </View>
                             <View style={styles.infoItem}>
-                                <Text style={styles.infoLabel}>Size</Text>
-                                <Text style={styles.infoValue}>Medium</Text>
-                                <Text style={styles.infoSubtitle}>~18.5 kg</Text>
+                                <Text style={styles.infoLabel}>Species</Text>
+                                <Text style={styles.infoValue}>{animal.species === 'dog' ? 'Dog 🐕' : 'Cat 🐈'}</Text>
                             </View>
                             <View style={styles.infoItem}>
                                 <Text style={styles.infoLabel}>Color</Text>
-                                <Text style={styles.infoValue}>Golden Tan</Text>
+                                <Text style={styles.infoValue}>{animal.color}</Text>
                             </View>
                         </View>
+
+                        {animal.embedding && (
+                            <View style={styles.embeddingInfo}>
+                                <Ionicons name="finger-print" size={16} color={colors.minimalist.coral} />
+                                <Text style={styles.embeddingText}>
+                                    Identity fingerprint saved ({animal.embedding.length} features)
+                                </Text>
+                            </View>
+                        )}
                     </FloatingCard>
 
                     {/* Activity History */}
@@ -336,5 +424,46 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: colors.minimalist.coral,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    loadingText: {
+        fontSize: 16,
+        color: colors.minimalist.textMedium,
+        marginTop: spacing.md,
+    },
+    animalImage: {
+        width: '100%',
+        height: 300,
+    },
+    embeddingInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: spacing.md,
+        padding: spacing.sm,
+        backgroundColor: colors.minimalist.peachLight,
+        borderRadius: 8,
+    },
+    embeddingText: {
+        fontSize: 12,
+        color: colors.minimalist.coral,
+        fontWeight: '600',
+    },
+    backButtonAlt: {
+        marginTop: spacing.lg,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.minimalist.coral,
+        borderRadius: 12,
+    },
+    backButtonText: {
+        color: colors.minimalist.white,
+        fontWeight: '600',
+        fontSize: 16,
     },
 });

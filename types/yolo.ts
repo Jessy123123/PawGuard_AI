@@ -14,6 +14,7 @@ export interface AnimalIdentificationResult {
     condition: 'healthy' | 'injured' | 'unknown';
     confidence: number;
     rawResponse?: string;
+    embedding?: number[];
 }
 
 export interface YOLODetection {
