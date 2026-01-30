@@ -228,7 +228,11 @@ export const NGOReportDetailScreen: React.FC = () => {
                         </View>
                     )}
                     <View style={styles.addressRow}>
+<<<<<<< HEAD
                         <Ionicons name="location" size={18} color="#0891B2" />
+=======
+                        <Ionicons name="location" size={18} color={colors.minimalist.coral} />
+>>>>>>> 9cfb1f6 (adoption and report)
                         <Text style={styles.addressText}>{report.location}</Text>
                     </View>
                 </FloatingCard>
@@ -238,7 +242,11 @@ export const NGOReportDetailScreen: React.FC = () => {
                     <Text style={styles.sectionTitle}>Reporter Information</Text>
                     <View style={styles.reporterCard}>
                         <View style={styles.reporterAvatar}>
+<<<<<<< HEAD
                             <Ionicons name="person" size={24} color="#0891B2" />
+=======
+                            <Ionicons name="person" size={24} color={colors.minimalist.coral} />
+>>>>>>> 9cfb1f6 (adoption and report)
                         </View>
                         <View style={styles.reporterInfo}>
                             <Text style={styles.reporterName}>{report.reporterName}</Text>
@@ -365,7 +373,11 @@ const styles = StyleSheet.create({
     reportIdText: {
         fontSize: 10,
         fontWeight: '700',
+<<<<<<< HEAD
         color: '#0891B2',
+=======
+        color: colors.minimalist.coral,
+>>>>>>> 9cfb1f6 (adoption and report)
     },
     container: {
         flex: 1,
@@ -508,7 +520,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+<<<<<<< HEAD
         backgroundColor: '#A5E5ED',
+=======
+        backgroundColor: colors.minimalist.coral,
+>>>>>>> 9cfb1f6 (adoption and report)
         paddingVertical: spacing.md,
         borderRadius: 12,
         gap: spacing.sm,
@@ -570,7 +586,11 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     saveButton: {
+<<<<<<< HEAD
         backgroundColor: '#A5E5ED',
+=======
+        backgroundColor: colors.minimalist.coral,
+>>>>>>> 9cfb1f6 (adoption and report)
         paddingVertical: spacing.md,
         borderRadius: 12,
         alignItems: 'center',

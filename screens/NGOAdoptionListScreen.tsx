@@ -10,7 +10,10 @@ import {
     Animated,
     Dimensions,
     Platform,
+<<<<<<< HEAD
     Modal,
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -203,11 +206,19 @@ const AdoptionCard: React.FC<{
     const getStatusConfig = (status: AdoptionStatus) => {
         switch (status) {
             case 'available':
+<<<<<<< HEAD
                 return { color: '#166534', bg: '#BBF3DE', icon: 'checkmark-circle', label: 'Available' };
             case 'pending':
                 return { color: '#92400E', bg: '#F9F8D9', icon: 'time', label: 'Pending' };
             case 'adopted':
                 return { color: '#4D7C4D', bg: '#C7DEB1', icon: 'heart', label: 'Adopted' };
+=======
+                return { color: '#059669', bg: '#D1FAE5', icon: 'checkmark-circle', label: 'Available' };
+            case 'pending':
+                return { color: '#D97706', bg: '#FEF3C7', icon: 'time', label: 'Pending' };
+            case 'adopted':
+                return { color: '#6B7280', bg: '#F3F4F6', icon: 'heart', label: 'Adopted' };
+>>>>>>> 9cfb1f6 (adoption and report)
             default:
                 return { color: '#6B7280', bg: '#F3F4F6', icon: 'help-circle', label: 'Unknown' };
         }
@@ -216,7 +227,11 @@ const AdoptionCard: React.FC<{
     const statusConfig = getStatusConfig(post.status);
 
     const glowStyle = {
+<<<<<<< HEAD
         shadowColor: '#A5E5ED',
+=======
+        shadowColor: colors.minimalist.coral,
+>>>>>>> 9cfb1f6 (adoption and report)
         shadowOpacity: glowAnim,
         shadowRadius: glowAnim.interpolate({
             inputRange: [0, 1],
@@ -263,7 +278,11 @@ const AdoptionCard: React.FC<{
                 <View style={styles.cardActions}>
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
+<<<<<<< HEAD
                             <Ionicons name="heart" size={16} color="#0891B2" />
+=======
+                            <Ionicons name="heart" size={16} color={colors.minimalist.coral} />
+>>>>>>> 9cfb1f6 (adoption and report)
                             <Text style={styles.statText}>{post.interestedCount} interested</Text>
                         </View>
                         <View style={styles.statItem}>
@@ -272,20 +291,45 @@ const AdoptionCard: React.FC<{
                         </View>
                     </View>
 
+<<<<<<< HEAD
                     {post.status !== 'adopted' && (
                         <View style={styles.actionButtons}>
                             <Pressable
                                 style={[styles.actionBtn, styles.actionBtnPrimary, styles.actionBtnFull]}
+=======
+                    <View style={styles.actionButtons}>
+                        <Pressable
+                            style={[styles.actionBtn, post.status === 'adopted' && styles.actionBtnFull]}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                onEdit();
+                            }}
+                        >
+                            <Ionicons name="create-outline" size={18} color={colors.minimalist.textMedium} />
+                            <Text style={styles.actionBtnText}>Edit</Text>
+                        </Pressable>
+                        {post.status !== 'adopted' && (
+                            <Pressable
+                                style={[styles.actionBtn, styles.actionBtnPrimary]}
+>>>>>>> 9cfb1f6 (adoption and report)
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                     onUpdateStatus();
                                 }}
                             >
+<<<<<<< HEAD
                                 <Ionicons name="sync-outline" size={18} color="#0891B2" />
                                 <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>Update Status</Text>
                             </Pressable>
                         </View>
                     )}
+=======
+                                <Ionicons name="sync-outline" size={18} color={colors.minimalist.coral} />
+                                <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>Update Status</Text>
+                            </Pressable>
+                        )}
+                    </View>
+>>>>>>> 9cfb1f6 (adoption and report)
                 </View>
             </Pressable>
         </Animated.View>
@@ -301,8 +345,11 @@ export const NGOAdoptionListScreen: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
     const [newPostId, setNewPostId] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+<<<<<<< HEAD
     const [showStatusModal, setShowStatusModal] = useState(false);
     const [selectedPost, setSelectedPost] = useState<AdoptionPost | null>(null);
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
 
     // Filter indicator animation
     const indicatorPosition = useRef(new Animated.Value(0)).current;
@@ -335,6 +382,7 @@ export const NGOAdoptionListScreen: React.FC = () => {
         router.push('/ngo-create-adoption');
     };
 
+<<<<<<< HEAD
     const handleUpdateStatus = (postId: string, newStatus: AdoptionStatus) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setPosts(posts.map(post =>
@@ -360,6 +408,8 @@ export const NGOAdoptionListScreen: React.FC = () => {
         setShowStatusModal(true);
     };
 
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
     // Simulate new post creation success
     const simulateNewPost = () => {
         const newPost: AdoptionPost = {
@@ -412,7 +462,10 @@ export const NGOAdoptionListScreen: React.FC = () => {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Adoption Posts</Text>
+<<<<<<< HEAD
                 <Text style={styles.headerSubtitle}>{filteredPosts.length} animals looking for homes</Text>
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
             </View>
 
             {/* Success Toast */}
@@ -446,6 +499,12 @@ export const NGOAdoptionListScreen: React.FC = () => {
                             >
                                 {filter.label}
                             </Text>
+<<<<<<< HEAD
+=======
+                            {filter.key !== 'all' && (
+                                <View style={[styles.filterDot, { backgroundColor: filter.color }]} />
+                            )}
+>>>>>>> 9cfb1f6 (adoption and report)
                         </Pressable>
                     ))}
                 </View>
@@ -461,7 +520,11 @@ export const NGOAdoptionListScreen: React.FC = () => {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
+<<<<<<< HEAD
                         tintColor="#0891B2"
+=======
+                        tintColor={colors.minimalist.coral}
+>>>>>>> 9cfb1f6 (adoption and report)
                     />
                 }
             >
@@ -484,7 +547,11 @@ export const NGOAdoptionListScreen: React.FC = () => {
                         </Text>
                         <Pressable style={styles.emptyButton} onPress={handleCreatePost}>
                             <LinearGradient
+<<<<<<< HEAD
                                 colors={['#A5E5ED', '#BBF3DE']}
+=======
+                                colors={[colors.minimalist.coral, colors.minimalist.orange]}
+>>>>>>> 9cfb1f6 (adoption and report)
                                 style={styles.emptyButtonGradient}
                             >
                                 <Ionicons name="add" size={20} color="#fff" />
@@ -500,8 +567,13 @@ export const NGOAdoptionListScreen: React.FC = () => {
                             post={post}
                             index={index}
                             isNew={post.id === newPostId}
+<<<<<<< HEAD
                             onEdit={() => { }}
                             onUpdateStatus={() => openStatusModal(post)}
+=======
+                            onEdit={() => console.log('Edit:', post.id)}
+                            onUpdateStatus={() => console.log('Update status:', post.id)}
+>>>>>>> 9cfb1f6 (adoption and report)
                         />
                     ))
                 )}
@@ -515,12 +587,17 @@ export const NGOAdoptionListScreen: React.FC = () => {
                 onPress={handleCreatePost}
             >
                 <LinearGradient
+<<<<<<< HEAD
                     colors={['#A5E5ED', '#BBF3DE']}
+=======
+                    colors={[colors.minimalist.coral, colors.minimalist.orange]}
+>>>>>>> 9cfb1f6 (adoption and report)
                     style={styles.fabGradient}
                 >
                     <Ionicons name="add" size={28} color="#fff" />
                 </LinearGradient>
             </Pressable>
+<<<<<<< HEAD
 
             {/* Status Update Modal */}
             <Modal
@@ -579,6 +656,8 @@ export const NGOAdoptionListScreen: React.FC = () => {
                     </View>
                 </Pressable>
             </Modal>
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
         </SafeAreaView>
     );
 };
@@ -589,12 +668,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFBFC',
     },
     header: {
+<<<<<<< HEAD
         paddingHorizontal: spacing.xl,
         paddingVertical: spacing.lg,
+=======
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+>>>>>>> 9cfb1f6 (adoption and report)
         backgroundColor: '#fff',
     },
     headerTitle: {
         ...serifTextStyles.serifSubheading,
+<<<<<<< HEAD
         fontSize: 22,
         color: colors.minimalist.textDark,
     },
@@ -602,6 +687,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: colors.minimalist.textLight,
         marginTop: 2,
+=======
+        fontSize: 24,
+        color: colors.minimalist.textDark,
+        textAlign: 'center',
+>>>>>>> 9cfb1f6 (adoption and report)
     },
     successToast: {
         position: 'absolute',
@@ -631,21 +721,34 @@ const styles = StyleSheet.create({
         color: '#059669',
     },
     filterContainer: {
+<<<<<<< HEAD
         paddingHorizontal: spacing.xl,
         paddingBottom: spacing.lg,
         backgroundColor: '#fff',
+=======
+        backgroundColor: '#fff',
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.md,
+>>>>>>> 9cfb1f6 (adoption and report)
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(0,0,0,0.05)',
     },
     filterTabs: {
         flexDirection: 'row',
+<<<<<<< HEAD
         backgroundColor: 'rgba(165, 229, 237, 0.4)',
         borderRadius: 14,
         padding: 2,
+=======
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        padding: 4,
+>>>>>>> 9cfb1f6 (adoption and report)
         position: 'relative',
     },
     filterIndicator: {
         position: 'absolute',
+<<<<<<< HEAD
         top: 2,
         left: 2,
         width: (SCREEN_WIDTH - spacing.xl * 2 - 4) / 4,
@@ -660,10 +763,22 @@ const styles = StyleSheet.create({
                 shadowRadius: 8
             },
             android: { elevation: 4 },
+=======
+        top: 4,
+        left: 4,
+        width: (SCREEN_WIDTH - spacing.lg * 2 - 8) / 4,
+        height: 36,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+            android: { elevation: 2 },
+>>>>>>> 9cfb1f6 (adoption and report)
         }),
     },
     filterTab: {
         flex: 1,
+<<<<<<< HEAD
         height: 40,
         alignItems: 'center',
         justifyContent: 'center',
@@ -676,6 +791,21 @@ const styles = StyleSheet.create({
     },
     filterTabTextActive: {
         color: '#0891B2',
+=======
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        gap: 4,
+    },
+    filterTabText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.minimalist.textLight,
+    },
+    filterTabTextActive: {
+        color: colors.minimalist.textDark,
+>>>>>>> 9cfb1f6 (adoption and report)
     },
     filterDot: {
         width: 6,
@@ -686,11 +816,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
+<<<<<<< HEAD
         padding: spacing.xl,
     },
     // Adoption Card
     cardContainer: {
         marginBottom: spacing.xxl,
+=======
+        padding: spacing.lg,
+    },
+    // Card Styles
+    cardContainer: {
+        marginBottom: spacing.lg,
+>>>>>>> 9cfb1f6 (adoption and report)
         borderRadius: 20,
         backgroundColor: '#fff',
         overflow: 'hidden',
@@ -783,7 +921,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#F3F4F6',
     },
     actionBtnPrimary: {
+<<<<<<< HEAD
         backgroundColor: 'rgba(165, 229, 237, 0.25)',
+=======
+        backgroundColor: 'rgba(245, 158, 131, 0.15)',
+>>>>>>> 9cfb1f6 (adoption and report)
     },
     actionBtnText: {
         fontSize: 13,
@@ -791,7 +933,11 @@ const styles = StyleSheet.create({
         color: colors.minimalist.textMedium,
     },
     actionBtnTextPrimary: {
+<<<<<<< HEAD
         color: '#0891B2',
+=======
+        color: colors.minimalist.coral,
+>>>>>>> 9cfb1f6 (adoption and report)
     },
     actionBtnFull: {
         flex: undefined,
@@ -885,7 +1031,11 @@ const styles = StyleSheet.create({
         right: 24,
         borderRadius: 28,
         ...Platform.select({
+<<<<<<< HEAD
             ios: { shadowColor: '#A5E5ED', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12 },
+=======
+            ios: { shadowColor: colors.minimalist.coral, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12 },
+>>>>>>> 9cfb1f6 (adoption and report)
             android: { elevation: 8 },
         }),
     },
@@ -899,6 +1049,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+<<<<<<< HEAD
     // Modal Styles
     modalOverlay: {
         flex: 1,
@@ -971,6 +1122,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.minimalist.textLight,
     },
+=======
+>>>>>>> 9cfb1f6 (adoption and report)
 });
 
 export default NGOAdoptionListScreen;
