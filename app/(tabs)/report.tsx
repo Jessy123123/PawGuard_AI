@@ -9,10 +9,18 @@ import { FloatingCard } from '../../components/FloatingCard';
 import { Popup } from '../../components/Popup';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAuth } from '../../contexts/AuthContext';
+import { NGOReportListScreen } from '../../screens/NGOReportListScreen';
 
 export default function ReportScreen() {
     const router = useRouter();
+    const { user } = useAuth();
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+    // If user is NGO, show the NGO Report Management screen
+    if (user?.role === 'ngo') {
+        return <NGOReportListScreen />;
+    }
 
     const handleCreateReport = () => {
         // Navigate to AI Camera screen for photo capture and analysis

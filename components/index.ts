@@ -27,3 +27,9 @@ export { MinimalistStatusBadge } from './MinimalistStatusBadge';
 // Adoption screen components
 export { CertificationCard } from './CertificationCard';
 export { SwitchRow } from './SwitchRow';
+
+// NGO components
+export { ReportStatusBadge } from './ReportStatusBadge';
+export { SeverityIndicator } from './SeverityIndicator';
+export { ContactModal } from './ContactModal';
+export { AdoptionPostCard } from './AdoptionPostCard';
