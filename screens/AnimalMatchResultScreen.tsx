@@ -11,6 +11,7 @@ import { FloatingCard } from '../components/FloatingCard';
 import { AnimalIdentity } from '../types';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AnimalMatchResultScreenParams {
     capturedImage: string;
@@ -21,6 +22,8 @@ interface AnimalMatchResultScreenParams {
 export const AnimalMatchResultScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute();
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
     const { capturedImage, aiResult, matches } = route.params as AnimalMatchResultScreenParams;
 
     const matchedAnimal = matches[0]; // Display top match for now
@@ -99,8 +102,8 @@ export const AnimalMatchResultScreen = () => {
                         ]}>
                             <Text style={[
                                 styles.statusText,
-                                matchedAnimal.status === 'rescued' && { color: colors.minimalist.greenDark },
-                                matchedAnimal.status === 'waiting' && { color: colors.minimalist.orange }
+                                matchedAnimal.status === 'rescued' && { color: isNGO ? '#059669' : colors.minimalist.greenDark },
+                                matchedAnimal.status === 'waiting' && { color: isNGO ? '#0891B2' : colors.minimalist.orange }
                             ]}>
                                 {matchedAnimal.status.toUpperCase()}
                             </Text>
@@ -113,7 +116,7 @@ export const AnimalMatchResultScreen = () => {
 
                     <Pressable style={styles.confirmButton} onPress={handleConfirmMatch}>
                         <LinearGradient
-                            colors={[colors.minimalist.greenDark, '#4CAF50']}
+                            colors={isNGO ? ['#0891B2', '#A5E5ED'] : [colors.minimalist.greenDark, '#4CAF50']}
                             style={styles.gradientButton}
                         >
                             <Ionicons name="checkmark-circle" size={24} color={colors.minimalist.white} />
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
     matchPercentage: {
         fontSize: 10,
         fontWeight: 'bold',
-        color: colors.minimalist.coral,
+        color: '#0891B2',
     },
     detailsCard: {
         marginBottom: spacing.xxl,

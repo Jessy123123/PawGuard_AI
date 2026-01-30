@@ -12,12 +12,22 @@ import { FloatingCard } from '../components/FloatingCard';
 import { yoloBackendService } from '../services/yoloBackendService';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../contexts/AuthContext';
 
 export const AIReportCameraScreen = () => {
     const router = useRouter();
+    const { user } = useAuth();
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<AnimalIdentificationResult | null>(null);
+
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const accentColorDark = isNGO ? '#0891B2' : colors.minimalist.redDark;
+    const subtleAccentBg = isNGO ? 'rgba(165, 229, 237, 0.2)' : 'rgba(245, 164, 145, 0.15)';
+    const gradientColors = (isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.peach]) as [string, string, ...string[]];
+    const secondaryBorderColor = isNGO ? '#A5E5ED' : colors.minimalist.coral;
+    const secondaryTextColor = isNGO ? '#0891B2' : colors.minimalist.coral;
 
     const takePhoto = async () => {
         try {
@@ -94,7 +104,7 @@ export const AIReportCameraScreen = () => {
                 condition: 'unknown',
                 confidence: detection.confidence,
                 rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`,
-                embedding:backendResult.embedding || undefined
+                embedding: backendResult.embedding || undefined
             };
 
             setAnalysisResult(result);
@@ -137,8 +147,8 @@ export const AIReportCameraScreen = () => {
             <ScrollView contentContainerStyle={styles.content}>
                 {!imageUri ? (
                     <View style={styles.placeholderContainer}>
-                        <View style={styles.illustrationCircle}>
-                            <Ionicons name="scan-outline" size={64} color={colors.minimalist.coral} />
+                        <View style={[styles.illustrationCircle, { backgroundColor: subtleAccentBg }]}>
+                            <Ionicons name="scan-outline" size={64} color={accentColor} />
                         </View>
                         <Text style={styles.title}>Identify Animal</Text>
                         <Text style={styles.subtitle}>
@@ -148,7 +158,7 @@ export const AIReportCameraScreen = () => {
                         <View style={styles.buttonRow}>
                             <Pressable style={styles.actionButton} onPress={takePhoto}>
                                 <LinearGradient
-                                    colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                                    colors={gradientColors}
                                     style={styles.gradient}
                                 >
                                     <Ionicons name="camera" size={24} color={colors.minimalist.white} />
@@ -157,9 +167,9 @@ export const AIReportCameraScreen = () => {
                             </Pressable>
 
                             <Pressable style={styles.actionButton} onPress={pickImage}>
-                                <View style={styles.secondaryButton}>
-                                    <Ionicons name="images" size={24} color={colors.minimalist.coral} />
-                                    <Text style={styles.secondaryButtonText}>Gallery</Text>
+                                <View style={[styles.secondaryButton, { borderColor: secondaryBorderColor }]}>
+                                    <Ionicons name="images" size={24} color={secondaryTextColor} />
+                                    <Text style={[styles.secondaryButtonText, { color: secondaryTextColor }]}>Gallery</Text>
                                 </View>
                             </Pressable>
                         </View>
@@ -209,11 +219,11 @@ export const AIReportCameraScreen = () => {
                                     )}
 
                                     <Pressable
-                                        style={styles.continueButton}
+                                        style={[styles.continueButton, { backgroundColor: isNGO ? '#A5E5ED' : colors.minimalist.coral }]}
                                         onPress={handleContinue}
                                     >
-                                        <Text style={styles.continueButtonText}>Create Report with this Data</Text>
-                                        <Ionicons name="arrow-forward" size={20} color={colors.minimalist.white} />
+                                        <Text style={[styles.continueButtonText, { color: isNGO ? '#0891B2' : colors.minimalist.white }]}>Create Report with this Data</Text>
+                                        <Ionicons name="arrow-forward" size={20} color={isNGO ? '#0891B2' : colors.minimalist.white} />
                                     </Pressable>
 
                                     <Pressable
@@ -264,7 +274,7 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: colors.minimalist.peachLight,
+        backgroundColor: 'rgba(165, 229, 237, 0.2)',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.xl,
@@ -312,11 +322,11 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
         backgroundColor: colors.minimalist.white,
         borderWidth: 1,
-        borderColor: colors.minimalist.coral,
+        borderColor: '#A5E5ED',
         borderRadius: 16,
     },
     secondaryButtonText: {
-        color: colors.minimalist.coral,
+        color: '#0891B2',
         fontWeight: '600',
         fontSize: 16,
     },
@@ -377,7 +387,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
     },
     continueButton: {
-        backgroundColor: colors.minimalist.coral,
+        backgroundColor: '#A5E5ED',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -387,7 +397,7 @@ const styles = StyleSheet.create({
         gap: spacing.xs,
     },
     continueButtonText: {
-        color: colors.minimalist.white,
+        color: '#0891B2',
         fontWeight: '600',
         fontSize: 16,
     },

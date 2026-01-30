@@ -10,6 +10,7 @@ import {
     Animated,
     Dimensions,
     Platform,
+    Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -202,11 +203,11 @@ const AdoptionCard: React.FC<{
     const getStatusConfig = (status: AdoptionStatus) => {
         switch (status) {
             case 'available':
-                return { color: '#059669', bg: '#D1FAE5', icon: 'checkmark-circle', label: 'Available' };
+                return { color: '#166534', bg: '#BBF3DE', icon: 'checkmark-circle', label: 'Available' };
             case 'pending':
-                return { color: '#D97706', bg: '#FEF3C7', icon: 'time', label: 'Pending' };
+                return { color: '#92400E', bg: '#F9F8D9', icon: 'time', label: 'Pending' };
             case 'adopted':
-                return { color: '#6B7280', bg: '#F3F4F6', icon: 'heart', label: 'Adopted' };
+                return { color: '#4D7C4D', bg: '#C7DEB1', icon: 'heart', label: 'Adopted' };
             default:
                 return { color: '#6B7280', bg: '#F3F4F6', icon: 'help-circle', label: 'Unknown' };
         }
@@ -215,7 +216,7 @@ const AdoptionCard: React.FC<{
     const statusConfig = getStatusConfig(post.status);
 
     const glowStyle = {
-        shadowColor: colors.minimalist.coral,
+        shadowColor: '#A5E5ED',
         shadowOpacity: glowAnim,
         shadowRadius: glowAnim.interpolate({
             inputRange: [0, 1],
@@ -262,7 +263,7 @@ const AdoptionCard: React.FC<{
                 <View style={styles.cardActions}>
                     <View style={styles.statsRow}>
                         <View style={styles.statItem}>
-                            <Ionicons name="heart" size={16} color={colors.minimalist.coral} />
+                            <Ionicons name="heart" size={16} color="#0891B2" />
                             <Text style={styles.statText}>{post.interestedCount} interested</Text>
                         </View>
                         <View style={styles.statItem}>
@@ -271,30 +272,20 @@ const AdoptionCard: React.FC<{
                         </View>
                     </View>
 
-                    <View style={styles.actionButtons}>
-                        <Pressable
-                            style={[styles.actionBtn, post.status === 'adopted' && styles.actionBtnFull]}
-                            onPress={() => {
-                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                onEdit();
-                            }}
-                        >
-                            <Ionicons name="create-outline" size={18} color={colors.minimalist.textMedium} />
-                            <Text style={styles.actionBtnText}>Edit</Text>
-                        </Pressable>
-                        {post.status !== 'adopted' && (
+                    {post.status !== 'adopted' && (
+                        <View style={styles.actionButtons}>
                             <Pressable
-                                style={[styles.actionBtn, styles.actionBtnPrimary]}
+                                style={[styles.actionBtn, styles.actionBtnPrimary, styles.actionBtnFull]}
                                 onPress={() => {
                                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                                     onUpdateStatus();
                                 }}
                             >
-                                <Ionicons name="sync-outline" size={18} color={colors.minimalist.coral} />
+                                <Ionicons name="sync-outline" size={18} color="#0891B2" />
                                 <Text style={[styles.actionBtnText, styles.actionBtnTextPrimary]}>Update Status</Text>
                             </Pressable>
-                        )}
-                    </View>
+                        </View>
+                    )}
                 </View>
             </Pressable>
         </Animated.View>
@@ -310,6 +301,8 @@ export const NGOAdoptionListScreen: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
     const [newPostId, setNewPostId] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [selectedPost, setSelectedPost] = useState<AdoptionPost | null>(null);
 
     // Filter indicator animation
     const indicatorPosition = useRef(new Animated.Value(0)).current;
@@ -340,6 +333,31 @@ export const NGOAdoptionListScreen: React.FC = () => {
 
     const handleCreatePost = () => {
         router.push('/ngo-create-adoption');
+    };
+
+    const handleUpdateStatus = (postId: string, newStatus: AdoptionStatus) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setPosts(posts.map(post =>
+            post.id === postId
+                ? { ...post, status: newStatus, updatedAt: new Date().toISOString() }
+                : post
+        ));
+        setShowStatusModal(false);
+        setSelectedPost(null);
+
+        // Show success feedback
+        setShowSuccess(true);
+        Animated.sequence([
+            Animated.timing(successOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.delay(2000),
+            Animated.timing(successOpacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        ]).start(() => setShowSuccess(false));
+    };
+
+    const openStatusModal = (post: AdoptionPost) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setSelectedPost(post);
+        setShowStatusModal(true);
     };
 
     // Simulate new post creation success
@@ -394,6 +412,7 @@ export const NGOAdoptionListScreen: React.FC = () => {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Adoption Posts</Text>
+                <Text style={styles.headerSubtitle}>{filteredPosts.length} animals looking for homes</Text>
             </View>
 
             {/* Success Toast */}
@@ -427,9 +446,6 @@ export const NGOAdoptionListScreen: React.FC = () => {
                             >
                                 {filter.label}
                             </Text>
-                            {filter.key !== 'all' && (
-                                <View style={[styles.filterDot, { backgroundColor: filter.color }]} />
-                            )}
                         </Pressable>
                     ))}
                 </View>
@@ -445,7 +461,7 @@ export const NGOAdoptionListScreen: React.FC = () => {
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        tintColor={colors.minimalist.coral}
+                        tintColor="#0891B2"
                     />
                 }
             >
@@ -468,7 +484,7 @@ export const NGOAdoptionListScreen: React.FC = () => {
                         </Text>
                         <Pressable style={styles.emptyButton} onPress={handleCreatePost}>
                             <LinearGradient
-                                colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                                colors={['#A5E5ED', '#BBF3DE']}
                                 style={styles.emptyButtonGradient}
                             >
                                 <Ionicons name="add" size={20} color="#fff" />
@@ -484,8 +500,8 @@ export const NGOAdoptionListScreen: React.FC = () => {
                             post={post}
                             index={index}
                             isNew={post.id === newPostId}
-                            onEdit={() => console.log('Edit:', post.id)}
-                            onUpdateStatus={() => console.log('Update status:', post.id)}
+                            onEdit={() => { }}
+                            onUpdateStatus={() => openStatusModal(post)}
                         />
                     ))
                 )}
@@ -499,12 +515,70 @@ export const NGOAdoptionListScreen: React.FC = () => {
                 onPress={handleCreatePost}
             >
                 <LinearGradient
-                    colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                    colors={['#A5E5ED', '#BBF3DE']}
                     style={styles.fabGradient}
                 >
                     <Ionicons name="add" size={28} color="#fff" />
                 </LinearGradient>
             </Pressable>
+
+            {/* Status Update Modal */}
+            <Modal
+                visible={showStatusModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowStatusModal(false)}
+            >
+                <Pressable
+                    style={styles.modalOverlay}
+                    onPress={() => setShowStatusModal(false)}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Update Status</Text>
+                        {selectedPost && (
+                            <Text style={styles.modalSubtitle}>
+                                {selectedPost.name} • Current: {selectedPost.status}
+                            </Text>
+                        )}
+
+                        <View style={styles.statusOptions}>
+                            <Pressable
+                                style={[styles.statusOption, styles.statusAvailable]}
+                                onPress={() => selectedPost && handleUpdateStatus(selectedPost.id, 'available')}
+                            >
+                                <View style={[styles.statusDot, { backgroundColor: '#166534' }]} />
+                                <Text style={styles.statusOptionText}>Available</Text>
+                                <Text style={styles.statusDesc}>Ready for adoption</Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={[styles.statusOption, styles.statusPending]}
+                                onPress={() => selectedPost && handleUpdateStatus(selectedPost.id, 'pending')}
+                            >
+                                <View style={[styles.statusDot, { backgroundColor: '#92400E' }]} />
+                                <Text style={styles.statusOptionText}>Pending</Text>
+                                <Text style={styles.statusDesc}>Adoption in progress</Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={[styles.statusOption, styles.statusAdopted]}
+                                onPress={() => selectedPost && handleUpdateStatus(selectedPost.id, 'adopted')}
+                            >
+                                <View style={[styles.statusDot, { backgroundColor: '#4D7C4D' }]} />
+                                <Text style={styles.statusOptionText}>Adopted</Text>
+                                <Text style={styles.statusDesc}>Found a home! 🎉</Text>
+                            </Pressable>
+                        </View>
+
+                        <Pressable
+                            style={styles.modalCancel}
+                            onPress={() => setShowStatusModal(false)}
+                        >
+                            <Text style={styles.modalCancelText}>Cancel</Text>
+                        </Pressable>
+                    </View>
+                </Pressable>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -515,15 +589,19 @@ const styles = StyleSheet.create({
         backgroundColor: '#FAFBFC',
     },
     header: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.lg,
         backgroundColor: '#fff',
     },
     headerTitle: {
         ...serifTextStyles.serifSubheading,
-        fontSize: 24,
+        fontSize: 22,
         color: colors.minimalist.textDark,
-        textAlign: 'center',
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        color: colors.minimalist.textLight,
+        marginTop: 2,
     },
     successToast: {
         position: 'absolute',
@@ -553,47 +631,51 @@ const styles = StyleSheet.create({
         color: '#059669',
     },
     filterContainer: {
+        paddingHorizontal: spacing.xl,
+        paddingBottom: spacing.lg,
         backgroundColor: '#fff',
-        paddingHorizontal: spacing.lg,
-        paddingBottom: spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: 'rgba(0,0,0,0.05)',
     },
     filterTabs: {
         flexDirection: 'row',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 12,
-        padding: 4,
+        backgroundColor: 'rgba(165, 229, 237, 0.4)',
+        borderRadius: 14,
+        padding: 2,
         position: 'relative',
     },
     filterIndicator: {
         position: 'absolute',
-        top: 4,
-        left: 4,
-        width: (SCREEN_WIDTH - spacing.lg * 2 - 8) / 4,
-        height: 36,
+        top: 2,
+        left: 2,
+        width: (SCREEN_WIDTH - spacing.xl * 2 - 4) / 4,
+        height: 40,
         backgroundColor: '#fff',
-        borderRadius: 10,
+        borderRadius: 12,
         ...Platform.select({
-            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
-            android: { elevation: 2 },
+            ios: {
+                shadowColor: '#0891B2',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8
+            },
+            android: { elevation: 4 },
         }),
     },
     filterTab: {
         flex: 1,
-        flexDirection: 'row',
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
-        gap: 4,
+        zIndex: 1,
     },
     filterTabText: {
         fontSize: 13,
-        fontWeight: '600',
+        fontWeight: '700',
         color: colors.minimalist.textLight,
     },
     filterTabTextActive: {
-        color: colors.minimalist.textDark,
+        color: '#0891B2',
     },
     filterDot: {
         width: 6,
@@ -604,11 +686,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        padding: spacing.lg,
+        padding: spacing.xl,
     },
-    // Card Styles
+    // Adoption Card
     cardContainer: {
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xxl,
         borderRadius: 20,
         backgroundColor: '#fff',
         overflow: 'hidden',
@@ -701,7 +783,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F3F4F6',
     },
     actionBtnPrimary: {
-        backgroundColor: 'rgba(245, 158, 131, 0.15)',
+        backgroundColor: 'rgba(165, 229, 237, 0.25)',
     },
     actionBtnText: {
         fontSize: 13,
@@ -709,7 +791,7 @@ const styles = StyleSheet.create({
         color: colors.minimalist.textMedium,
     },
     actionBtnTextPrimary: {
-        color: colors.minimalist.coral,
+        color: '#0891B2',
     },
     actionBtnFull: {
         flex: undefined,
@@ -803,7 +885,7 @@ const styles = StyleSheet.create({
         right: 24,
         borderRadius: 28,
         ...Platform.select({
-            ios: { shadowColor: colors.minimalist.coral, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12 },
+            ios: { shadowColor: '#A5E5ED', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 12 },
             android: { elevation: 8 },
         }),
     },
@@ -816,6 +898,78 @@ const styles = StyleSheet.create({
         borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.lg,
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: spacing.xl,
+        width: '100%',
+        maxWidth: 340,
+    },
+    modalTitle: {
+        ...serifTextStyles.serifSubheading,
+        fontSize: 20,
+        color: colors.minimalist.textDark,
+        textAlign: 'center',
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: colors.minimalist.textLight,
+        textAlign: 'center',
+        marginTop: 4,
+        marginBottom: spacing.lg,
+    },
+    statusOptions: {
+        gap: spacing.sm,
+    },
+    statusOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        borderRadius: 16,
+        gap: spacing.md,
+    },
+    statusAvailable: {
+        backgroundColor: '#BBF3DE',
+    },
+    statusPending: {
+        backgroundColor: '#F9F8D9',
+    },
+    statusAdopted: {
+        backgroundColor: '#C7DEB1',
+    },
+    statusDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+    },
+    statusOptionText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+        flex: 1,
+    },
+    statusDesc: {
+        fontSize: 12,
+        color: colors.minimalist.textLight,
+    },
+    modalCancel: {
+        marginTop: spacing.lg,
+        padding: spacing.md,
+        alignItems: 'center',
+    },
+    modalCancelText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: colors.minimalist.textLight,
     },
 });
 

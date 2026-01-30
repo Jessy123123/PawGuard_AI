@@ -52,6 +52,10 @@ export default function EditProfileScreen() {
         return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
     };
 
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const avatarBg = isNGO ? '#A5E5ED' : '#FFD7D0';
+
     const handleSave = async () => {
         setIsSaving(true);
         // Simulate save
@@ -92,12 +96,14 @@ export default function EditProfileScreen() {
                 }}>
                     {/* Avatar Section */}
                     <View style={styles.avatarSection}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{getInitials(name)}</Text>
+                        <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
+                            <Text style={[styles.avatarText, !isNGO && { color: colors.minimalist.coral }]}>
+                                {getInitials(name)}
+                            </Text>
                         </View>
                         <Pressable style={styles.changePhotoButton}>
-                            <Ionicons name="camera-outline" size={18} color={colors.minimalist.coral} />
-                            <Text style={styles.changePhotoText}>Change Photo</Text>
+                            <Ionicons name="camera-outline" size={18} color={accentColor} />
+                            <Text style={[styles.changePhotoText, { color: accentColor }]}>Change Photo</Text>
                         </Pressable>
                     </View>
 
@@ -160,11 +166,12 @@ export default function EditProfileScreen() {
                         disabled={isSaving}
                         style={({ pressed }) => [
                             styles.saveButton,
+                            { backgroundColor: avatarBg },
                             pressed && styles.saveButtonPressed,
                             isSaving && styles.saveButtonDisabled
                         ]}
                     >
-                        <Text style={styles.saveButtonText}>
+                        <Text style={[styles.saveButtonText, { color: accentColor }]}>
                             {isSaving ? 'Saving...' : 'Save Changes'}
                         </Text>
                     </Pressable>
@@ -224,7 +231,6 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: colors.minimalist.coral,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.lg,
@@ -244,7 +250,6 @@ const styles = StyleSheet.create({
     changePhotoText: {
         fontSize: 14,
         fontWeight: '600',
-        color: colors.minimalist.coral,
     },
     formCard: {
         marginBottom: spacing.xxl,
@@ -273,7 +278,6 @@ const styles = StyleSheet.create({
         paddingTop: spacing.lg,
     },
     saveButton: {
-        backgroundColor: colors.minimalist.coral,
         paddingVertical: 16,
         borderRadius: 14,
         alignItems: 'center',
@@ -288,7 +292,6 @@ const styles = StyleSheet.create({
     saveButtonText: {
         fontSize: 16,
         fontWeight: '700',
-        color: colors.minimalist.white,
     },
     bottomSpacing: {
         height: spacing.xxl,

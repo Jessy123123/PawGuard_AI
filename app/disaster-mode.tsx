@@ -1,103 +1,204 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FloatingCard } from '../components/FloatingCard';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
+import { FloatingCard } from '../components/FloatingCard';
+import { useData } from '../contexts/DataContext';
 
 export default function DisasterModeScreen() {
     const router = useRouter();
+    const {
+        isDisasterModeActive,
+        activeAlert,
+        disasterResources,
+        setDisasterMode,
+        updateResources
+    } = useData();
+
+    const [showDisableModal, setShowDisableModal] = useState(false);
+    const fadeAnim = useState(new Animated.Value(0))[0];
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+        }).start();
+
+        // Default alert if none active (for demo)
+        if (!activeAlert) {
+            setDisasterMode(true, {
+                title: 'Flood Warning',
+                description: 'High risk of flash floods in the Northern Districts. Multiple shelters are evacuating animals.',
+                severity: 'Critical',
+                status: 'Ongoing'
+            });
+        }
+    }, []);
+
+    const handleDisableAlert = () => {
+        setDisasterMode(false);
+        setShowDisableModal(false);
+        router.back();
+    };
+
+    const getResourceColor = (value: number) => {
+        if (value > 80) return colors.minimalist.errorRed;
+        if (value > 50) return colors.minimalist.warningOrange;
+        return colors.minimalist.successGreen;
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <StatusBar style="light" />
 
+            {/* Header */}
             <View style={styles.header}>
                 <Pressable onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.minimalist.white} />
                 </Pressable>
-                <Text style={styles.title}>Emergency Mode</Text>
+                <Text style={styles.headerTitle}>Emergency Mode</Text>
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                <FloatingCard shadow="large" style={styles.alertCard}>
-                    <View style={styles.alertHeader}>
-                        <Ionicons name="warning" size={32} color={colors.minimalist.errorRed} />
-                        <Text style={styles.alertTitle}>Active Alert: Flood Warning</Text>
-                    </View>
-                    <Text style={styles.alertDescription}>
-                        High risk of flash floods in the Northern Districts. Multiple shelters are evacuating animals.
-                    </Text>
-                    <View style={styles.statusBadge}>
-                        <Text style={styles.statusText}>CRITICAL LEVEL</Text>
-                    </View>
-                </FloatingCard>
+                {/* Active Alert Card */}
+                <Animated.View style={{ opacity: fadeAnim }}>
+                    <FloatingCard shadow="medium" style={styles.alertCard}>
+                        <View style={styles.alertHeader}>
+                            <Ionicons name="alert-circle" size={24} color={colors.minimalist.errorRed} />
+                            <Text style={styles.alertTitle}>Active Alert: {activeAlert?.title}</Text>
+                        </View>
+                        <Text style={styles.alertDescription}>
+                            {activeAlert?.description}
+                        </Text>
+                        <View style={styles.severityBadge}>
+                            <Text style={styles.severityText}>{activeAlert?.severity?.toUpperCase()} LEVEL</Text>
+                        </View>
+                    </FloatingCard>
+                </Animated.View>
 
+                {/* NGO Action Center */}
                 <Text style={styles.sectionTitle}>NGO Action Center</Text>
-
-                <View style={styles.actionsGrid}>
-                    <Pressable style={styles.actionItem}>
-                        <FloatingCard shadow="soft" style={styles.actionCard}>
-                            <Ionicons name="bus" size={32} color={colors.minimalist.coral} />
-                            <Text style={styles.actionLabel}>Evacuation Protocol</Text>
-                        </FloatingCard>
+                <View style={styles.actionGrid}>
+                    <Pressable
+                        style={styles.actionCard}
+                        onPress={() => router.push('/disaster-evacuation')}
+                    >
+                        <Ionicons name="bus-outline" size={32} color={colors.minimalist.coral} />
+                        <Text style={styles.actionText}>Evacuation Protocol</Text>
                     </Pressable>
 
-                    <Pressable style={styles.actionItem}>
-                        <FloatingCard shadow="soft" style={styles.actionCard}>
-                            <Ionicons name="medkit" size={32} color={colors.minimalist.coral} />
-                            <Text style={styles.actionLabel}>Field Triage</Text>
-                        </FloatingCard>
+                    <Pressable
+                        style={styles.actionCard}
+                        onPress={() => router.push('/disaster-triage')}
+                    >
+                        <Ionicons name="medical-outline" size={32} color={colors.minimalist.coral} />
+                        <Text style={styles.actionText}>Field Triage</Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.actionCard}
+                        onPress={() => router.push('/disaster-teams')}
+                    >
+                        <Ionicons name="people-outline" size={32} color={colors.minimalist.coral} />
+                        <Text style={styles.actionText}>Assign Teams</Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.actionCard}
+                        onPress={() => router.push('/disaster-broadcast')}
+                    >
+                        <Ionicons name="radio-outline" size={32} color={colors.minimalist.coral} />
+                        <Text style={styles.actionText}>Broadcasting</Text>
                     </Pressable>
                 </View>
 
-                <View style={styles.actionsGrid}>
-                    <Pressable style={styles.actionItem}>
-                        <FloatingCard shadow="soft" style={styles.actionCard}>
-                            <Ionicons name="people" size={32} color={colors.minimalist.coral} />
-                            <Text style={styles.actionLabel}>Assign Teams</Text>
-                        </FloatingCard>
-                    </Pressable>
+                {/* Resource Tracking */}
+                <FloatingCard shadow="soft" style={styles.resourceCard}>
+                    <Text style={styles.resourceTitle}>Resource Tracking</Text>
 
-                    <Pressable style={styles.actionItem}>
-                        <FloatingCard shadow="soft" style={styles.actionCard}>
-                            <Ionicons name="radio" size={32} color={colors.minimalist.coral} />
-                            <Text style={styles.actionLabel}>Broadcasting</Text>
-                        </FloatingCard>
-                    </Pressable>
-                </View>
-
-                <FloatingCard shadow="soft" style={styles.infoCard}>
-                    <Text style={styles.infoTitle}>Resource Tracking</Text>
-                    <View style={styles.progressBarContainer}>
-                        <View style={styles.progressHeader}>
-                            <Text style={styles.progressLabel}>Shelter Capacity</Text>
-                            <Text style={styles.progressValue}>85%</Text>
+                    <View style={styles.resourceItem}>
+                        <View style={styles.resourceHeader}>
+                            <Text style={styles.resourceLabel}>Shelter Capacity</Text>
+                            <Text style={styles.resourceValue}>{disasterResources.shelter}%</Text>
                         </View>
-                        <View style={styles.progressBar}>
-                            <View style={[styles.progressFill, { width: '85%', backgroundColor: colors.minimalist.errorRed }]} />
+                        <View style={styles.progressBarBg}>
+                            <View
+                                style={[
+                                    styles.progressBarFill,
+                                    {
+                                        width: `${disasterResources.shelter}%`,
+                                        backgroundColor: getResourceColor(disasterResources.shelter)
+                                    }
+                                ]}
+                            />
                         </View>
                     </View>
 
-                    <View style={styles.progressBarContainer}>
-                        <View style={styles.progressHeader}>
-                            <Text style={styles.progressLabel}>Food Supplies</Text>
-                            <Text style={styles.progressValue}>42%</Text>
+                    <View style={styles.resourceItem}>
+                        <View style={styles.resourceHeader}>
+                            <Text style={styles.resourceLabel}>Food Supplies</Text>
+                            <Text style={styles.resourceValue}>{disasterResources.food}%</Text>
                         </View>
-                        <View style={styles.progressBar}>
-                            <View style={[styles.progressFill, { width: '42%', backgroundColor: colors.minimalist.warningOrange }]} />
+                        <View style={styles.progressBarBg}>
+                            <View
+                                style={[
+                                    styles.progressBarFill,
+                                    {
+                                        width: `${disasterResources.food}%`,
+                                        backgroundColor: getResourceColor(100 - disasterResources.food) // Inverted for supplies
+                                    }
+                                ]}
+                            />
                         </View>
                     </View>
                 </FloatingCard>
-
-                <Pressable style={styles.exitButton} onPress={() => router.back()}>
-                    <Text style={styles.exitButtonText}>Disable Active Alert</Text>
-                </Pressable>
             </ScrollView>
+
+            {/* Disable Button */}
+            <View style={styles.footer}>
+                <Pressable
+                    onPress={() => setShowDisableModal(true)}
+                    style={styles.disableButton}
+                >
+                    <Text style={styles.disableButtonText}>Disable Active Alert</Text>
+                </Pressable>
+            </View>
+
+            {/* Confirmation Modal */}
+            <Modal
+                visible={showDisableModal}
+                transparent
+                animationType="fade"
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Disable Emergency Mode?</Text>
+                        <Text style={styles.modalDescription}>
+                            This will notify all teams that the immediate threat has passed and return the system to normal operations.
+                        </Text>
+                        <View style={styles.modalButtons}>
+                            <Pressable
+                                onPress={() => setShowDisableModal(false)}
+                                style={[styles.modalButton, styles.cancelButton]}
+                            >
+                                <Text style={styles.cancelButtonText}>Keep Active</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={handleDisableAlert}
+                                style={[styles.modalButton, styles.confirmButton]}
+                            >
+                                <Text style={styles.confirmButtonText}>Confirm Completion</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -105,140 +206,203 @@ export default function DisasterModeScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#1C1917', // Darker background for disaster mode
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: spacing.lg,
-        backgroundColor: '#1C1917',
-    },
-    backButton: {
-        marginRight: spacing.md,
-    },
-    title: {
-        ...serifTextStyles.serifHeading,
-        fontSize: 22,
-        color: colors.minimalist.white,
+        backgroundColor: '#111', // Dark focused background
     },
     container: {
         flex: 1,
     },
     scrollContent: {
-        padding: spacing.xl,
+        padding: spacing.lg,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.lg,
+        paddingTop: spacing.md,
+    },
+    backButton: {
+        marginRight: spacing.md,
+    },
+    headerTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: colors.minimalist.white,
     },
     alertCard: {
         padding: spacing.xl,
-        marginBottom: spacing.xxl,
+        borderRadius: 20,
         backgroundColor: colors.minimalist.white,
+        marginBottom: spacing.xl,
     },
     alertHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: spacing.md,
-        gap: spacing.md,
+        gap: spacing.sm,
     },
     alertTitle: {
-        fontSize: 20,
-        fontWeight: '700',
+        fontSize: 18,
+        fontWeight: '800',
         color: colors.minimalist.textDark,
-        flex: 1,
     },
     alertDescription: {
-        fontSize: 16,
+        fontSize: 15,
         color: colors.minimalist.textMedium,
-        lineHeight: 24,
+        lineHeight: 22,
         marginBottom: spacing.lg,
     },
-    statusBadge: {
+    severityBadge: {
         alignSelf: 'flex-start',
-        backgroundColor: `${colors.minimalist.errorRed}15`,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 4,
-        borderWidth: 1,
+        borderWidth: 1.5,
         borderColor: colors.minimalist.errorRed,
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: 6,
     },
-    statusText: {
-        fontSize: 12,
-        fontWeight: '700',
+    severityText: {
         color: colors.minimalist.errorRed,
+        fontSize: 13,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     sectionTitle: {
-        ...serifTextStyles.serifHeading,
         fontSize: 18,
+        fontWeight: '700',
         color: colors.minimalist.white,
         marginBottom: spacing.lg,
+        marginLeft: 4,
     },
-    actionsGrid: {
+    actionGrid: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: spacing.md,
-        marginBottom: spacing.md,
-    },
-    actionItem: {
-        flex: 1,
+        justifyContent: 'space-between',
+        marginBottom: spacing.xl,
     },
     actionCard: {
-        alignItems: 'center',
-        padding: spacing.lg,
-        height: 120,
+        width: '47.5%',
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 20,
+        padding: spacing.xl,
+        aspectRatio: 1,
         justifyContent: 'center',
+        alignItems: 'center',
+        gap: spacing.md,
     },
-    actionLabel: {
+    actionText: {
         fontSize: 14,
         fontWeight: '600',
         color: colors.minimalist.textDark,
-        marginTop: spacing.sm,
         textAlign: 'center',
     },
-    infoCard: {
-        padding: spacing.lg,
-        marginTop: spacing.lg,
-        marginBottom: spacing.xxxl,
+    resourceCard: {
+        padding: spacing.xl,
+        borderRadius: 24,
+        backgroundColor: colors.minimalist.white,
+        marginBottom: 100,
     },
-    infoTitle: {
+    resourceTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: colors.minimalist.textDark,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xl,
     },
-    progressBarContainer: {
-        marginBottom: spacing.lg,
+    resourceItem: {
+        marginBottom: spacing.xl,
     },
-    progressHeader: {
+    resourceHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 6,
+        alignItems: 'center',
+        marginBottom: spacing.sm,
     },
-    progressLabel: {
+    resourceLabel: {
         fontSize: 14,
         color: colors.minimalist.textMedium,
+        fontWeight: '600',
     },
-    progressValue: {
+    resourceValue: {
         fontSize: 14,
         fontWeight: '700',
         color: colors.minimalist.textDark,
     },
-    progressBar: {
+    progressBarBg: {
         height: 8,
-        backgroundColor: colors.minimalist.bgLight,
+        backgroundColor: colors.minimalist.warmGray,
         borderRadius: 4,
         overflow: 'hidden',
     },
-    progressFill: {
+    progressBarFill: {
         height: '100%',
         borderRadius: 4,
     },
-    exitButton: {
+    footer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#111',
+        padding: spacing.lg,
+        paddingBottom: 40,
+    },
+    disableButton: {
         backgroundColor: colors.minimalist.errorRed,
-        paddingVertical: 18,
+        paddingVertical: spacing.lg,
         borderRadius: 12,
         alignItems: 'center',
-        marginBottom: spacing.xl,
     },
-    exitButtonText: {
+    disableButtonText: {
         color: colors.minimalist.white,
         fontSize: 18,
         fontWeight: '700',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        justifyContent: 'center',
+        padding: spacing.xl,
+    },
+    modalContent: {
+        backgroundColor: colors.minimalist.white,
+        borderRadius: 24,
+        padding: spacing.xl,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: colors.minimalist.textDark,
+        marginBottom: spacing.md,
+    },
+    modalDescription: {
+        fontSize: 15,
+        color: colors.minimalist.textMedium,
+        lineHeight: 22,
+        marginBottom: spacing.xxl,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    modalButton: {
+        flex: 1,
+        paddingVertical: spacing.md,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: colors.minimalist.warmGray,
+    },
+    cancelButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+    },
+    confirmButton: {
+        backgroundColor: colors.minimalist.errorRed,
+    },
+    confirmButtonText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: colors.minimalist.white,
     },
 });

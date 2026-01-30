@@ -5,13 +5,19 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FloatingCard } from '../components/FloatingCard';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 
 export default function ContactReporterScreen() {
     const router = useRouter();
+    const { user } = useAuth();
     const params = useLocalSearchParams();
+
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const avatarBg = isNGO ? '#A5E5ED' : colors.minimalist.peach;
 
     const reporterName = params.name || 'Sarah Miller';
     const reporterPhone = params.phone || '+65 9123 4567';
@@ -34,7 +40,7 @@ export default function ContactReporterScreen() {
 
             <View style={styles.container}>
                 <FloatingCard shadow="medium" style={styles.profileCard}>
-                    <View style={styles.avatar}>
+                    <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
                         <Text style={styles.avatarText}>{reporterName[0]}</Text>
                     </View>
                     <Text style={styles.reporterName}>{reporterName}</Text>
@@ -50,14 +56,14 @@ export default function ContactReporterScreen() {
                 </FloatingCard>
 
                 <View style={styles.actionSection}>
-                    <Pressable onPress={handleCall} style={styles.callButton}>
+                    <Pressable onPress={handleCall} style={[styles.callButton, { backgroundColor: accentColor }]}>
                         <Ionicons name="call" size={24} color={colors.minimalist.white} />
                         <Text style={styles.callButtonText}>Call {reporterName}</Text>
                     </Pressable>
 
-                    <Pressable style={styles.messageButton}>
-                        <Ionicons name="chatbubble" size={24} color={colors.minimalist.coral} />
-                        <Text style={styles.messageButtonText}>Send Message</Text>
+                    <Pressable style={[styles.messageButton, { borderColor: accentColor }]}>
+                        <Ionicons name="chatbubble" size={24} color={accentColor} />
+                        <Text style={[styles.messageButtonText, { color: accentColor }]}>Send Message</Text>
                     </Pressable>
                 </View>
 

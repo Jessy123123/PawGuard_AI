@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FloatingCard } from '../components/FloatingCard';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -26,6 +27,11 @@ interface NotificationSetting {
 
 export default function NotificationsSettingsScreen() {
     const router = useRouter();
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const accentBg = isNGO ? 'rgba(165, 229, 237, 0.2)' : 'rgba(255, 180, 162, 0.15)';
+    const trackColorTrue = isNGO ? '#A5E5ED' : colors.minimalist.peachLight;
 
     const [settings, setSettings] = useState<NotificationSetting[]>([
         {
@@ -121,11 +127,11 @@ export default function NotificationsSettingsScreen() {
                         pressed && styles.settingItemPressed
                     ]}
                 >
-                    <View style={[styles.iconContainer, setting.enabled && styles.iconContainerActive]}>
+                    <View style={[styles.iconContainer, setting.enabled && { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : 'rgba(255, 180, 162, 0.15)' }]}>
                         <Ionicons
                             name={setting.icon}
                             size={22}
-                            color={setting.enabled ? colors.minimalist.coral : colors.minimalist.textLight}
+                            color={setting.enabled ? accentColor : colors.minimalist.textLight}
                         />
                     </View>
                     <View style={styles.settingContent}>
@@ -137,7 +143,7 @@ export default function NotificationsSettingsScreen() {
                         onValueChange={() => toggleSetting(setting.id)}
                         trackColor={{
                             false: colors.minimalist.borderLight,
-                            true: colors.minimalist.coral,
+                            true: trackColorTrue,
                         }}
                         thumbColor={colors.minimalist.white}
                         ios_backgroundColor={colors.minimalist.borderLight}
@@ -173,8 +179,8 @@ export default function NotificationsSettingsScreen() {
             >
                 {/* Info Banner */}
                 <Animated.View style={{ opacity: fadeAnim }}>
-                    <FloatingCard shadow="soft" style={styles.infoBanner}>
-                        <Ionicons name="information-circle" size={24} color={colors.minimalist.coral} />
+                    <FloatingCard shadow="soft" style={[styles.infoBanner, { backgroundColor: accentBg }]}>
+                        <Ionicons name="information-circle" size={24} color={accentColor} />
                         <Text style={styles.infoText}>
                             Customize which notifications you'd like to receive from PawGuard.
                         </Text>
@@ -197,8 +203,8 @@ export default function NotificationsSettingsScreen() {
                             Set a schedule to pause notifications during specific hours.
                         </Text>
                         <Pressable style={styles.configureButton}>
-                            <Text style={styles.configureButtonText}>Configure</Text>
-                            <Ionicons name="chevron-forward" size={18} color={colors.minimalist.coral} />
+                            <Text style={[styles.configureButtonText, { color: accentColor }]}>Configure</Text>
+                            <Ionicons name="chevron-forward" size={18} color={accentColor} />
                         </Pressable>
                     </FloatingCard>
                 </Animated.View>
@@ -254,7 +260,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.lg,
         marginBottom: spacing.xl,
-        backgroundColor: 'rgba(245, 164, 145, 0.1)',
     },
     infoText: {
         flex: 1,
@@ -287,7 +292,7 @@ const styles = StyleSheet.create({
         marginRight: spacing.lg,
     },
     iconContainerActive: {
-        backgroundColor: 'rgba(245, 164, 145, 0.15)',
+        opacity: 1,
     },
     settingContent: {
         flex: 1,
@@ -335,7 +340,6 @@ const styles = StyleSheet.create({
     configureButtonText: {
         fontSize: 15,
         fontWeight: '600',
-        color: colors.minimalist.coral,
     },
     bottomSpacing: {
         height: spacing.xxl,
