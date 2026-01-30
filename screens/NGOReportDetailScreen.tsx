@@ -228,7 +228,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                         </View>
                     )}
                     <View style={styles.addressRow}>
-                        <Ionicons name="location" size={18} color={colors.minimalist.coral} />
+                        <Ionicons name="location" size={18} color="#0891B2" />
                         <Text style={styles.addressText}>{report.location}</Text>
                     </View>
                 </FloatingCard>
@@ -238,7 +238,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                     <Text style={styles.sectionTitle}>Reporter Information</Text>
                     <View style={styles.reporterCard}>
                         <View style={styles.reporterAvatar}>
-                            <Ionicons name="person" size={24} color={colors.minimalist.coral} />
+                            <Ionicons name="person" size={24} color="#0891B2" />
                         </View>
                         <View style={styles.reporterInfo}>
                             <Text style={styles.reporterName}>{report.reporterName}</Text>
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     reportIdText: {
         fontSize: 10,
         fontWeight: '700',
-        color: colors.minimalist.coral,
+        color: '#0891B2',
     },
     container: {
         flex: 1,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.minimalist.coral,
+        backgroundColor: '#A5E5ED',
         paddingVertical: spacing.md,
         borderRadius: 12,
         gap: spacing.sm,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     saveButton: {
-        backgroundColor: colors.minimalist.coral,
+        backgroundColor: '#A5E5ED',
         paddingVertical: spacing.md,
         borderRadius: 12,
         alignItems: 'center',

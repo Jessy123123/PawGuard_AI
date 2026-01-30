@@ -54,6 +54,9 @@ export default function AnimalProfileScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const params = useLocalSearchParams();
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const subtleAccentBg = isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight;
     const animalId = params.id as string;
 
     const [animal, setAnimal] = useState<AnimalIdentity | null>(null);
@@ -92,7 +95,7 @@ export default function AnimalProfileScreen() {
         return (
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={colors.minimalist.coral} />
+                    <ActivityIndicator size="large" color={accentColor} />
                     <Text style={styles.loadingText}>Loading animal profile...</Text>
                 </View>
             </SafeAreaView>
@@ -105,7 +108,7 @@ export default function AnimalProfileScreen() {
                 <View style={styles.loadingContainer}>
                     <Ionicons name="alert-circle" size={64} color={colors.minimalist.textLight} />
                     <Text style={styles.loadingText}>Animal not found</Text>
-                    <Pressable style={styles.backButtonAlt} onPress={() => router.back()}>
+                    <Pressable style={[styles.backButtonAlt, { backgroundColor: accentColor }]} onPress={() => router.back()}>
                         <Text style={styles.backButtonText}>Go Back</Text>
                     </Pressable>
                 </View>
@@ -155,7 +158,7 @@ export default function AnimalProfileScreen() {
                     {/* Name & ID */}
                     <Text style={styles.name}>{animal.breed || 'Unknown'}</Text>
                     <Text style={styles.id}>
-                        ID: <Text style={styles.idValue}>#{animal.systemId}</Text> • Spotted {new Date(animal.lastSeenAt).toLocaleDateString()}
+                        ID: <Text style={[styles.idValue, { color: accentColor }]}>#{animal.systemId}</Text> • Spotted {new Date(animal.lastSeenAt).toLocaleDateString()}
                     </Text>
 
                     {/* Status Row */}
@@ -174,7 +177,7 @@ export default function AnimalProfileScreen() {
                     {/* AI Identity Section */}
                     <FloatingCard style={styles.section} shadow="soft">
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="sparkles" size={20} color={colors.minimalist.coral} />
+                            <Ionicons name="sparkles" size={20} color={accentColor} />
                             <Text style={styles.sectionTitle}>AI-Generated Identity</Text>
                         </View>
 
@@ -197,9 +200,9 @@ export default function AnimalProfileScreen() {
                         </View>
 
                         {animal.embedding && (
-                            <View style={styles.embeddingInfo}>
-                                <Ionicons name="finger-print" size={16} color={colors.minimalist.coral} />
-                                <Text style={styles.embeddingText}>
+                            <View style={[styles.embeddingInfo, { backgroundColor: subtleAccentBg }]}>
+                                <Ionicons name="finger-print" size={16} color={accentColor} />
+                                <Text style={[styles.embeddingText, { color: accentColor }]}>
                                     Identity fingerprint saved ({animal.embedding.length} features)
                                 </Text>
                             </View>
@@ -211,8 +214,8 @@ export default function AnimalProfileScreen() {
                     {mockActivities.map((activity) => (
                         <FloatingCard key={activity.id} style={styles.activityCard} shadow="soft">
                             <View style={styles.activityRow}>
-                                <View style={styles.activityIcon}>
-                                    <Ionicons name={activity.icon} size={20} color={colors.minimalist.coral} />
+                                <View style={[styles.activityIcon, { backgroundColor: subtleAccentBg }]}>
+                                    <Ionicons name={activity.icon} size={20} color={accentColor} />
                                 </View>
                                 <View style={styles.activityContent}>
                                     <Text style={styles.activityTitle}>{activity.title}</Text>
@@ -226,19 +229,19 @@ export default function AnimalProfileScreen() {
                     {/* Action Buttons */}
                     <Pressable style={styles.primaryButton}>
                         <LinearGradient
-                            colors={[colors.minimalist.coral, colors.minimalist.mutedOrange]}
+                            colors={isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.mutedOrange]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={styles.buttonGradient}
                         >
-                            <Ionicons name="shield-checkmark" size={20} color={colors.minimalist.white} />
-                            <Text style={styles.buttonText}>Initiate Rescue</Text>
+                            <Ionicons name="shield-checkmark" size={20} color={isNGO ? '#0891B2' : colors.minimalist.white} />
+                            <Text style={[styles.buttonText, isNGO && { color: '#0891B2' }]}>Initiate Rescue</Text>
                         </LinearGradient>
                     </Pressable>
 
-                    <Pressable style={styles.secondaryButton}>
-                        <Ionicons name="heart" size={20} color={colors.minimalist.coral} />
-                        <Text style={styles.secondaryButtonText}>Adoption</Text>
+                    <Pressable style={[styles.secondaryButton, isNGO && { borderColor: '#A5E5ED' }]}>
+                        <Ionicons name="heart" size={20} color={accentColor} />
+                        <Text style={[styles.secondaryButtonText, { color: accentColor }]}>Adoption</Text>
                     </Pressable>
                 </View>
             </ScrollView>

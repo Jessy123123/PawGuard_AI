@@ -16,6 +16,8 @@ import { AnimalIdentity } from '../types';
 export default function ReportHistoryScreen() {
     const router = useRouter();
     const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
     const [animals, setAnimals] = useState<AnimalIdentity[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -70,7 +72,7 @@ export default function ReportHistoryScreen() {
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
                 {isLoading ? (
                     <View style={styles.loadingState}>
-                        <ActivityIndicator size="large" color={colors.minimalist.coral} />
+                        <ActivityIndicator size="large" color={accentColor} />
                         <Text style={styles.loadingText}>Loading your animals...</Text>
                     </View>
                 ) : animals.length > 0 ? (
@@ -97,7 +99,7 @@ export default function ReportHistoryScreen() {
                                                     <Text style={styles.animalName}>
                                                         {animal.species === 'dog' ? '🐕' : '🐈'} {animal.breed}
                                                     </Text>
-                                                    <Text style={styles.animalId}>
+                                                    <Text style={[styles.animalId, { color: accentColor }]}>
                                                         ID: {animal.systemId}
                                                     </Text>
                                                     <Text style={styles.reportDate}>
@@ -111,9 +113,9 @@ export default function ReportHistoryScreen() {
                                                 <Text style={styles.colorText}>Color: {animal.color}</Text>
                                             )}
                                             {animal.embedding && (
-                                                <View style={styles.embeddingBadge}>
-                                                    <Ionicons name="finger-print" size={12} color={colors.minimalist.coral} />
-                                                    <Text style={styles.embeddingText}>Identity Saved</Text>
+                                                <View style={[styles.embeddingBadge, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
+                                                    <Ionicons name="finger-print" size={12} color={accentColor} />
+                                                    <Text style={[styles.embeddingText, { color: accentColor }]}>Identity Saved</Text>
                                                 </View>
                                             )}
                                         </View>
@@ -122,8 +124,8 @@ export default function ReportHistoryScreen() {
                                     <View style={styles.divider} />
 
                                     <View style={styles.cardFooter}>
-                                        <Text style={styles.viewDetails}>View Details</Text>
-                                        <Ionicons name="chevron-forward" size={16} color={colors.minimalist.coral} />
+                                        <Text style={[styles.viewDetails, { color: accentColor }]}>View Details</Text>
+                                        <Ionicons name="chevron-forward" size={16} color={accentColor} />
                                     </View>
                                 </FloatingCard>
                             )}
@@ -134,7 +136,7 @@ export default function ReportHistoryScreen() {
                         <Ionicons name="document-text-outline" size={64} color={colors.minimalist.textLight} />
                         <Text style={styles.emptyText}>No animals scanned yet</Text>
                         <Pressable
-                            style={styles.ctaButton}
+                            style={[styles.ctaButton, { backgroundColor: accentColor }]}
                             onPress={() => router.push('/AIReportCamera')}
                         >
                             <Text style={styles.ctaText}>Scan Your First Animal</Text>

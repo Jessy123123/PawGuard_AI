@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FloatingCard } from '../components/FloatingCard';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -35,6 +36,10 @@ interface SettingSection {
 
 export default function AppSettingsScreen() {
     const router = useRouter();
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const trackColorTrue = isNGO ? '#A5E5ED' : colors.minimalist.peachLight;
     const fadeAnim = useState(new Animated.Value(0))[0];
 
     const [sections, setSections] = useState<SettingSection[]>([
@@ -191,7 +196,7 @@ export default function AppSettingsScreen() {
                     onValueChange={() => toggleSetting(sectionIndex, item.id)}
                     trackColor={{
                         false: colors.minimalist.borderLight,
-                        true: colors.minimalist.coral,
+                        true: trackColorTrue,
                     }}
                     thumbColor={colors.minimalist.white}
                     ios_backgroundColor={colors.minimalist.borderLight}
@@ -239,7 +244,7 @@ export default function AppSettingsScreen() {
 
                     {/* App Version */}
                     <View style={styles.versionContainer}>
-                        <Ionicons name="paw" size={24} color={colors.minimalist.textLight} />
+                        <Ionicons name="paw" size={24} color={accentColor} />
                         <Text style={styles.versionText}>PawGuard AI</Text>
                         <Text style={styles.versionNumber}>Version 1.0.0</Text>
                     </View>

@@ -5,13 +5,20 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FloatingCard } from '../components/FloatingCard';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 
 export default function ContactShelterScreen() {
     const router = useRouter();
+    const { user } = useAuth();
     const params = useLocalSearchParams();
+
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const subtleAccentBg = isNGO ? 'rgba(165, 229, 237, 0.25)' : '#FFF7F5';
+    const shelterIconBg = isNGO ? '#A5E5ED' : colors.minimalist.mutedOrange;
 
     const shelterName = (params.name as string) || 'Happy Tails Sanctuary';
     const shelterPhone = (params.phone as string) || '+65 6789 0123';
@@ -39,7 +46,7 @@ export default function ContactShelterScreen() {
 
             <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
                 <FloatingCard shadow="medium" style={styles.shelterCard}>
-                    <View style={styles.shelterIcon}>
+                    <View style={[styles.shelterIcon, { backgroundColor: shelterIconBg }]}>
                         <Ionicons name="business" size={48} color={colors.minimalist.white} />
                     </View>
                     <Text style={styles.shelterName}>{shelterName}</Text>
@@ -48,7 +55,7 @@ export default function ContactShelterScreen() {
                     <View style={styles.divider} />
 
                     <View style={styles.infoItem}>
-                        <Ionicons name="location" size={20} color={colors.minimalist.coral} />
+                        <Ionicons name="location" size={20} color={accentColor} />
                         <View style={styles.infoText}>
                             <Text style={styles.infoLabel}>Address</Text>
                             <Text style={styles.infoValue}>{shelterAddress}</Text>
@@ -56,7 +63,7 @@ export default function ContactShelterScreen() {
                     </View>
 
                     <View style={styles.infoItem}>
-                        <Ionicons name="time" size={20} color={colors.minimalist.coral} />
+                        <Ionicons name="time" size={20} color={accentColor} />
                         <View style={styles.infoText}>
                             <Text style={styles.infoLabel}>Operating Hours</Text>
                             <Text style={styles.infoValue}>Daily: 9:00 AM - 6:00 PM</Text>
@@ -65,24 +72,24 @@ export default function ContactShelterScreen() {
                 </FloatingCard>
 
                 <View style={styles.actionSection}>
-                    <Pressable onPress={handleCall} style={styles.callButton}>
+                    <Pressable onPress={handleCall} style={[styles.callButton, { backgroundColor: accentColor }]}>
                         <Ionicons name="call" size={24} color={colors.minimalist.white} />
                         <Text style={styles.callButtonText}>Call Shelter</Text>
                     </Pressable>
 
-                    <Pressable onPress={handleDirections} style={styles.directionButton}>
-                        <Ionicons name="map" size={24} color={colors.minimalist.coral} />
-                        <Text style={styles.directionButtonText}>Get Directions</Text>
+                    <Pressable onPress={handleDirections} style={[styles.directionButton, { borderColor: accentColor }]}>
+                        <Ionicons name="map" size={24} color={accentColor} />
+                        <Text style={[styles.directionButtonText, { color: accentColor }]}>Get Directions</Text>
                     </Pressable>
                 </View>
 
-                <FloatingCard shadow="soft" style={styles.messageCard}>
+                <FloatingCard shadow="soft" style={[styles.messageCard, { backgroundColor: subtleAccentBg }]}>
                     <Text style={styles.messageTitle}>Send a Message</Text>
                     <Text style={styles.messageText}>
                         Inquire about adoption or report an animal directly to this shelter.
                     </Text>
-                    <Pressable style={styles.secondaryMessageButton}>
-                        <Text style={styles.secondaryMessageButtonText}>Open Chat</Text>
+                    <Pressable style={[styles.secondaryMessageButton, { borderBottomColor: accentColor }]}>
+                        <Text style={[styles.secondaryMessageButtonText, { color: accentColor }]}>Open Chat</Text>
                     </Pressable>
                 </FloatingCard>
             </ScrollView>

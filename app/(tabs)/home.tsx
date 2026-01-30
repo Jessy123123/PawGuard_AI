@@ -8,10 +8,17 @@ import { FloatingCard } from '../../components/FloatingCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { NGOHomeScreen } from '../../screens/NGOHomeScreen';
 
 export default function HomeScreen() {
     const router = useRouter();
     const { user } = useAuth();
+
+    // If user is NGO, show the NGO Home Screen
+    if (user?.role === 'ngo') {
+        return <NGOHomeScreen />;
+    }
+
     const firstName = user?.name ? user.name.split(' ')[0] : 'there';
 
     return (

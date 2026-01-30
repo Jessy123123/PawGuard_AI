@@ -204,9 +204,9 @@ export const ReportSightingScreen = () => {
                         required
                     />
                     {aiResult && (
-                        <View style={styles.aiBadge}>
+                        <View style={[styles.aiBadge, { backgroundColor: colors.minimalist.coral }]}>
                             <Ionicons name="sparkles" size={14} color={colors.minimalist.white} />
-                            <Text style={styles.aiBadgeText}>AI Analyzed</Text>
+                            <Text style={[styles.aiBadgeText, { color: colors.minimalist.white }]}>AI Analyzed</Text>
                         </View>
                     )}
                 </FloatingCard>
@@ -214,7 +214,7 @@ export const ReportSightingScreen = () => {
                 {/* AI Analysis Summary if available */}
                 {aiResult && (
                     <View style={styles.section}>
-                        <FloatingCard shadow="soft" style={{ backgroundColor: colors.minimalist.peachLight }}>
+                        <FloatingCard shadow="soft" style={{ backgroundColor: 'rgba(245, 164, 145, 0.1)' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                                 <Ionicons name="scan-circle" size={24} color={colors.minimalist.coral} />
                                 <Text style={{ fontWeight: 'bold', color: colors.minimalist.textDark }}>Gemini Analysis</Text>
@@ -464,7 +464,7 @@ export const ReportSightingScreen = () => {
             <View style={styles.submitContainer}>
                 <Pressable onPress={handleSubmit} disabled={isSaving}>
                     <LinearGradient
-                        colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                        colors={[colors.minimalist.coral, colors.minimalist.peach]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={[styles.submitButton, isSaving && { opacity: 0.6 }]}
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
         borderColor: colors.gray200,
     },
     triStateButtonActive: {
-        backgroundColor: colors.minimalist.peachLight,
+        backgroundColor: 'rgba(245, 164, 145, 0.15)',
         borderColor: colors.minimalist.coral,
     },
     triStateText: {

@@ -11,9 +11,23 @@ interface DataContextType {
         catsNotRescued: number;
     };
     isLoading: boolean;
+    isDisasterModeActive: boolean;
+    activeAlert: {
+        title: string;
+        description: string;
+        severity: 'Critical' | 'High' | 'Moderate';
+        status: string;
+    } | null;
+    disasterResources: {
+        shelter: number;
+        food: number;
+        medical: number;
+    };
     refreshData: () => Promise<void>;
     addAnimal: (animal: AnimalProfile) => void;
     updateAnimal: (id: string, updates: Partial<AnimalProfile>) => void;
+    setDisasterMode: (active: boolean, alert?: any) => void;
+    updateResources: (updates: Partial<{ shelter: number; food: number; medical: number }>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -71,6 +85,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [animals, setAnimals] = useState<AnimalProfile[]>(mockAnimals);
     const [alerts, setAlerts] = useState<Alert[]>(mockAlerts);
     const [isLoading, setIsLoading] = useState(false);
+    const [isDisasterModeActive, setIsDisasterModeActive] = useState(false);
+    const [activeAlert, setActiveAlert] = useState<{
+        title: string;
+        description: string;
+        severity: 'Critical' | 'High' | 'Moderate';
+        status: string;
+    } | null>(null);
+    const [disasterResources, setDisasterResources] = useState({
+        shelter: 85,
+        food: 42,
+        medical: 65,
+    });
     const [stats] = useState({
         dogsRescued: 128,
         dogsNotRescued: 45,
@@ -99,6 +125,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
     };
 
+    const setDisasterMode = (active: boolean, alert?: any) => {
+        setIsDisasterModeActive(active);
+        if (active && alert) {
+            setActiveAlert(alert);
+        } else if (!active) {
+            setActiveAlert(null);
+        }
+    };
+
+    const updateResources = (updates: Partial<{ shelter: number; food: number; medical: number }>) => {
+        setDisasterResources(prev => ({ ...prev, ...updates }));
+    };
+
     return (
         <DataContext.Provider
             value={{
@@ -109,6 +148,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 refreshData,
                 addAnimal,
                 updateAnimal,
+                isDisasterModeActive,
+                activeAlert,
+                disasterResources,
+                setDisasterMode,
+                updateResources,
             }}
         >
             {children}
