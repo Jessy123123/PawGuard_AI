@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import {
     View,
     Text,
@@ -11,7 +11,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
@@ -21,9 +21,53 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // Local video file
 const VIDEO_SOURCE = require('../../assets/video/stray_cat.mp4');
 
+/**
+ * Isolated Video Component to prevent React 19 "Expected static flag" errors
+ * by keeping the native view stable and outside the main animation re-render cycle.
+ */
+const VideoBackground = memo(({ player }: { player: any }) => {
+    return (
+        <View style={StyleSheet.absoluteFill}>
+            <View style={styles.videoContainer}>
+                <VideoView
+                    player={player}
+                    style={styles.video}
+                    contentFit="cover"
+                    nativeControls={false}
+                />
+            </View>
+
+            {/* Premium Dark Gradient Overlay */}
+            <LinearGradient
+                colors={[
+                    'rgba(0, 0, 0, 0.15)',
+                    'rgba(0, 0, 0, 0.05)',
+                    'rgba(0, 0, 0, 0.25)',
+                    'rgba(0, 0, 0, 0.65)',
+                    'rgba(0, 0, 0, 0.85)',
+                ]}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
+                style={styles.gradientOverlay}
+            />
+
+            {/* Vignette Effect */}
+            <View style={styles.vignetteTop} />
+            <View style={styles.vignetteBottom} />
+            <View style={styles.vignetteLeft} />
+            <View style={styles.vignetteRight} />
+        </View>
+    );
+});
+
 export default function LandingScreen() {
     const router = useRouter();
-    const videoRef = useRef<Video>(null);
+
+    // Initialize Video Player (expo-video)
+    const player = useVideoPlayer(VIDEO_SOURCE, (player) => {
+        player.loop = true;
+        player.play();
+        player.muted = true;
+    });
 
     // Animation values - staggered entry
     const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -32,7 +76,6 @@ export default function LandingScreen() {
     const taglineOpacity = useRef(new Animated.Value(0)).current;
     const buttonsOpacity = useRef(new Animated.Value(0)).current;
     const buttonsTranslateY = useRef(new Animated.Value(60)).current;
-    const videoScale = useRef(new Animated.Value(1)).current;
     const grainOpacity = useRef(new Animated.Value(0)).current;
 
     // Button animations
@@ -55,22 +98,6 @@ export default function LandingScreen() {
                 duration: 1200,
                 useNativeDriver: true,
             }).start();
-
-            // Cinematic slow zoom
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(videoScale, {
-                        toValue: 1.08,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(videoScale, {
-                        toValue: 1,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
 
             // 2. Title fades & slides in (after 400ms)
             await new Promise(resolve => setTimeout(resolve, 400));
@@ -116,8 +143,9 @@ export default function LandingScreen() {
     }, []);
 
     const handleGetStartedPressIn = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        // Micro-bounce effect with spring
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
         Animated.spring(getStartedScale, {
             toValue: 0.96,
             friction: 3,
@@ -132,7 +160,6 @@ export default function LandingScreen() {
     };
 
     const handleGetStartedPressOut = () => {
-        // Bounce back with overshoot
         Animated.spring(getStartedScale, {
             toValue: 1,
             friction: 3,
@@ -147,7 +174,9 @@ export default function LandingScreen() {
     };
 
     const handleLoginPressIn = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
         Animated.spring(loginScale, {
             toValue: 0.96,
             friction: 5,
@@ -175,46 +204,23 @@ export default function LandingScreen() {
         <View style={styles.container}>
             <StatusBar style="light" />
 
-            {/* Video Background with Parallax Zoom */}
+            {/* Video Background - Memoized to protect from animation flags */}
+            <VideoBackground player={player} />
+
+            {/* Background Animation Overlay (Fade in) */}
             <Animated.View style={[
-                styles.videoContainer,
+                StyleSheet.absoluteFillObject,
                 {
-                    opacity: backgroundOpacity,
-                    transform: [{ scale: videoScale }],
+                    backgroundColor: '#000',
+                    opacity: backgroundOpacity.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0],
+                    }),
                 }
-            ]}>
-                <Video
-                    ref={videoRef}
-                    source={VIDEO_SOURCE}
-                    style={styles.video}
-                    resizeMode={ResizeMode.COVER}
-                    shouldPlay
-                    isLooping
-                    isMuted
-                />
-            </Animated.View>
-
-            {/* Premium Dark Gradient Overlay */}
-            <LinearGradient
-                colors={[
-                    'rgba(0, 0, 0, 0.15)',
-                    'rgba(0, 0, 0, 0.05)',
-                    'rgba(0, 0, 0, 0.25)',
-                    'rgba(0, 0, 0, 0.65)',
-                    'rgba(0, 0, 0, 0.85)',
-                ]}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={styles.gradientOverlay}
-            />
-
-            {/* Vignette Effect */}
-            <View style={styles.vignetteTop} />
-            <View style={styles.vignetteBottom} />
-            <View style={styles.vignetteLeft} />
-            <View style={styles.vignetteRight} />
+            ]} pointerEvents="none" />
 
             {/* Subtle Film Grain */}
-            <Animated.View style={[styles.filmGrain, { opacity: grainOpacity }]} />
+            <Animated.View style={[styles.filmGrain, { opacity: grainOpacity }]} pointerEvents="none" />
 
             {/* Content */}
             <View style={styles.content}>
@@ -314,10 +320,8 @@ const styles = StyleSheet.create({
     },
     video: {
         flex: 1,
-        width: SCREEN_WIDTH * 1.1,
-        height: SCREEN_HEIGHT * 1.1,
-        marginLeft: -SCREEN_WIDTH * 0.05,
-        marginTop: -SCREEN_HEIGHT * 0.05,
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
     },
     gradientOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -384,7 +388,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'space-between',
         paddingHorizontal: spacing.xl + 8,
-        paddingTop: SCREEN_HEIGHT * 0.12,
+        paddingTop: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.12 : SCREEN_HEIGHT * 0.08,
         paddingBottom: spacing.mega + 24,
     },
     logoSection: {
@@ -506,3 +510,4 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
 });
+
