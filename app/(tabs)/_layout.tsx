@@ -23,12 +23,12 @@ export default function TabsLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: isNGO ? '#0891B2' : colors.minimalist.coral,
+                tabBarActiveTintColor: user?.role === 'ngo' ? '#0891B2' : colors.minimalist.coral,
                 tabBarInactiveTintColor: colors.minimalist.textLight,
                 tabBarStyle: {
-                    backgroundColor: isNGO ? '#FAFCFA' : colors.minimalist.white,
+                    backgroundColor: user?.role === 'ngo' ? '#FAFCFA' : colors.minimalist.white,
                     borderTopWidth: 1,
-                    borderTopColor: isNGO ? '#A5E5ED' : colors.minimalist.borderLight,
+                    borderTopColor: user?.role === 'ngo' ? '#A5E5ED' : colors.minimalist.borderLight,
                     height: 60,
                     paddingBottom: 8,
                     paddingTop: 8,

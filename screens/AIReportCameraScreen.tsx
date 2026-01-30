@@ -14,9 +14,6 @@ import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 
-// Gemini Cloud Function URL
-const GEMINI_ANALYZE_URL = 'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal';
-
 export const AIReportCameraScreen = () => {
     const router = useRouter();
     const { user } = useAuth();
@@ -26,6 +23,7 @@ export const AIReportCameraScreen = () => {
 
     const isNGO = user?.role === 'ngo';
     const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
+    const accentColorDark = isNGO ? '#0891B2' : colors.minimalist.redDark;
     const subtleAccentBg = isNGO ? 'rgba(165, 229, 237, 0.2)' : 'rgba(245, 164, 145, 0.15)';
     const gradientColors = (isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.peach]) as [string, string, ...string[]];
     const secondaryBorderColor = isNGO ? '#A5E5ED' : colors.minimalist.coral;
@@ -85,44 +83,51 @@ export const AIReportCameraScreen = () => {
             });
 
             // Call Gemini Cloud Function
-            const response = await fetch(GEMINI_ANALYZE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imageBase64: base64,
-                    mimeType: 'image/jpeg',
-                }),
-            });
+            // const response = await fetch(GEMINI_ANALYZE_URL, {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({
+            //         imageBase64: base64,
+            //         mimeType: 'image/jpeg',
+            //     }),
+            // });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Gemini analysis failed');
-            }
+            // if (!response.ok) {
+            //     const errorData = await response.json();
+            //     throw new Error(errorData.message || 'Gemini analysis failed');
+            // }
 
-            const geminiResult = await response.json();
-            console.log('✅ Gemini response:', geminiResult);
+            // const geminiResult = await response.json();
+            // console.log('✅ Gemini response:', geminiResult);
 
             // Handle case where no animal is detected
-            if (!geminiResult.species || geminiResult.species === 'unknown') {
-                console.log('⚠️ Gemini: No dog/cat detected');
-                Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
-                setIsAnalyzing(false);
-                return;
-            }
+            // if (!geminiResult.species || geminiResult.species === 'unknown') {
+            //     console.log('⚠️ Gemini: No dog/cat detected');
+            //     Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
+            //     setIsAnalyzing(false);
+            //     return;
+            // }
 
             // Map Gemini response to AnimalIdentificationResult
-            const result: AnimalIdentificationResult = {
-                species: geminiResult.species as 'dog' | 'cat' | 'unknown',
-                breed: geminiResult.breed || 'Mixed',
-                color: geminiResult.color || 'Unknown',
-                distinctiveFeatures: geminiResult.distinctiveFeatures || 'Analyzed by Gemini AI',
-                healthNotes: geminiResult.healthStatus || 'No health concerns noted',
-                isEmergency: geminiResult.isEmergency || false,
-                confidence: 0.95, // Gemini doesn't return confidence, use high default
-            };
+            // const result: AnimalIdentificationResult = {
+            //     isAnimal: true,
+            //     species: detection.class_name,
+            //     breed: detection.class_name.charAt(0).toUpperCase() + detection.class_name.slice(1),
+            //     color: 'Detected via YOLO',
+            //     distinctiveFeatures: [
+            //         `Detected with ${(detection.confidence * 100).toFixed(1)}% confidence`,
+            //         'YOLOv8 Backend Detection'
+            //     ],
+            //     estimatedAge: 'unknown',
+            //     size: 'medium',
+            //     condition: 'unknown',
+            //     confidence: detection.confidence,
+            //     rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`,
+            //     embedding: backendResult.embedding || undefined
+            // };
 
-            setAnalysisResult(result);
-            setIsAnalyzing(false);
+            // setAnalysisResult(result);
+            // setIsAnalyzing(false);
 
         } catch (error: any) {
             const errorMsg = error?.message || 'Unknown error';
