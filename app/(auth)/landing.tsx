@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import {
     View,
     Text,
@@ -12,17 +12,63 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Background image
-const BACKGROUND_IMAGE = require('../../assets/splash-icon.png');
+// Local video file
+const VIDEO_SOURCE = require('../../assets/video/stray_cat.mp4');
+
+/**
+ * Isolated Video Component to prevent React 19 "Expected static flag" errors
+ * by keeping the native view stable and outside the main animation re-render cycle.
+ */
+const VideoBackground = memo(({ player }: { player: any }) => {
+    return (
+        <View style={StyleSheet.absoluteFill}>
+            <View style={styles.videoContainer}>
+                <VideoView
+                    player={player}
+                    style={styles.video}
+                    contentFit="cover"
+                    nativeControls={false}
+                />
+            </View>
+
+            {/* Premium Dark Gradient Overlay */}
+            <LinearGradient
+                colors={[
+                    'rgba(0, 0, 0, 0.15)',
+                    'rgba(0, 0, 0, 0.05)',
+                    'rgba(0, 0, 0, 0.25)',
+                    'rgba(0, 0, 0, 0.65)',
+                    'rgba(0, 0, 0, 0.85)',
+                ]}
+                locations={[0, 0.25, 0.5, 0.75, 1]}
+                style={styles.gradientOverlay}
+            />
+
+            {/* Vignette Effect */}
+            <View style={styles.vignetteTop} />
+            <View style={styles.vignetteBottom} />
+            <View style={styles.vignetteLeft} />
+            <View style={styles.vignetteRight} />
+        </View>
+    );
+});
 
 export default function LandingScreen() {
     const router = useRouter();
+
+    // Initialize Video Player (expo-video)
+    const player = useVideoPlayer(VIDEO_SOURCE, (player) => {
+        player.loop = true;
+        player.play();
+        player.muted = true;
+    });
 
     // Animation values - staggered entry
     const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -159,32 +205,8 @@ export default function LandingScreen() {
         <View style={styles.container}>
             <StatusBar style="light" />
 
-            {/* Gradient Background instead of Video */}
-            <View style={StyleSheet.absoluteFill}>
-                <LinearGradient
-                    colors={['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                />
-
-                {/* Premium Dark Gradient Overlay */}
-                <LinearGradient
-                    colors={[
-                        'rgba(0, 0, 0, 0.15)',
-                        'rgba(0, 0, 0, 0.05)',
-                        'rgba(0, 0, 0, 0.25)',
-                        'rgba(0, 0, 0, 0.65)',
-                        'rgba(0, 0, 0, 0.85)',
-                    ]}
-                    locations={[0, 0.25, 0.5, 0.75, 1]}
-                    style={styles.gradientOverlay}
-                />
-
-                {/* Decorative circles */}
-                <View style={styles.decorativeCircle1} />
-                <View style={styles.decorativeCircle2} />
-            </View>
+            {/* Video Background - Memoized to protect from animation flags */}
+            <VideoBackground player={player} />
 
             {/* Background Animation Overlay (Fade in) */}
             <Animated.View style={[
@@ -293,6 +315,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#0A0A0A',
+    },
+    videoContainer: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    video: {
+        flex: 1,
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT,
     },
     gradientOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -444,3 +474,4 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
 });
+
