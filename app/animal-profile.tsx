@@ -14,41 +14,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { getAnimalById } from '../services/animalService';
 import { AnimalIdentity } from '../types';
 
-interface ActivityItem {
-    id: string;
-    type: string;
-    title: string;
-    description: string;
-    timestamp: string;
-    icon: keyof typeof Ionicons.glyphMap;
-}
-
-const mockActivities: ActivityItem[] = [
-    {
-        id: '1',
-        type: 'location',
-        title: 'Downtown Metro - Gate 4',
-        description: 'Spotted by Volunteer Sarah near the west entrance. Appeared calm but slightly dehydrated.',
-        timestamp: 'Last seen • 2 hours ago',
-        icon: 'location',
-    },
-    {
-        id: '2',
-        type: 'medical',
-        title: 'Rabies Vaccination',
-        description: 'Administered at PawGuard Field Clinic #2. Batch: RX-9921',
-        timestamp: 'Medical log • Sept 15',
-        icon: 'medical',
-    },
-    {
-        id: '3',
-        type: 'intake',
-        title: 'Profile Created via AI Scan',
-        description: 'Initial recognition profile generated from mobile upload.',
-        timestamp: 'Initial intake • Sept 10',
-        icon: 'camera',
-    },
-];
 
 export default function AnimalProfileScreen() {
     const router = useRouter();
@@ -73,6 +38,7 @@ export default function AnimalProfileScreen() {
         try {
             setIsLoading(true);
             console.log('📥 Loading animal:', animalId);
+
             const animalData = await getAnimalById(animalId);
 
             if (animalData) {
@@ -208,20 +174,38 @@ export default function AnimalProfileScreen() {
 
                     {/* Activity History */}
                     <Text style={styles.activityTitle}>Activity & Medical History</Text>
-                    {mockActivities.map((activity) => (
-                        <FloatingCard key={activity.id} style={styles.activityCard} shadow="soft">
-                            <View style={styles.activityRow}>
-                                <View style={styles.activityIcon}>
-                                    <Ionicons name={activity.icon} size={20} color={colors.minimalist.coral} />
+
+                    {animal.reportHistory.length === 0 ? (
+                        <Text style={{ color: colors.minimalist.textLight }}>
+                            No activity recorded yet
+                        </Text>
+                    ) : (
+                        animal.reportHistory.map((report, index) => (
+                            <FloatingCard key={index} style={styles.activityCard} shadow="soft">
+                                <View style={styles.activityRow}>
+                                    <View style={styles.activityIcon}>
+                                        <Ionicons name="location" size={20} color={colors.minimalist.coral} />
+                                    </View>
+
+                                    <View style={styles.activityContent}>
+                                        <Text style={styles.activityTitle}>
+                                            {report.location}
+                                        </Text>
+
+                                        <Text style={styles.activityDescription}>
+                                            Spotted by {report.reporterName}
+                                            {report.notes ? ` • ${report.notes}` : ''}
+                                        </Text>
+
+                                        <Text style={styles.activityTimestamp}>
+                                            {new Date(report.timestamp).toLocaleString()}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={styles.activityContent}>
-                                    <Text style={styles.activityTitle}>{activity.title}</Text>
-                                    <Text style={styles.activityDescription}>{activity.description}</Text>
-                                    <Text style={styles.activityTimestamp}>{activity.timestamp}</Text>
-                                </View>
-                            </View>
-                        </FloatingCard>
-                    ))}
+                            </FloatingCard>
+                        ))
+                    )}
+
 
                     {/* Action Buttons */}
                     <Pressable style={styles.primaryButton}>

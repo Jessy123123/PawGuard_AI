@@ -1,4 +1,4 @@
-// Animal Service - Database operations for animal identities
+// Animal Servianimace - Database operations for animal identities
 import {
     collection,
     doc,
@@ -152,10 +152,11 @@ export async function createAnimalIdentity(
     reporterInfo: { userId: string; userName: string },
     location: { address: string; coordinates?: { lat: number; lng: number } }
 ): Promise<AnimalIdentity> {
+
     const systemId = generateAnimalId();
     const now = new Date().toISOString();
 
-    const animalData: Omit<AnimalIdentity, 'id'> = {
+    const animalData: any = {
         systemId,
         species: aiResult.species === 'unknown' ? 'dog' : aiResult.species,
         breed: aiResult.breed,
@@ -163,7 +164,6 @@ export async function createAnimalIdentity(
         distinctiveFeatures: aiResult.distinctiveFeatures,
         featureHash: generateFeatureHash(aiResult),
         primaryImageUrl: imageUrl,
-        embedding: aiResult.embedding,
 
         status: 'waiting',
         isVaccinated: false,
@@ -172,21 +172,29 @@ export async function createAnimalIdentity(
         firstReportedAt: now,
         firstReportedBy: reporterInfo.userName,
         createdBy: reporterInfo.userId,
+
         lastSeenAt: now,
         lastSeenLocation: location.address,
+        lastSeenCoordinates: location.coordinates
+            ? {
+                latitude: location.coordinates.lat,
+                longitude: location.coordinates.lng,
+            }
+            : undefined,
 
         reportHistory: [],
         careHistory: []
     };
 
-    try {
-        const docRef = await addDoc(collection(db, ANIMALS_COLLECTION), animalData);
-        return { ...animalData, id: docRef.id };
-    } catch (error) {
-        console.error('Error creating animal identity:', error);
-        throw error;
+    // ✅ only add embedding if it exists
+    if (aiResult.embedding) {
+        animalData.embedding = aiResult.embedding;
     }
+
+    const docRef = await addDoc(collection(db, ANIMALS_COLLECTION), animalData);
+    return { ...animalData, id: docRef.id };
 }
+
 
 /**
  * Get an animal by ID
@@ -224,11 +232,22 @@ export async function addReportToAnimal(
         const currentData = animalDoc.data() as AnimalIdentity;
         const updatedHistory = [...(currentData.reportHistory || []), report];
 
-        await updateDoc(animalRef, {
+        const updateData: any = {
             reportHistory: updatedHistory,
             lastSeenAt: report.timestamp,
-            lastSeenLocation: report.location
-        });
+            lastSeenLocation: report.location,
+        };
+
+        //  only add coordinates if they exist
+        if (report.coordinates) {
+            updateData.lastSeenCoordinates = {
+                latitude: report.coordinates.lat,
+                longitude: report.coordinates.lng,
+            };
+        }
+
+        await updateDoc(animalRef, updateData);
+
     } catch (error) {
         console.error('Error adding report to animal:', error);
         throw error;

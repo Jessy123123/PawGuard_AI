@@ -5,7 +5,14 @@
 
 import * as FileSystem from 'expo-file-system/legacy';
 
-const BACKEND_URL = (process.env.EXPO_PUBLIC_YOLO_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
+const BACKEND_URL = process.env.EXPO_PUBLIC_YOLO_BACKEND_URL?.replace(/\/$/, '');
+
+if (!BACKEND_URL) {
+    throw new Error(
+        'EXPO_PUBLIC_YOLO_BACKEND_URL is not set. Check your .env file and restart Expo.'
+    );
+}
+
 
 console.log(`[YOLO Service] Configured BACKEND_URL: ${BACKEND_URL}`);
 
@@ -27,7 +34,7 @@ interface BackendResponse {
     dog_detected: boolean;
     cat_detected: boolean;
     primary_detection: BackendDetection | null;
-    embedding:number[] | null;
+    embedding: number[] | null;
     error?: string;
 }
 

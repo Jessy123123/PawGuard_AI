@@ -12,12 +12,30 @@ import { FloatingCard } from '../components/FloatingCard';
 import { yoloBackendService } from '../services/yoloBackendService';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
+
+
 
 export const AIReportCameraScreen = () => {
     const router = useRouter();
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState<AnimalIdentificationResult | null>(null);
+
+    const requestLocationPermission = async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+            Alert.alert(
+                'Location Permission Required',
+                'Location is needed to create a report.'
+            );
+            return false;
+        }
+
+        return true;
+    };
+
 
     const takePhoto = async () => {
         try {
@@ -94,7 +112,7 @@ export const AIReportCameraScreen = () => {
                 condition: 'unknown',
                 confidence: detection.confidence,
                 rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`,
-                embedding:backendResult.embedding || undefined
+                embedding: backendResult.embedding || undefined
             };
 
             setAnalysisResult(result);
@@ -111,17 +129,25 @@ export const AIReportCameraScreen = () => {
         }
     };
 
-    const handleContinue = () => {
-        if (imageUri && analysisResult) {
-            router.push({
-                pathname: '/ReportSighting',
-                params: {
-                    imageUri,
-                    aiResult: JSON.stringify(analysisResult)
-                }
-            });
-        }
+    const handleContinue = async () => {
+        if (!imageUri || !analysisResult) return;
+
+        // 1️⃣ Ask for location permission
+        const allowed = await requestLocationPermission();
+
+        // 2️⃣ If user denies → stop here
+        if (!allowed) return;
+
+        // 3️⃣ If allowed → go to Report screen
+        router.push({
+            pathname: '/ReportSighting',
+            params: {
+                imageUri,
+                aiResult: JSON.stringify(analysisResult),
+            },
+        });
     };
+
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
