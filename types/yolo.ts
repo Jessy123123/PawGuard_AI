@@ -4,17 +4,13 @@
  */
 
 export interface AnimalIdentificationResult {
-    isAnimal: boolean;
     species: 'dog' | 'cat' | 'unknown';
     breed: string;
     color: string;
-    distinctiveFeatures: string[];
-    estimatedAge: string;
-    size: 'small' | 'medium' | 'large';
-    condition: 'healthy' | 'injured' | 'unknown';
+    distinctiveFeatures: string;
+    healthNotes?: string; // New field for Gemini
+    isEmergency?: boolean; // New field for Gemini
     confidence: number;
-    rawResponse?: string;
-    embedding?: number[];
 }
 
 export interface YOLODetection {

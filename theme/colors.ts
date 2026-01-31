@@ -121,6 +121,15 @@ export const colors = {
     // Borders
     border: '#E7E5E4',
     borderLight: '#F5F5F4',
+
+    // Disaster Mode Colors
+    disasterRed: '#DC2626',
+    disasterRedLight: '#FEE2E2',
+    disasterOrange: '#F97316',
+    disasterOrangeLight: '#FFEDD5',
+    disasterGray: '#6B7280',
+    disasterGrayLight: '#F3F4F6',
+    disasterDark: '#1C1917',
   },
 };
 
