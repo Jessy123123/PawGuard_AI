@@ -32,6 +32,7 @@ export type RootStackParamList = {
     NewHomeDashboard: undefined;
     AnimalProfile: undefined;
     DisasterMode: undefined;
+    DisasterAnimalDetail: { animalId: string };
     NewAdoption: undefined;
     CommunityFeed: undefined;
     AIReportCamera: undefined;

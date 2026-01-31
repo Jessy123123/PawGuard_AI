@@ -108,30 +108,6 @@ export default function ReportScreen() {
                     </FloatingCard>
                 </View>
 
-                {/* Recent Reports */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Recent Reports</Text>
-
-                    <FloatingCard shadow="soft" style={styles.reportCard}>
-                        <View style={styles.reportHeader}>
-                            <Text style={styles.reportTitle}>Injured Dog - Marina Bay</Text>
-                            <View style={[styles.statusBadge, styles.statusSubmitted]}>
-                                <Text style={styles.statusText}>Submitted</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.reportTime}>Today at 2:30 PM</Text>
-                    </FloatingCard>
-
-                    <FloatingCard shadow="soft" style={styles.reportCard}>
-                        <View style={styles.reportHeader}>
-                            <Text style={styles.reportTitle}>Lost Cat - Orchard Road</Text>
-                            <View style={[styles.statusBadge, styles.statusVerified]}>
-                                <Text style={styles.statusText}>Verified</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.reportTime}>Yesterday at 10:15 AM</Text>
-                    </FloatingCard>
-                </View>
 
                 {/* Bottom Spacing */}
                 <View style={styles.bottomSpacing} />

@@ -81,14 +81,6 @@ export default function AppSettingsScreen() {
                     type: 'navigation',
                     icon: 'key',
                 },
-                {
-                    id: 'twoFactor',
-                    title: 'Two-Factor Authentication',
-                    description: 'Add extra security to your account',
-                    type: 'toggle',
-                    enabled: false,
-                    icon: 'lock-closed',
-                },
             ],
         },
         {

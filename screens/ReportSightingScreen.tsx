@@ -121,13 +121,13 @@ export const ReportSightingScreen = () => {
         setIsSaving(true);
 
         try {
-            console.log('📤 Uploading image to Firebase Storage...');
+            console.log('Uploading image to Firebase Storage...');
             // Upload image to Firebase Storage first
             const tempAnimalId = 'temp-' + Date.now();
             const imageUrl = await uploadAnimalImage(photoUri, tempAnimalId);
-            console.log('✅ Image uploaded:', imageUrl);
+            console.log('Image uploaded:', imageUrl);
 
-            console.log('💾 Creating animal identity in Firestore...');
+            console.log('Creating animal identity in Firestore...');
             // Create animal identity in Firestore (with embedding!)
             const createdAnimal = await createAnimalIdentity(
                 aiResult,
@@ -155,7 +155,7 @@ export const ReportSightingScreen = () => {
             });
 
             Alert.alert(
-                'Success! 🎉',
+                'Success!',
                 `Animal saved with ID: ${createdAnimal.systemId}\n\nThe embedding has been saved to Firestore!`,
                 [
                     {
@@ -165,7 +165,7 @@ export const ReportSightingScreen = () => {
                 ]
             );
         } catch (error: any) {
-            console.error('❌ Error saving animal:', error);
+            console.error('Error saving animal:', error);
             Alert.alert(
                 'Save Failed',
                 `Could not save the animal report.\n\nError: ${error.message || 'Unknown error'}`
