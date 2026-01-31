@@ -5,14 +5,17 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 import { FloatingCard } from '../components/FloatingCard';
-import { yoloBackendService } from '../services/yoloBackendService';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
+
+// Gemini Cloud Function URL
+const GEMINI_ANALYZE_URL = 'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal';
 
 export const AIReportCameraScreen = () => {
     const router = useRouter();
@@ -23,7 +26,6 @@ export const AIReportCameraScreen = () => {
 
     const isNGO = user?.role === 'ngo';
     const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
-    const accentColorDark = isNGO ? '#0891B2' : colors.minimalist.redDark;
     const subtleAccentBg = isNGO ? 'rgba(165, 229, 237, 0.2)' : 'rgba(245, 164, 145, 0.15)';
     const gradientColors = (isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.peach]) as [string, string, ...string[]];
     const secondaryBorderColor = isNGO ? '#A5E5ED' : colors.minimalist.coral;
@@ -69,42 +71,54 @@ export const AIReportCameraScreen = () => {
         }
     };
 
-
     const analyzeImage = async (uri: string) => {
         setImageUri(uri);
         setIsAnalyzing(true);
         setAnalysisResult(null);
 
         try {
-            console.log('🎯 Starting YOLO backend detection...');
-            const backendResult = await yoloBackendService.detectAnimals(uri);
+            console.log('🎯 Starting Gemini AI analysis...');
 
-            if (!backendResult.primary_detection) {
-                console.log('⚠️ YOLO: No dog/cat detected');
+            // Convert image to Base64
+            const base64 = await FileSystem.readAsStringAsync(uri, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // Call Gemini Cloud Function
+            const response = await fetch(GEMINI_ANALYZE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    imageBase64: base64,
+                    mimeType: 'image/jpeg',
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Gemini analysis failed');
+            }
+
+            const geminiResult = await response.json();
+            console.log('✅ Gemini response:', geminiResult);
+
+            // Handle case where no animal is detected
+            if (!geminiResult.species || geminiResult.species === 'unknown') {
+                console.log('⚠️ Gemini: No dog/cat detected');
                 Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
                 setIsAnalyzing(false);
                 return;
             }
 
-            console.log('✅ YOLO detected animal!');
-            const detection = backendResult.primary_detection;
-
-            // Create result from YOLO detection
+            // Map Gemini response to AnimalIdentificationResult
             const result: AnimalIdentificationResult = {
-                isAnimal: true,
-                species: detection.class_name,
-                breed: detection.class_name.charAt(0).toUpperCase() + detection.class_name.slice(1),
-                color: 'Detected via YOLO',
-                distinctiveFeatures: [
-                    `Detected with ${(detection.confidence * 100).toFixed(1)}% confidence`,
-                    'YOLOv8 Backend Detection'
-                ],
-                estimatedAge: 'unknown',
-                size: 'medium',
-                condition: 'unknown',
-                confidence: detection.confidence,
-                rawResponse: `YOLO: ${detection.class_name} @ ${(detection.confidence * 100).toFixed(1)}%`,
-                embedding: backendResult.embedding || undefined
+                species: geminiResult.species as 'dog' | 'cat' | 'unknown',
+                breed: geminiResult.breed || 'Mixed',
+                color: geminiResult.color || 'Unknown',
+                distinctiveFeatures: geminiResult.distinctiveFeatures || 'Analyzed by Gemini AI',
+                healthNotes: geminiResult.healthStatus || 'No health concerns noted',
+                isEmergency: geminiResult.isEmergency || false,
+                confidence: 0.95, // Gemini doesn't return confidence, use high default
             };
 
             setAnalysisResult(result);
@@ -112,10 +126,10 @@ export const AIReportCameraScreen = () => {
 
         } catch (error: any) {
             const errorMsg = error?.message || 'Unknown error';
-            console.error('❌ YOLO detection failed:', errorMsg);
+            console.error('❌ Gemini analysis failed:', errorMsg);
             Alert.alert(
-                'Detection Failed',
-                `Could not analyze the image. Make sure the YOLO backend server is running.\n\nError: ${errorMsg}`
+                'Analysis Failed',
+                `Could not analyze the image. Please check your internet connection.\n\nError: ${errorMsg}`
             );
             setIsAnalyzing(false);
         }
@@ -152,7 +166,7 @@ export const AIReportCameraScreen = () => {
                         </View>
                         <Text style={styles.title}>Identify Animal</Text>
                         <Text style={styles.subtitle}>
-                            Take a photo or upload an image. AI will identify the species, breed, and check for existing records.
+                            Take a photo or upload an image. Gemini AI will identify the species, breed, and health concerns.
                         </Text>
 
                         <View style={styles.buttonRow}>
@@ -181,30 +195,30 @@ export const AIReportCameraScreen = () => {
                         {isAnalyzing ? (
                             <View style={styles.analyzingOverlay}>
                                 <ActivityIndicator size="large" color={colors.minimalist.white} />
-                                <Text style={styles.analyzingText}>Analyzing with AI...</Text>
+                                <Text style={styles.analyzingText}>Analyzing with Gemini AI...</Text>
                             </View>
                         ) : analysisResult ? (
                             <View style={styles.resultCard}>
                                 <FloatingCard shadow="medium">
                                     <View style={styles.resultHeader}>
                                         <Ionicons
-                                            name="checkmark-circle"
+                                            name={analysisResult.isEmergency ? "alert-circle" : "checkmark-circle"}
                                             size={32}
-                                            color={analysisResult.isAnimal ? colors.minimalist.greenDark : colors.minimalist.orange}
+                                            color={analysisResult.isEmergency ? colors.minimalist.errorRed : colors.minimalist.greenDark}
                                         />
                                         <Text style={styles.resultTitle}>
-                                            {analysisResult.isAnimal ? 'Scan Complete' : 'Not an Animal?'}
+                                            {analysisResult.isEmergency ? '⚠️ Emergency Case' : 'Scan Complete'}
                                         </Text>
                                     </View>
 
-                                    {analysisResult.isAnimal && (
+                                    {analysisResult.species !== 'unknown' && (
                                         <View style={styles.attributesList}>
                                             <View style={styles.attributeRow}>
                                                 <Text style={styles.attributeLabel}>Species:</Text>
                                                 <Text style={styles.attributeValue}>{analysisResult.species.toUpperCase()}</Text>
                                             </View>
                                             <View style={styles.attributeRow}>
-                                                <Text style={styles.attributeLabel}>Breed Match:</Text>
+                                                <Text style={styles.attributeLabel}>Breed:</Text>
                                                 <Text style={styles.attributeValue}>{analysisResult.breed}</Text>
                                             </View>
                                             <View style={styles.attributeRow}>
@@ -212,9 +226,20 @@ export const AIReportCameraScreen = () => {
                                                 <Text style={styles.attributeValue}>{analysisResult.color}</Text>
                                             </View>
                                             <View style={styles.attributeRow}>
-                                                <Text style={styles.attributeLabel}>Confidence:</Text>
-                                                <Text style={styles.attributeValue}>{(analysisResult.confidence * 100).toFixed(0)}%</Text>
+                                                <Text style={styles.attributeLabel}>Health Status:</Text>
+                                                <Text style={[
+                                                    styles.attributeValue,
+                                                    analysisResult.isEmergency && { color: colors.minimalist.errorRed }
+                                                ]}>
+                                                    {analysisResult.healthNotes}
+                                                </Text>
                                             </View>
+                                            {analysisResult.distinctiveFeatures && (
+                                                <View style={styles.attributeRow}>
+                                                    <Text style={styles.attributeLabel}>Features:</Text>
+                                                    <Text style={styles.attributeValue}>{analysisResult.distinctiveFeatures}</Text>
+                                                </View>
+                                            )}
                                         </View>
                                     )}
 
@@ -385,6 +410,8 @@ const styles = StyleSheet.create({
         color: colors.minimalist.textDark,
         fontWeight: '600',
         fontSize: 15,
+        flex: 1,
+        textAlign: 'right',
     },
     continueButton: {
         backgroundColor: '#A5E5ED',

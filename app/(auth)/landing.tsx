@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,67 +7,22 @@ import {
     Dimensions,
     Animated,
     Platform,
+    ImageBackground,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Local video file
-const VIDEO_SOURCE = require('../../assets/video/stray_cat.mp4');
-
-/**
- * Isolated Video Component to prevent React 19 "Expected static flag" errors
- * by keeping the native view stable and outside the main animation re-render cycle.
- */
-const VideoBackground = memo(({ player }: { player: any }) => {
-    return (
-        <View style={StyleSheet.absoluteFill}>
-            <View style={styles.videoContainer}>
-                <VideoView
-                    player={player}
-                    style={styles.video}
-                    contentFit="cover"
-                    nativeControls={false}
-                />
-            </View>
-
-            {/* Premium Dark Gradient Overlay */}
-            <LinearGradient
-                colors={[
-                    'rgba(0, 0, 0, 0.15)',
-                    'rgba(0, 0, 0, 0.05)',
-                    'rgba(0, 0, 0, 0.25)',
-                    'rgba(0, 0, 0, 0.65)',
-                    'rgba(0, 0, 0, 0.85)',
-                ]}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={styles.gradientOverlay}
-            />
-
-            {/* Vignette Effect */}
-            <View style={styles.vignetteTop} />
-            <View style={styles.vignetteBottom} />
-            <View style={styles.vignetteLeft} />
-            <View style={styles.vignetteRight} />
-        </View>
-    );
-});
+// Background image
+const BACKGROUND_IMAGE = require('../../assets/splash-icon.png');
 
 export default function LandingScreen() {
     const router = useRouter();
-
-    // Initialize Video Player (expo-video)
-    const player = useVideoPlayer(VIDEO_SOURCE, (player) => {
-        player.loop = true;
-        player.play();
-        player.muted = true;
-    });
 
     // Animation values - staggered entry
     const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -204,8 +159,32 @@ export default function LandingScreen() {
         <View style={styles.container}>
             <StatusBar style="light" />
 
-            {/* Video Background - Memoized to protect from animation flags */}
-            <VideoBackground player={player} />
+            {/* Gradient Background instead of Video */}
+            <View style={StyleSheet.absoluteFill}>
+                <LinearGradient
+                    colors={['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                />
+
+                {/* Premium Dark Gradient Overlay */}
+                <LinearGradient
+                    colors={[
+                        'rgba(0, 0, 0, 0.15)',
+                        'rgba(0, 0, 0, 0.05)',
+                        'rgba(0, 0, 0, 0.25)',
+                        'rgba(0, 0, 0, 0.65)',
+                        'rgba(0, 0, 0, 0.85)',
+                    ]}
+                    locations={[0, 0.25, 0.5, 0.75, 1]}
+                    style={styles.gradientOverlay}
+                />
+
+                {/* Decorative circles */}
+                <View style={styles.decorativeCircle1} />
+                <View style={styles.decorativeCircle2} />
+            </View>
 
             {/* Background Animation Overlay (Fade in) */}
             <Animated.View style={[
@@ -315,70 +294,26 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0A0A0A',
     },
-    videoContainer: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    video: {
-        flex: 1,
-        width: SCREEN_WIDTH,
-        height: SCREEN_HEIGHT,
-    },
     gradientOverlay: {
         ...StyleSheet.absoluteFillObject,
     },
-    // Vignette - Soft edges effect
-    vignetteTop: {
+    decorativeCircle1: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 150,
-        backgroundColor: 'transparent',
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 50 },
-                shadowOpacity: 0.4,
-                shadowRadius: 80,
-            },
-        }),
+        top: -100,
+        right: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: 'rgba(255, 146, 104, 0.1)',
     },
-    vignetteBottom: {
+    decorativeCircle2: {
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 200,
-    },
-    vignetteLeft: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        width: 60,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 40, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 60,
-            },
-        }),
-    },
-    vignetteRight: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: 60,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: -40, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 60,
-            },
-        }),
+        bottom: 200,
+        left: -150,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: 'rgba(100, 200, 255, 0.05)',
     },
     filmGrain: {
         ...StyleSheet.absoluteFillObject,
@@ -468,7 +403,6 @@ const styles = StyleSheet.create({
         borderRadius: 32,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.2)',
-        // Top inner highlight
         borderTopColor: 'rgba(255, 255, 255, 0.35)',
         borderBottomColor: 'rgba(0, 0, 0, 0.15)',
     },
@@ -510,4 +444,3 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
     },
 });
-
