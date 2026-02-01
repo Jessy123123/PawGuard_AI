@@ -1,0 +1,90 @@
+﻿{
+  "status": "success",
+  "result": [
+    {
+      "platform": "gcfv2",
+      "id": "analyzeAnimal",
+      "project": "pawguardai-4ee35",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "analyzeAnimal",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-906596802029-us-central1",
+          "object": "analyzeAnimal/function-source.zip",
+          "generation": "1769861184431879"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"pawguardai-4ee35\",\"storageBucket\":\"pawguardai-4ee35.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "pawguardai-4ee35",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/pawguardai-4ee35/locations/us-central1/services/analyzeAnimal",
+        "FUNCTION_TARGET": "analyzeAnimal",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "secretEnvironmentVariables": [
+        {
+          "key": "GEMINI_API_KEY",
+          "projectId": "pawguardai-4ee35",
+          "secret": "GEMINI_API_KEY",
+          "version": "4"
+        }
+      ],
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal",
+      "serviceAccount": "906596802029-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 256,
+      "cpu": 1,
+      "maxInstances": 20,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "firebase-functions-hash": "c12d70a0af23935af79ddd7d40c82ff997a57534"
+      },
+      "runServiceId": "analyzeanimal",
+      "codebase": "default",
+      "hash": "c12d70a0af23935af79ddd7d40c82ff997a57534",
+      "state": "ACTIVE"
+    },
+    {
+      "platform": "gcfv2",
+      "id": "generateEmbedding",
+      "project": "pawguardai-4ee35",
+      "region": "us-central1",
+      "httpsTrigger": {},
+      "entryPoint": "generateEmbedding",
+      "runtime": "nodejs20",
+      "source": {
+        "storageSource": {
+          "bucket": "gcf-v2-sources-906596802029-us-central1",
+          "object": "generateEmbedding/function-source.zip",
+          "generation": "1769917045088475"
+        }
+      },
+      "ingressSettings": "ALLOW_ALL",
+      "environmentVariables": {
+        "FIREBASE_CONFIG": "{\"projectId\":\"pawguardai-4ee35\",\"storageBucket\":\"pawguardai-4ee35.firebasestorage.app\"}",
+        "GCLOUD_PROJECT": "pawguardai-4ee35",
+        "EVENTARC_CLOUD_EVENT_SOURCE": "projects/pawguardai-4ee35/locations/us-central1/services/generateEmbedding",
+        "FUNCTION_TARGET": "generateEmbedding",
+        "LOG_EXECUTION_ID": "true"
+      },
+      "timeoutSeconds": 60,
+      "uri": "https://us-central1-pawguardai-4ee35.cloudfunctions.net/generateEmbedding",
+      "serviceAccount": "906596802029-compute@developer.gserviceaccount.com",
+      "availableMemoryMb": 512,
+      "cpu": 1,
+      "concurrency": 80,
+      "labels": {
+        "deployment-tool": "cli-firebase",
+        "firebase-functions-hash": "7dcbd1f923675d35b953de1e42fcfcc2dd5574c3"
+      },
+      "runServiceId": "generateembedding",
+      "codebase": "default",
+      "hash": "7dcbd1f923675d35b953de1e42fcfcc2dd5574c3",
+      "state": "ACTIVE"
+    }
+  ]
+}

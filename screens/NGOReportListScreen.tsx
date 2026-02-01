@@ -26,77 +26,8 @@ import { NGOReport, ReportStatus, InjurySeverity } from '../types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Mock data
-const mockReports: NGOReport[] = [
-    {
-        id: '1',
-        reportId: 'RPT-2026-0001',
-        animalType: 'dog',
-        animalBreed: 'Golden Retriever',
-        animalColor: 'Golden',
-        injurySeverity: 'high',
-        injuryDescription: 'Injured leg, limping badly',
-        photos: ['https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600'],
-        location: 'Marina Bay Sands',
-        coordinates: { lat: 1.2838, lng: 103.8591 },
-        reporterName: 'Sarah Chen',
-        reporterPhone: '+65 9123 4567',
-        reporterEmail: 'sarah@email.com',
-        status: 'new',
-        reportedAt: new Date(Date.now() - 900000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '2',
-        reportId: 'RPT-2026-0002',
-        animalType: 'cat',
-        animalBreed: 'Persian',
-        animalColor: 'White',
-        injurySeverity: 'critical',
-        injuryDescription: 'Hit by vehicle, needs immediate care',
-        photos: ['https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600'],
-        location: 'Orchard Road',
-        coordinates: { lat: 1.3048, lng: 103.8318 },
-        reporterName: 'James Wong',
-        reporterPhone: '+65 9876 5432',
-        status: 'in_progress',
-        reportedAt: new Date(Date.now() - 3600000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        assignedVolunteer: 'John',
-    },
-    {
-        id: '3',
-        reportId: 'RPT-2026-0003',
-        animalType: 'dog',
-        animalBreed: 'Mixed Breed',
-        animalColor: 'Brown',
-        injurySeverity: 'medium',
-        injuryDescription: 'Appears malnourished',
-        photos: ['https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=600'],
-        location: 'Tampines Mall',
-        coordinates: { lat: 1.3525, lng: 103.9447 },
-        reporterName: 'Mary Tan',
-        status: 'new',
-        reportedAt: new Date(Date.now() - 7200000).toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '4',
-        reportId: 'RPT-2026-0004',
-        animalType: 'cat',
-        animalBreed: 'Tabby',
-        animalColor: 'Orange',
-        injurySeverity: 'low',
-        injuryDescription: 'Stray cat, appears healthy but needing shelter',
-        photos: ['https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600'],
-        location: 'Sentosa Island',
-        reporterName: 'Alex Lim',
-        status: 'resolved',
-        reportedAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date().toISOString(),
-        resolvedAt: new Date().toISOString(),
-    },
-];
+import { getAllAnimals } from '../services/animalService';
+import { AnimalIdentity } from '../types';
 
 type StatusFilter = 'all' | ReportStatus;
 
@@ -358,9 +289,9 @@ const ReportStoryCard: React.FC<{
 export const NGOReportListScreen: React.FC = () => {
     const router = useRouter();
     const scrollViewRef = useRef<ScrollView>(null);
-    const [reports, setReports] = useState(mockReports);
+    const [reports, setReports] = useState<NGOReport[]>([]);
     const [refreshing, setRefreshing] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
     // Filter indicator animation
@@ -375,16 +306,61 @@ export const NGOReportListScreen: React.FC = () => {
         setStatusFilter(filter);
 
         Animated.spring(indicatorPosition, {
-            toValue: index * (SCREEN_WIDTH - spacing.lg * 2) / 4,
+            toValue: index * ((SCREEN_WIDTH - spacing.xl * 2 - 8) / 4),
             friction: 8,
             tension: 80,
             useNativeDriver: true,
         }).start();
     };
 
+    useEffect(() => {
+        loadReports();
+    }, []);
+
+    const loadReports = async () => {
+        try {
+            setIsLoading(true);
+            const animals = await getAllAnimals();
+
+            // Map Firestore animals to NGOReport structure
+            const mappedReports: NGOReport[] = animals.map(animal => {
+                // Determine severity from first report or default
+                const firstReport = animal.reportHistory?.[0];
+                const condition = firstReport?.condition || 'unknown';
+                const isEmergency = condition === 'injured' || condition === 'critical';
+
+                return {
+                    id: animal.id,
+                    reportId: animal.systemId,
+                    animalType: animal.species as 'dog' | 'cat',
+                    animalBreed: animal.breed,
+                    animalColor: animal.color,
+                    injurySeverity: isEmergency ? 'high' : 'low',
+                    injuryDescription: firstReport?.notes || animal.distinctiveFeatures?.[0] || 'No description provided',
+                    photos: [animal.primaryImageUrl],
+                    location: animal.lastSeenLocation || 'Unknown Location',
+                    coordinates: animal.lastSeenCoordinates ? {
+                        lat: animal.lastSeenCoordinates.latitude,
+                        lng: animal.lastSeenCoordinates.longitude
+                    } : undefined,
+                    reporterName: animal.firstReportedBy || 'Anonymous',
+                    status: (animal.status as ReportStatus) || 'new',
+                    reportedAt: animal.firstReportedAt,
+                    updatedAt: animal.lastSeenAt,
+                };
+            });
+
+            setReports(mappedReports);
+        } catch (error) {
+            console.error('Failed to load reports:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const onRefresh = async () => {
         setRefreshing(true);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadReports();
         setRefreshing(false);
     };
 

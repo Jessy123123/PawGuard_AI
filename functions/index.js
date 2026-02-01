@@ -1,83 +1,97 @@
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { PredictionServiceClient } from "@google-cloud/aiplatform";
 
-const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
+// ========================================
+// Vertex AI Multimodal Embeddings Function
+// ========================================
 
-// Define the schema once outside to keep the handler clean
-const animalSchema = {
-    type: "object",
-    properties: {
-        species: { type: "string", enum: ["dog", "cat", "unknown"] },
-        breed: { type: "string", description: "Likely breed, e.g., 'Malaysian Kampung Dog' or 'Tabby'" },
-        color: { type: "string" },
-        isNeutered: { type: "boolean", description: "True if a cat has a tipped ear or notch" },
-        healthStatus: { type: "string", description: "Summary of visible health, e.g., 'Skin infection', 'Underweight', 'Healthy'" },
-        distinctiveFeatures: { type: "string", description: "Markings like 'white socks', 'collar', or 'scar'" },
-        isEmergency: { type: "boolean", description: "True if the animal appears injured or in critical condition" }
-    },
-    required: ["species", "breed", "color", "isNeutered", "healthStatus", "isEmergency"]
-};
+const PROJECT_ID = "pawguardai-4ee35";
+const LOCATION = "us-central1";
+const MODEL = "multimodalembedding@001";
 
-export const analyzeAnimal = onRequest(
+// Initialize the AI Platform client
+const aiplatformClient = new PredictionServiceClient({
+    apiEndpoint: `${LOCATION}-aiplatform.googleapis.com`,
+});
+
+export const generateEmbedding = onRequest(
     {
-        region: "us-central1",
-        secrets: [GEMINI_API_KEY],
-        timeoutSeconds: 60,
+        region: LOCATION,
+        timeoutSeconds: 120,
+        memory: "1GiB",
+        cors: true, // Enable CORS for all origins
+        // Uses Compute Engine default service account which needs Vertex AI User role
     },
     async (req, res) => {
+        // Handle CORS preflight
+        if (req.method === "OPTIONS") {
+            res.set("Access-Control-Allow-Origin", "*");
+            res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+            res.set("Access-Control-Allow-Headers", "Content-Type");
+            res.status(204).send("");
+            return;
+        }
+
+        // Set CORS headers for all responses
+        res.set("Access-Control-Allow-Origin", "*");
+
         try {
-            const genAI = new GoogleGenerativeAI(GEMINI_API_KEY.value());
+            console.log("📊 generateEmbedding function called");
 
-            // Apply the Schema and JSON configuration here
-            const model = genAI.getGenerativeModel({
-                model: "gemini-2.5-flash",
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: animalSchema,
-                }
-            });
-
-            const { imageBase64, mimeType } = req.body;
+            const { imageBase64 } = req.body;
 
             if (!imageBase64) {
-                const result = await model.generateContent("Say OK if you are working.");
-                return res.json({
-                    message: "No image found, running text test.",
-                    test: result.response.text()
+                console.error("❌ Missing imageBase64 in request body");
+                return res.status(400).json({
+                    error: "Missing imageBase64 in request body",
+                    success: false
                 });
             }
 
-            // The Malaysian-specific rescue prompt
-            const prompt = `
-                Act as a Malaysian animal rescue expert. Analyze this image for a stray animal report.
-                
-                CRITICAL INDICATORS:
-                - CATS: Look for a "tipped ear" (the top 1cm of the left ear removed). This is the standard Malaysian sign for a neutered community cat.
-                - HEALTH: Check for common local issues: mange (kurap), open wounds, severe thinness, or eye infections.
-                - IDENTITY: Describe markings clearly so rescuers can find this specific animal again.
-                
-                Output the result in the specified JSON format.
-            `;
+            console.log(`📷 Received image data: ${imageBase64.length} characters`);
 
-            const imagePart = {
-                inlineData: {
-                    data: imageBase64,
-                    mimeType: mimeType || "image/jpeg",
+            const endpoint = `projects/${PROJECT_ID}/locations/${LOCATION}/publishers/google/models/${MODEL}`;
+
+            const instance = {
+                image: {
+                    bytesBase64Encoded: imageBase64,
                 },
             };
 
-            const result = await model.generateContent([prompt, imagePart]);
+            console.log("🚀 Calling Vertex AI Multimodal Embeddings API...");
 
-            // Parse and return the structured JSON
-            const responseData = JSON.parse(result.response.text());
-            res.json(responseData);
+            const [response] = await aiplatformClient.predict({
+                endpoint,
+                instances: [instance],
+                parameters: { dimension: 1408 },
+            });
+
+            if (!response.predictions || response.predictions.length === 0) {
+                throw new Error("No predictions returned from Vertex AI");
+            }
+
+            const embedding = response.predictions[0].imageEmbedding;
+
+            if (!embedding || embedding.length === 0) {
+                throw new Error("Empty embedding returned from Vertex AI");
+            }
+
+            console.log(`✅ Generated ${embedding.length}-dimension embedding`);
+
+            res.status(200).json({
+                embedding: embedding,
+                dimensions: embedding.length,
+                success: true
+            });
 
         } catch (err) {
-            console.error("PawGuard AI Error:", err);
+            console.error("❌ Embedding generation failed:", err.message);
+            console.error("Full error:", err);
+
             res.status(500).json({
-                error: "Analysis failed",
-                message: err.message
+                error: "Embedding generation failed",
+                message: err.message || "Unknown error",
+                success: false
             });
         }
     }

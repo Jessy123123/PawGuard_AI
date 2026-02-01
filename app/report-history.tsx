@@ -103,23 +103,25 @@ export default function ReportHistoryScreen() {
                                                     style={styles.thumbnail}
                                                 />
                                             )}
-                                            {animal.embedding && (
-                                                <View style={[styles.embeddingBadge, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
-                                                    <Ionicons name="finger-print" size={12} color={accentColor} />
-                                                    <Text style={[styles.embeddingText, { color: accentColor }]}>Identity Saved</Text>
+                                            <View style={styles.cardInfo}>
+                                                <View style={styles.cardHeader}>
+                                                    <View style={styles.animalInfo}>
+                                                        <Text style={styles.animalName}>{animal.breed || 'Unknown'}</Text>
+                                                        <Text style={styles.reportDate}>{displayDate}</Text>
+                                                    </View>
                                                 </View>
+
+                                                {animal.embedding && (
+                                                    <View style={[styles.embeddingBadge, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
+                                                        <Ionicons name="finger-print" size={12} color={accentColor} />
+                                                        <Text style={[styles.embeddingText, { color: accentColor }]}>Identity Saved</Text>
+                                                    </View>
+                                                )}
 
                                                 {animal.color && (
                                                     <Text style={styles.colorText}>
                                                         Color: {animal.color}
                                                     </Text>
-                                                )}
-
-                                                {animal.embedding && (
-                                                    <View style={styles.embeddingBadge}>
-                                                        <Ionicons name="finger-print" size={12} color={colors.minimalist.coral} />
-                                                        <Text style={styles.embeddingText}>Identity Saved</Text>
-                                                    </View>
                                                 )}
                                             </View>
                                         </View>
@@ -131,20 +133,11 @@ export default function ReportHistoryScreen() {
                                             <Ionicons name="chevron-forward" size={16} color={colors.minimalist.coral} />
                                         </View>
                                     </FloatingCard>
-                                )}
+                                )
+                                }
                             </Pressable>
                         );
-                    })
-
-                                    <View style={styles.cardFooter}>
-                                        <Text style={[styles.viewDetails, { color: accentColor }]}>View Details</Text>
-                                        <Ionicons name="chevron-forward" size={16} color={accentColor} />
-                                    </View>
-                                </FloatingCard>
-                            )}
-                        </Pressable>
-                    ))
-                ) : (
+                    })) : (
                     <View style={styles.emptyState}>
                         <Ionicons name="document-text-outline" size={64} color={colors.minimalist.textLight} />
                         <Text style={styles.emptyText}>No animals scanned yet</Text>
@@ -157,7 +150,7 @@ export default function ReportHistoryScreen() {
                     </View>
                 )}
             </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 

@@ -8,7 +8,8 @@ export interface AnimalIdentificationResult {
     breed: string;
     color: string;
     distinctiveFeatures: string;
-    healthNotes?: string; // New field for Gemini
+    healthNotes?: string; // Additional notes on health
+    embedding?: number[]; // Vector embedding for similarity searchmini
     isEmergency?: boolean; // New field for Gemini
     confidence: number;
 }

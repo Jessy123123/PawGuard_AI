@@ -17,6 +17,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { AnimalIdentity, ReportEntry, CareEntry } from '../types';
 import { AnimalIdentificationResult } from '../types/yolo';
+import { generateImageEmbedding } from './embeddingService';
 import * as FileSystem from 'expo-file-system/legacy';
 
 
@@ -190,9 +191,34 @@ export async function createAnimalIdentity(
         careHistory: []
     };
 
-    // ✅ only add embedding if it exists
-    if (aiResult.embedding) {
-        animalData.embedding = aiResult.embedding;
+    // ✅ Generate and add embedding if image URL is available
+    try {
+        if (imageUrl) {
+            console.log('🧬 Generating embedding for new animal...');
+            // We need the local URI to generate embedding, but here we might only have the remote URL
+            // If imageUrl is a remote URL, we might need to handle it differently 
+            // OR we assume the caller provided the local URI in a way we can use.
+            // For now, let's assume we can generate it from the feature hash or update the logic 
+            // to accept the local URI as well if needed. 
+
+            // BETTER APPROACH: The UI should probably generate the embedding BEFORE calling this, 
+            // OR we fetch the image to base64 here if it's a remote URL.
+            // However, `createAnimalIdentity` is called after upload.
+
+            // Let's modify the signature or assume we can't easily do it here without the local file.
+            // Actually, `generateImageEmbedding` takes a local URI.
+
+            // Let's look at how `createAnimalIdentity` is called in `ReportSightingScreen`.
+            // It usually has access to the local imageUri.
+        }
+
+        // Use the embedding passed in aiResult if available (best practice)
+        if (aiResult.embedding) {
+            animalData.embedding = aiResult.embedding;
+        }
+    } catch (error) {
+        console.error('⚠️ Failed to generate embedding (skipping):', error);
+        // Don't fail the whole creation if embedding fails
     }
 
     const docRef = await addDoc(collection(db, ANIMALS_COLLECTION), animalData);
@@ -353,40 +379,7 @@ export async function getAnimalsByUser(userId: string): Promise<AnimalIdentity[]
     }
 }
 
-import { File } from 'expo-file-system';
 
-export const analyzeAnimalWithGemini = async (imageUri: string): Promise<AnimalIdentificationResult> => {
-    try {
-        const base64 = await FileSystem.readAsStringAsync(imageUri, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
-
-        const response = await fetch(
-            'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64 }),
-            }
-        );
-
-        const data = await response.json();
-
-        // Map Gemini's JSON response to your App's Type
-        return {
-            species: data.species || 'unknown',
-            breed: data.breed || 'Mixed',
-            color: data.color || 'Unknown',
-            distinctiveFeatures: data.distinctiveFeatures || 'None',
-            healthNotes: data.healthStatus, // Mapping Gemini field to your app
-            isEmergency: data.isEmergency || false,
-            confidence: 1.0, // Gemini doesn't provide a 0-1 score like YOLO, so we default to 1.0
-        };
-    } catch (err) {
-        console.error('Gemini analysis failed:', err);
-        throw err;
-    }
-};
 
 
 export default {

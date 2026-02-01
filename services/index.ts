@@ -2,4 +2,5 @@
 export * from './firebase';
 export * from './animalService';
 export * from './locationService';
-export * from './yoloBackendService';
+export * from './geminiService';
+export * from './embeddingService';
