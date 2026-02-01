@@ -135,17 +135,25 @@ export const AIReportCameraScreen = () => {
         }
     };
 
-    const handleContinue = () => {
-        if (imageUri && analysisResult) {
-            router.push({
-                pathname: '/ReportSighting',
-                params: {
-                    imageUri,
-                    aiResult: JSON.stringify(analysisResult)
-                }
-            });
-        }
+    const handleContinue = async () => {
+        if (!imageUri || !analysisResult) return;
+
+        // 1️⃣ Ask for location permission
+        const allowed = await requestLocationPermission();
+
+        // 2️⃣ If user denies → stop here
+        if (!allowed) return;
+
+        // 3️⃣ If allowed → go to Report screen
+        router.push({
+            pathname: '/ReportSighting',
+            params: {
+                imageUri,
+                aiResult: JSON.stringify(analysisResult),
+            },
+        });
     };
+
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

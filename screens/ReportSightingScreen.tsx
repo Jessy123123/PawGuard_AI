@@ -16,6 +16,16 @@ import { useReports } from '../contexts/ReportContext';
 import { getCurrentLocation } from '../services/locationService';
 import { createAnimalIdentity, uploadAnimalImage } from '../services/animalService';
 import { useAuth } from '../contexts/AuthContext';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Location from 'expo-location';
+import { Linking } from 'react-native';
+import { addReportToAnimal } from '../services/animalService';
+
+
+
+
+
+
 
 export const ReportSightingScreen = () => {
     const router = useRouter();
@@ -46,11 +56,21 @@ export const ReportSightingScreen = () => {
     const [additionalDetails, setAdditionalDetails] = useState<string>(initialDetails);
     const [isDetectingLocation, setIsDetectingLocation] = useState(true);
     const [location, setLocation] = useState({
-        latitude: 37.7749,
-        longitude: -122.4194,
+        latitude: 4.2105,     // Malaysia
+        longitude: 101.9758,
     });
+
     const [locationName, setLocationName] = useState('Detecting location...');
     const [manualAddress, setManualAddress] = useState('');
+    const openGoogleMapsForEdit = () => {
+        const lat = location.latitude;
+        const lng = location.longitude;
+
+        // Opens Google Maps with search enabled, centered near current location
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+        Linking.openURL(url);
+    };
 
     const handleEditAddress = () => {
         Alert.prompt(
@@ -75,19 +95,44 @@ export const ReportSightingScreen = () => {
             manualAddress || locationName
         );
     };
+    const openInGoogleMaps = () => {
+        const lat = location.latitude;
+        const lng = location.longitude;
+
+        const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+        Linking.openURL(url);
+    };
+
+    const requestLocationPermission = async () => {
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+            Alert.alert(
+                'Permission denied',
+                'Location access is required to attach location to the report.'
+            );
+            return null;
+        }
+
+        const currentLocation = await Location.getCurrentPositionAsync({});
+        return currentLocation;
+    };
 
     useEffect(() => {
         // Get real GPS location on mount
         const fetchLocation = async () => {
             try {
                 const result = await getCurrentLocation();
-                if (result && result.coordinates) {
+                if (result.success && result.coordinates) {
                     setLocation({
                         latitude: result.coordinates.latitude,
-                        longitude: result.coordinates.longitude
+                        longitude: result.coordinates.longitude,
                     });
-                    setLocationName(`${result.coordinates.latitude.toFixed(4)}, ${result.coordinates.longitude.toFixed(4)}`);
+
+                    setLocationName(result.address || 'Location unavailable');
                 }
+
             } catch (error) {
                 console.log('Location permission denied, using default');
                 setLocationName('Location unavailable');
@@ -138,6 +183,26 @@ export const ReportSightingScreen = () => {
                     coordinates: { lat: location.latitude, lng: location.longitude }
                 }
             );
+
+            // ✅ STEP 1: Add report entry for Activity & Medical History
+            await addReportToAnimal(createdAnimal.id, {
+                id: Date.now().toString(),
+                reporterId: user.id,
+                reporterName: user.name,
+                location: manualAddress || locationName,
+                coordinates: {
+                    lat: location.latitude,
+                    lng: location.longitude,
+                },
+                imageUrl,
+                condition,
+                notes: additionalDetails,
+                timestamp: new Date().toISOString(),
+
+
+            });
+
+
             console.log('✅ Animal created with ID:', createdAnimal.systemId);
 
             // Update the displayed report ID with the real system ID
@@ -145,14 +210,7 @@ export const ReportSightingScreen = () => {
             setReportId(createdAnimal.systemId);
 
             // Also save to context for local viewing
-            addReport({
-                animalType: animalType as 'dog' | 'cat',
-                breed: aiResult?.breed || 'Unknown',
-                color: aiResult?.color || 'Unknown',
-                location: manualAddress || locationName,
-                imageUri: photoUri,
-                aiData: aiResult
-            });
+
 
             Alert.alert(
                 'Success! 🎉',
@@ -246,19 +304,26 @@ export const ReportSightingScreen = () => {
                     <Text style={styles.sectionLabel}>Detection Location</Text>
                     <FloatingCard shadow="soft">
                         <View style={styles.mapContainer}>
-                            <MapView
-                                style={styles.map}
-                                initialRegion={{
-                                    ...location,
-                                    latitudeDelta: 0.1,
-                                    longitudeDelta: 0.1,
-                                }}
-                                scrollEnabled={false}
-                                zoomEnabled={false}
-                            >
-                                <Marker coordinate={location} />
-                            </MapView>
+                            <Pressable onPress={openInGoogleMaps} style={{ flex: 1 }}>
+                                <MapView
+                                    style={{ flex: 1 }}
+                                    region={{
+                                        latitude: location.latitude,
+                                        longitude: location.longitude,
+                                        latitudeDelta: 0.01,
+                                        longitudeDelta: 0.01,
+                                    }}
+                                    scrollEnabled={false}
+                                    zoomEnabled={false}
+                                    pointerEvents="none"
+                                >
+
+                                    <Marker coordinate={location} />
+                                </MapView>
+                            </Pressable>
                         </View>
+
+
                         <View style={styles.locationRow}>
                             <View style={styles.locationStatus}>
                                 <View
@@ -275,10 +340,21 @@ export const ReportSightingScreen = () => {
                                     {isDetectingLocation ? 'Detecting location...' : 'Location detected'}
                                 </Text>
                             </View>
-                            <Pressable onPress={handleEditAddress}>
+                            <Pressable onPress={openGoogleMapsForEdit}>
                                 <Text style={styles.editAddressText}>Edit Address</Text>
                             </Pressable>
+
                         </View>
+                        <Text
+                            style={{
+                                fontSize: 12,
+                                color: colors.minimalist.textLight,
+                                marginTop: 6,
+                            }}
+                        >
+                            If location was incorrect, please confirm the address manually before submitting.
+                        </Text>
+
                     </FloatingCard>
                 </View>
 

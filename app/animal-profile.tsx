@@ -14,41 +14,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { getAnimalById } from '../services/animalService';
 import { AnimalIdentity } from '../types';
 
-interface ActivityItem {
-    id: string;
-    type: string;
-    title: string;
-    description: string;
-    timestamp: string;
-    icon: keyof typeof Ionicons.glyphMap;
-}
-
-const mockActivities: ActivityItem[] = [
-    {
-        id: '1',
-        type: 'location',
-        title: 'Downtown Metro - Gate 4',
-        description: 'Spotted by Volunteer Sarah near the west entrance. Appeared calm but slightly dehydrated.',
-        timestamp: 'Last seen • 2 hours ago',
-        icon: 'location',
-    },
-    {
-        id: '2',
-        type: 'medical',
-        title: 'Rabies Vaccination',
-        description: 'Administered at PawGuard Field Clinic #2. Batch: RX-9921',
-        timestamp: 'Medical log • Sept 15',
-        icon: 'medical',
-    },
-    {
-        id: '3',
-        type: 'intake',
-        title: 'Profile Created via AI Scan',
-        description: 'Initial recognition profile generated from mobile upload.',
-        timestamp: 'Initial intake • Sept 10',
-        icon: 'camera',
-    },
-];
 
 export default function AnimalProfileScreen() {
     const router = useRouter();
@@ -76,6 +41,7 @@ export default function AnimalProfileScreen() {
         try {
             setIsLoading(true);
             console.log('📥 Loading animal:', animalId);
+
             const animalData = await getAnimalById(animalId);
 
             if (animalData) {
@@ -222,9 +188,10 @@ export default function AnimalProfileScreen() {
                                     <Text style={styles.activityDescription}>{activity.description}</Text>
                                     <Text style={styles.activityTimestamp}>{activity.timestamp}</Text>
                                 </View>
-                            </View>
-                        </FloatingCard>
-                    ))}
+                            </FloatingCard>
+                        ))
+                    )}
+
 
                     {/* Action Buttons */}
                     <Pressable style={styles.primaryButton}>

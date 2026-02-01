@@ -76,52 +76,65 @@ export default function ReportHistoryScreen() {
                         <Text style={styles.loadingText}>Loading your animals...</Text>
                     </View>
                 ) : animals.length > 0 ? (
-                    animals.map((animal) => (
-                        <Pressable
-                            key={animal.id}
-                            onPress={() => router.push({
-                                pathname: '/animal-profile',
-                                params: { id: animal.id }
-                            })}
-                        >
-                            {({ pressed }) => (
-                                <FloatingCard shadow="soft" style={[styles.reportCard, pressed && styles.pressed]}>
-                                    <View style={styles.cardContent}>
-                                        {animal.primaryImageUrl && (
-                                            <Image
-                                                source={{ uri: animal.primaryImageUrl }}
-                                                style={styles.thumbnail}
-                                            />
-                                        )}
-                                        <View style={styles.cardInfo}>
-                                            <View style={styles.cardHeader}>
-                                                <View style={styles.animalInfo}>
-                                                    <Text style={styles.animalName}>
-                                                        {animal.species === 'dog' ? '🐕' : '🐈'} {animal.breed}
-                                                    </Text>
-                                                    <Text style={[styles.animalId, { color: accentColor }]}>
-                                                        ID: {animal.systemId}
-                                                    </Text>
-                                                    <Text style={styles.reportDate}>
-                                                        {new Date(animal.lastSeenAt).toLocaleDateString()} • {animal.lastSeenLocation}
-                                                    </Text>
-                                                </View>
-                                                <StatusBadge status={animal.status as any} />
-                                            </View>
+                    animals.map((animal) => {
+                        const displayLocation =
+                            animal.lastSeenLocation
+                                ? animal.lastSeenLocation
+                                : animal.lastSeenCoordinates?.latitude != null
+                                    ? `${animal.lastSeenCoordinates.latitude.toFixed(4)}, ${animal.lastSeenCoordinates.longitude.toFixed(4)}`
+                                    : 'Location unavailable';
 
-                                            {animal.color && (
-                                                <Text style={styles.colorText}>Color: {animal.color}</Text>
+                        const displayDate = new Date(animal.lastSeenAt).toLocaleDateString();
+
+                        return (
+                            <Pressable
+                                key={animal.id}
+                                onPress={() => router.push({
+                                    pathname: '/animal-profile',
+                                    params: { id: animal.id }
+                                })}
+                            >
+                                {({ pressed }) => (
+                                    <FloatingCard shadow="soft" style={[styles.reportCard, pressed && styles.pressed]}>
+                                        <View style={styles.cardContent}>
+                                            {animal.primaryImageUrl && (
+                                                <Image
+                                                    source={{ uri: animal.primaryImageUrl }}
+                                                    style={styles.thumbnail}
+                                                />
                                             )}
                                             {animal.embedding && (
                                                 <View style={[styles.embeddingBadge, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
                                                     <Ionicons name="finger-print" size={12} color={accentColor} />
                                                     <Text style={[styles.embeddingText, { color: accentColor }]}>Identity Saved</Text>
                                                 </View>
-                                            )}
-                                        </View>
-                                    </View>
 
-                                    <View style={styles.divider} />
+                                                {animal.color && (
+                                                    <Text style={styles.colorText}>
+                                                        Color: {animal.color}
+                                                    </Text>
+                                                )}
+
+                                                {animal.embedding && (
+                                                    <View style={styles.embeddingBadge}>
+                                                        <Ionicons name="finger-print" size={12} color={colors.minimalist.coral} />
+                                                        <Text style={styles.embeddingText}>Identity Saved</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                        </View>
+
+                                        <View style={styles.divider} />
+
+                                        <View style={styles.cardFooter}>
+                                            <Text style={styles.viewDetails}>View Details</Text>
+                                            <Ionicons name="chevron-forward" size={16} color={colors.minimalist.coral} />
+                                        </View>
+                                    </FloatingCard>
+                                )}
+                            </Pressable>
+                        );
+                    })
 
                                     <View style={styles.cardFooter}>
                                         <Text style={[styles.viewDetails, { color: accentColor }]}>View Details</Text>

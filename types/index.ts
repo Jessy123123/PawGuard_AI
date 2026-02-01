@@ -86,6 +86,10 @@ export interface AnimalIdentity {
     createdBy: string;                   // User ID who created this animal
     lastSeenAt: string;
     lastSeenLocation: string;
+    lastSeenCoordinates?: {
+        latitude: number;
+        longitude: number;
+    };
 
     // History
     reportHistory: ReportEntry[];

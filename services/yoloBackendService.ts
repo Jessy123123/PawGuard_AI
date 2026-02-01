@@ -5,7 +5,14 @@
 
 import * as FileSystem from 'expo-file-system/legacy';
 
-const BACKEND_URL = (process.env.EXPO_PUBLIC_YOLO_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '');
+const BACKEND_URL = process.env.EXPO_PUBLIC_YOLO_BACKEND_URL?.replace(/\/$/, '');
+
+if (!BACKEND_URL) {
+    throw new Error(
+        'EXPO_PUBLIC_YOLO_BACKEND_URL is not set. Check your .env file and restart Expo.'
+    );
+}
+
 
 console.log(`[YOLO Service] Configured BACKEND_URL: ${BACKEND_URL}`);
 
@@ -27,7 +34,7 @@ interface BackendResponse {
     dog_detected: boolean;
     cat_detected: boolean;
     primary_detection: BackendDetection | null;
-    embedding:number[] | null;
+    embedding: number[] | null;
     error?: string;
 }
 
@@ -126,7 +133,17 @@ class YOLOBackendService {
             }
 
             const result: BackendResponse = await response.json();
-            console.log(`📥 Received result:`, JSON.stringify(result, null, 2));
+
+            // Log result summary without the full embedding array (too long for terminal)
+            const resultSummary = {
+                success: result.success,
+                detections: result.detections,
+                dog_detected: result.dog_detected,
+                cat_detected: result.cat_detected,
+                primary_detection: result.primary_detection,
+                embedding: result.embedding ? `[${result.embedding.length} dimensions]` : null
+            };
+            console.log(`📥 Received result:`, JSON.stringify(resultSummary, null, 2));
 
             if (!result.success) {
                 throw new Error(result.error || 'Detection failed');
