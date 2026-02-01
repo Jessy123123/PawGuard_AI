@@ -47,5 +47,6 @@ __pycache__/
 *.pyc
 
 # Environment variables
+.env*.local
 .env
-.env.*
+!.env.example
