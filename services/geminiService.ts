@@ -8,12 +8,15 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 const GOOGLE_AI_KEY = process.env.EXPO_PUBLIC_GOOGLE_AI_KEY;
 
+// DEBUG: Log to verify key is loaded
+console.log('[Gemini] API Key loaded:', GOOGLE_AI_KEY ? `${GOOGLE_AI_KEY.substring(0, 10)}...` : 'MISSING!');
+
 if (!GOOGLE_AI_KEY) {
     console.error('Missing EXPO_PUBLIC_GOOGLE_AI_KEY in environment variables');
     // We don't throw immediately to allow app to load, but functionality will be broken
 }
 
-const genAI = new GoogleGenerativeAI(GOOGLE_AI_KEY);
+const genAI = new GoogleGenerativeAI(GOOGLE_AI_KEY || '');
 
 interface GeminiDetectionResult {
     success: boolean;
@@ -27,7 +30,8 @@ interface GeminiDetectionResult {
 }
 
 class GeminiService {
-    private model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    // Using 'gemini-2.0-flash' - older models (1.5-flash, gemini-pro) have been retired
+    private model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     /**
      * Convert image URI to base64

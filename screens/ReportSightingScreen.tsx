@@ -47,8 +47,14 @@ export const ReportSightingScreen = () => {
     );
 
     // Construct initial details based on AI analysis
+    // Handle distinctiveFeatures as either string or array
+    const featuresText = aiResult?.distinctiveFeatures
+        ? (Array.isArray(aiResult.distinctiveFeatures)
+            ? aiResult.distinctiveFeatures.join(', ')
+            : aiResult.distinctiveFeatures)
+        : 'N/A';
     const initialDetails = aiResult ?
-        `Breed: ${aiResult.breed}\nColor: ${aiResult.color}\nFeatures: ${aiResult.distinctiveFeatures?.join(', ') || 'N/A'}`
+        `Breed: ${aiResult.breed}\nColor: ${aiResult.color}\nFeatures: ${featuresText}`
         : '';
 
     const [temperament, setTemperament] = useState<string>('calm');
@@ -317,26 +323,55 @@ export const ReportSightingScreen = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionLabel}>Detection Location</Text>
                     <FloatingCard shadow="soft">
-                        <View style={styles.mapContainer}>
-                            <Pressable onPress={openInGoogleMaps} style={{ flex: 1 }}>
-                                <MapView
-                                    style={{ flex: 1 }}
-                                    region={{
-                                        latitude: location.latitude,
-                                        longitude: location.longitude,
-                                        latitudeDelta: 0.01,
-                                        longitudeDelta: 0.01,
+                        <View style={[styles.mapContainer, { height: 200 }]}>
+                            <MapView
+                                style={{ flex: 1 }}
+                                region={{
+                                    latitude: location.latitude,
+                                    longitude: location.longitude,
+                                    latitudeDelta: 0.01,
+                                    longitudeDelta: 0.01,
+                                }}
+                                scrollEnabled={true}
+                                zoomEnabled={true}
+                            >
+                                <Marker
+                                    coordinate={location}
+                                    draggable
+                                    onDragEnd={async (e) => {
+                                        const newCoords = e.nativeEvent.coordinate;
+                                        setLocation({
+                                            latitude: newCoords.latitude,
+                                            longitude: newCoords.longitude,
+                                        });
+                                        // Reverse geocode to get address
+                                        try {
+                                            const results = await Location.reverseGeocodeAsync({
+                                                latitude: newCoords.latitude,
+                                                longitude: newCoords.longitude,
+                                            });
+                                            if (results && results.length > 0) {
+                                                const addr = results[0];
+                                                const addressText = [
+                                                    addr.street,
+                                                    addr.city,
+                                                    addr.region,
+                                                    addr.country
+                                                ].filter(Boolean).join(', ');
+                                                setLocationName(addressText || 'Address updated');
+                                                setManualAddress(addressText || '');
+                                            }
+                                        } catch (err) {
+                                            console.log('Reverse geocoding failed:', err);
+                                            setLocationName('Location updated (address unavailable)');
+                                        }
                                     }}
-                                    scrollEnabled={false}
-                                    zoomEnabled={false}
-                                    pointerEvents="none"
-                                >
-
-                                    <Marker coordinate={location} />
-                                </MapView>
-                            </Pressable>
+                                />
+                            </MapView>
                         </View>
-
+                        <Text style={{ fontSize: 11, color: colors.minimalist.coral, marginBottom: 8, fontWeight: '600' }}>
+                            📍 Drag the marker to correct the location
+                        </Text>
 
                         <View style={styles.locationRow}>
                             <View style={styles.locationStatus}>
@@ -350,24 +385,15 @@ export const ReportSightingScreen = () => {
                                         },
                                     ]}
                                 />
-                                <Text style={styles.locationText}>
-                                    {isDetectingLocation ? 'Detecting location...' : 'Location detected'}
+                                <Text style={styles.locationText} numberOfLines={2}>
+                                    {locationName}
                                 </Text>
                             </View>
                             <Pressable onPress={openGoogleMapsForEdit}>
-                                <Text style={styles.editAddressText}>Edit Address</Text>
+                                <Text style={styles.editAddressText}>Open Maps</Text>
                             </Pressable>
 
                         </View>
-                        <Text
-                            style={{
-                                fontSize: 12,
-                                color: colors.minimalist.textLight,
-                                marginTop: 6,
-                            }}
-                        >
-                            If location was incorrect, please confirm the address manually before submitting.
-                        </Text>
 
                     </FloatingCard>
                 </View>

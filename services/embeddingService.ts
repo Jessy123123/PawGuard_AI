@@ -8,6 +8,8 @@ import * as FileSystem from 'expo-file-system/legacy';
 interface EmbeddingResult {
     embedding: number[];
     dimensions: number;
+    success: boolean;
+    message?: string;
 }
 
 const EMBEDDING_FUNCTION_URL = 'https://us-central1-pawguardai-4ee35.cloudfunctions.net/generateEmbedding';
@@ -18,35 +20,58 @@ const EMBEDDING_FUNCTION_URL = 'https://us-central1-pawguardai-4ee35.cloudfuncti
 export async function generateImageEmbedding(imageUri: string): Promise<number[]> {
     try {
         console.log('📊 Generating Vertex AI embedding for image...');
+        console.log('🔗 Function URL:', EMBEDDING_FUNCTION_URL);
 
         // Convert image to base64
         const base64 = await FileSystem.readAsStringAsync(imageUri, {
             encoding: 'base64',
         });
+        console.log(`📷 Image converted to base64: ${base64.length} characters`);
 
         // Call Cloud Function
         const response = await fetch(EMBEDDING_FUNCTION_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
             },
             body: JSON.stringify({
                 imageBase64: base64,
             }),
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Embedding generation failed');
+        console.log(`📡 Response status: ${response.status}`);
+
+        // Get response as text first to debug
+        const responseText = await response.text();
+        console.log(`📄 Response preview: ${responseText.substring(0, 200)}...`);
+
+        // Check if response is HTML (error page)
+        if (responseText.startsWith('<') || responseText.startsWith('<!')) {
+            throw new Error(`Cloud Function returned HTML error page. Status: ${response.status}. Check Firebase Console logs for details.`);
         }
 
-        const result: EmbeddingResult = await response.json();
+        // Try to parse as JSON
+        let result: EmbeddingResult;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            throw new Error(`Failed to parse response as JSON: ${responseText.substring(0, 100)}`);
+        }
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.message || `HTTP ${response.status}: Embedding generation failed`);
+        }
+
+        if (!result.embedding || result.embedding.length === 0) {
+            throw new Error('Empty embedding returned from Cloud Function');
+        }
 
         console.log(`✅ Generated ${result.dimensions}-dimension embedding`);
         return result.embedding;
 
     } catch (error: any) {
-        console.error('❌ Embedding generation failed:', error);
+        console.error('❌ Embedding generation failed:', error.message);
         throw error;
     }
 }
