@@ -20,6 +20,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import { Linking } from 'react-native';
 import { addReportToAnimal } from '../services/animalService';
+import { generateImageEmbedding } from '../services/embeddingService';
 
 
 
@@ -173,9 +174,22 @@ export const ReportSightingScreen = () => {
             console.log('✅ Image uploaded:', imageUrl);
 
             console.log('💾 Creating animal identity in Firestore...');
+            // 🧬 Generate embedding if not already present
+            let finalAiResult = { ...aiResult };
+            try {
+                if (photoUri && !finalAiResult.embedding) {
+                    console.log('🧬 Generating embedding for animal...');
+                    const embedding = await generateImageEmbedding(photoUri);
+                    finalAiResult.embedding = embedding;
+                    console.log('✅ Embedding generated and added to result');
+                }
+            } catch (err) {
+                console.error('⚠️ Embedding generation failed (continuing without it):', err);
+            }
+
             // Create animal identity in Firestore (with embedding!)
             const createdAnimal = await createAnimalIdentity(
-                aiResult,
+                finalAiResult,
                 imageUrl,
                 { userId: user.id, userName: user.name },
                 {

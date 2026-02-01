@@ -15,6 +15,26 @@ import { getAnimalById } from '../services/animalService';
 import { AnimalIdentity } from '../types';
 
 
+// Mock Activities Data for UI demonstration
+const mockActivities = [
+    {
+        id: '1',
+        title: 'Initial Rescue',
+        description: 'Found wandering near Marina Bay Sands. Scanned and identified.',
+        timestamp: '2 hours ago',
+        icon: 'paw' as const,
+        type: 'rescue'
+    },
+    {
+        id: '2',
+        title: 'Health Check',
+        description: 'Basic health assessment performed. Appears healthy.',
+        timestamp: '1 hour ago',
+        icon: 'medical' as const,
+        type: 'medical'
+    }
+];
+
 export default function AnimalProfileScreen() {
     const router = useRouter();
     const { user } = useAuth();
@@ -188,9 +208,10 @@ export default function AnimalProfileScreen() {
                                     <Text style={styles.activityDescription}>{activity.description}</Text>
                                     <Text style={styles.activityTimestamp}>{activity.timestamp}</Text>
                                 </View>
-                            </FloatingCard>
-                        ))
-                    )}
+                            </View>
+                        </FloatingCard>
+                    ))}
+
 
 
                     {/* Action Buttons */}

@@ -13,9 +13,8 @@ import { FloatingCard } from '../components/FloatingCard';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
-
-// Gemini Cloud Function URL
-const GEMINI_ANALYZE_URL = 'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal';
+import { geminiService } from '../services/geminiService';
+import * as Location from 'expo-location';
 
 export const AIReportCameraScreen = () => {
     const router = useRouter();
@@ -77,33 +76,12 @@ export const AIReportCameraScreen = () => {
         setAnalysisResult(null);
 
         try {
-            console.log('🎯 Starting Gemini AI analysis...');
+            console.log('🎯 Starting Gemini AI analysis with SDK...');
 
-            // Convert image to Base64
-            const base64 = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
+            // Call Gemini Service directly (no Cloud Function needed!)
+            const geminiResult = await geminiService.detectAnimals(uri);
 
-            // Call Gemini Cloud Function
-            const response = await fetch(GEMINI_ANALYZE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imageBase64: base64,
-                    mimeType: 'image/jpeg',
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Gemini analysis failed');
-            }
-
-            const geminiResult = await response.json();
-            console.log('✅ Gemini response:', geminiResult);
-
-            // Handle case where no animal is detected
-            if (!geminiResult.species || geminiResult.species === 'unknown') {
+            if (!geminiResult.success || !geminiResult.animalType) {
                 console.log('⚠️ Gemini: No dog/cat detected');
                 Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
                 setIsAnalyzing(false);
@@ -112,13 +90,14 @@ export const AIReportCameraScreen = () => {
 
             // Map Gemini response to AnimalIdentificationResult
             const result: AnimalIdentificationResult = {
-                species: geminiResult.species as 'dog' | 'cat' | 'unknown',
-                breed: geminiResult.breed || 'Mixed',
-                color: geminiResult.color || 'Unknown',
-                distinctiveFeatures: geminiResult.distinctiveFeatures || 'Analyzed by Gemini AI',
+                species: geminiResult.animalType as 'dog' | 'cat' | 'unknown',
+                breed: geminiResult.species || 'Mixed',
+                color: 'Unknown', // Gemini service doesn't return color yet
+                distinctiveFeatures: geminiResult.description,
                 healthNotes: geminiResult.healthStatus || 'No health concerns noted',
-                isEmergency: geminiResult.isEmergency || false,
-                confidence: 0.95, // Gemini doesn't return confidence, use high default
+                isEmergency: geminiResult.healthStatus?.toLowerCase().includes('injured') ||
+                    geminiResult.healthStatus?.toLowerCase().includes('sick') || false,
+                confidence: geminiResult.confidence,
             };
 
             setAnalysisResult(result);
@@ -133,6 +112,20 @@ export const AIReportCameraScreen = () => {
             );
             setIsAnalyzing(false);
         }
+    };
+
+    const requestLocationPermission = async () => {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+            Alert.alert(
+                'Permission Needed',
+                'Location access is required to attach location to the report.'
+            );
+            return false;
+        }
+
+        return true;
     };
 
     const handleContinue = async () => {
