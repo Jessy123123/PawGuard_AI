@@ -13,6 +13,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { FloatingCard } from '../components/FloatingCard';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 
@@ -32,6 +33,9 @@ interface QuickAction {
 
 export default function HelpSupportScreen() {
     const router = useRouter();
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
+    const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
     const fadeAnim = useState(new Animated.Value(0))[0];
 
     const [faqs, setFaqs] = useState<FAQItem[]>([
@@ -68,7 +72,7 @@ export default function HelpSupportScreen() {
             title: 'Live Chat',
             description: 'Chat with our support team',
             icon: 'chatbubbles',
-            color: colors.minimalist.coral,
+            color: accentColor,
         },
         {
             id: 'email',
@@ -204,8 +208,8 @@ export default function HelpSupportScreen() {
                     <Text style={styles.sectionTitle}>Additional Resources</Text>
                     <FloatingCard shadow="soft" style={styles.resourcesCard}>
                         <Pressable style={styles.resourceItem}>
-                            <View style={styles.resourceIcon}>
-                                <Ionicons name="book" size={20} color={colors.minimalist.coral} />
+                            <View style={[styles.resourceIcon, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : 'rgba(255, 180, 162, 0.15)' }]}>
+                                <Ionicons name="book" size={20} color={accentColor} />
                             </View>
                             <View style={styles.resourceContent}>
                                 <Text style={styles.resourceTitle}>User Guide</Text>
@@ -215,8 +219,8 @@ export default function HelpSupportScreen() {
                         </Pressable>
 
                         <Pressable style={styles.resourceItem}>
-                            <View style={styles.resourceIcon}>
-                                <Ionicons name="videocam" size={20} color={colors.minimalist.coral} />
+                            <View style={[styles.resourceIcon, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : 'rgba(255, 180, 162, 0.15)' }]}>
+                                <Ionicons name="videocam" size={20} color={accentColor} />
                             </View>
                             <View style={styles.resourceContent}>
                                 <Text style={styles.resourceTitle}>Video Tutorials</Text>
@@ -226,8 +230,8 @@ export default function HelpSupportScreen() {
                         </Pressable>
 
                         <Pressable style={[styles.resourceItem, { borderBottomWidth: 0 }]}>
-                            <View style={styles.resourceIcon}>
-                                <Ionicons name="document-text" size={20} color={colors.minimalist.coral} />
+                            <View style={[styles.resourceIcon, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : 'rgba(255, 180, 162, 0.15)' }]}>
+                                <Ionicons name="document-text" size={20} color={accentColor} />
                             </View>
                             <View style={styles.resourceContent}>
                                 <Text style={styles.resourceTitle}>Terms & Privacy</Text>
@@ -399,7 +403,6 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 10,
-        backgroundColor: 'rgba(245, 164, 145, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.lg,

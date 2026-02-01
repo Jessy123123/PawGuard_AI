@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
@@ -8,6 +9,9 @@ export default function TabsLayout() {
     const { user, isLoading } = useAuth();
     const router = useRouter();
     const segments = useSegments();
+    const [hasDisasterAlert, setHasDisasterAlert] = useState(true); // Mock: Active disaster
+
+    const isNGO = user?.role === 'ngo';
 
     useEffect(() => {
         if (!isLoading && user && !user.profileComplete) {
@@ -19,12 +23,12 @@ export default function TabsLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: colors.minimalist.coral,
+                tabBarActiveTintColor: isNGO ? '#0891B2' : colors.minimalist.coral,
                 tabBarInactiveTintColor: colors.minimalist.textLight,
                 tabBarStyle: {
-                    backgroundColor: colors.minimalist.white,
+                    backgroundColor: isNGO ? '#FAFCFA' : colors.minimalist.white,
                     borderTopWidth: 1,
-                    borderTopColor: colors.minimalist.borderLight,
+                    borderTopColor: isNGO ? '#A5E5ED' : colors.minimalist.borderLight,
                     height: 60,
                     paddingBottom: 8,
                     paddingTop: 8,
@@ -62,6 +66,26 @@ export default function TabsLayout() {
                     ),
                 }}
             />
+            {/* Disaster Mode Tab - NGO Only */}
+            <Tabs.Screen
+                name="disaster"
+                options={{
+                    title: 'Disaster',
+                    href: isNGO ? undefined : null, // Hide for non-NGO users
+                    tabBarIcon: ({ color, size }) => (
+                        <View>
+                            <Ionicons
+                                name="warning"
+                                size={size}
+                                color={hasDisasterAlert ? colors.minimalist.disasterOrange : color}
+                            />
+                            {hasDisasterAlert && (
+                                <View style={styles.alertBadge} />
+                            )}
+                        </View>
+                    ),
+                }}
+            />
             <Tabs.Screen
                 name="profile"
                 options={{
@@ -74,3 +98,15 @@ export default function TabsLayout() {
         </Tabs>
     );
 }
+
+const styles = StyleSheet.create({
+    alertBadge: {
+        position: 'absolute',
+        top: -2,
+        right: -4,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#DC2626',
+    },
+});

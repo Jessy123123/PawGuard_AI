@@ -31,6 +31,23 @@ export default function RootLayout() {
                 />
                 <Stack.Screen name="Community" />
                 <Stack.Screen name="CommunityFeed" />
+                {/* NGO Screens */}
+                <Stack.Screen
+                    name="ngo-reports"
+                    options={{ presentation: 'card' }}
+                />
+                <Stack.Screen
+                    name="ngo-report-detail"
+                    options={{ presentation: 'card' }}
+                />
+                <Stack.Screen
+                    name="ngo-adoption"
+                    options={{ presentation: 'card' }}
+                />
+                <Stack.Screen
+                    name="ngo-create-adoption"
+                    options={{ presentation: 'modal' }}
+                />
             </Stack>
         </Providers>
     );

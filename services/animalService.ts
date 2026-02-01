@@ -17,6 +17,10 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
 import { AnimalIdentity, ReportEntry, CareEntry } from '../types';
 import { AnimalIdentificationResult } from '../types/yolo';
+import * as FileSystem from 'expo-file-system/legacy';
+
+
+
 
 const ANIMALS_COLLECTION = 'animalIdentities';
 const REPORTS_COLLECTION = 'reports';
@@ -161,7 +165,7 @@ export async function createAnimalIdentity(
         species: aiResult.species === 'unknown' ? 'dog' : aiResult.species,
         breed: aiResult.breed,
         color: aiResult.color,
-        distinctiveFeatures: aiResult.distinctiveFeatures,
+        distinctiveFeatures: [aiResult.distinctiveFeatures],
         featureHash: generateFeatureHash(aiResult),
         primaryImageUrl: imageUrl,
 
@@ -348,6 +352,41 @@ export async function getAnimalsByUser(userId: string): Promise<AnimalIdentity[]
         return [];
     }
 }
+
+import { File } from 'expo-file-system';
+
+export const analyzeAnimalWithGemini = async (imageUri: string): Promise<AnimalIdentificationResult> => {
+    try {
+        const base64 = await FileSystem.readAsStringAsync(imageUri, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const response = await fetch(
+            'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64 }),
+            }
+        );
+
+        const data = await response.json();
+
+        // Map Gemini's JSON response to your App's Type
+        return {
+            species: data.species || 'unknown',
+            breed: data.breed || 'Mixed',
+            color: data.color || 'Unknown',
+            distinctiveFeatures: data.distinctiveFeatures || 'None',
+            healthNotes: data.healthStatus, // Mapping Gemini field to your app
+            isEmergency: data.isEmergency || false,
+            confidence: 1.0, // Gemini doesn't provide a 0-1 score like YOLO, so we default to 1.0
+        };
+    } catch (err) {
+        console.error('Gemini analysis failed:', err);
+        throw err;
+    }
+};
 
 
 export default {

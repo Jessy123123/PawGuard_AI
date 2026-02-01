@@ -9,6 +9,7 @@ import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ActivityItem {
     id: string;
@@ -47,6 +48,8 @@ const mockActivities: ActivityItem[] = [
 ];
 
 export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
             <StatusBar style="dark" />
@@ -91,7 +94,7 @@ export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                     {/* AI Identity Section */}
                     <FloatingCard style={styles.section} shadow="soft">
                         <View style={styles.sectionHeader}>
-                            <Ionicons name="sparkles" size={20} color={colors.minimalist.coral} />
+                            <Ionicons name="sparkles" size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
                             <Text style={styles.sectionTitle}>AI-Generated  Identity</Text>
                         </View>
 
@@ -119,7 +122,7 @@ export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                         <FloatingCard key={activity.id} style={styles.activityCard} shadow="soft">
                             <View style={styles.activityRow}>
                                 <View style={styles.activityIcon}>
-                                    <Ionicons name={activity.icon} size={20} color={colors.minimalist.coral} />
+                                    <Ionicons name={activity.icon} size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
                                 </View>
                                 <View style={styles.activityContent}>
                                     <Text style={styles.activityTitle}>{activity.title}</Text>
@@ -133,19 +136,19 @@ export const DogProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) 
                     {/* Action Buttons */}
                     <Pressable style={styles.primaryButton}>
                         <LinearGradient
-                            colors={[colors.minimalist.coral, colors.minimalist.mutedOrange]}
+                            colors={isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.mutedOrange]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
                             style={styles.buttonGradient}
                         >
-                            <Ionicons name="shield-checkmark" size={20} color={colors.minimalist.white} />
-                            <Text style={styles.buttonText}>Initiate Rescue</Text>
+                            <Ionicons name="shield-checkmark" size={20} color={isNGO ? '#0891B2' : colors.minimalist.white} />
+                            <Text style={[styles.buttonText, isNGO && { color: '#0891B2' }]}>Initiate Rescue</Text>
                         </LinearGradient>
                     </Pressable>
 
-                    <Pressable style={styles.secondaryButton}>
-                        <Ionicons name="heart" size={20} color={colors.minimalist.coral} />
-                        <Text style={styles.secondaryButtonText}>Adoption</Text>
+                    <Pressable style={[styles.secondaryButton, isNGO && { borderColor: '#A5E5ED' }]}>
+                        <Ionicons name="heart" size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
+                        <Text style={[styles.secondaryButtonText, isNGO && { color: '#0891B2' }]}>Adoption</Text>
                     </Pressable>
                 </View>
             </ScrollView>
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
     idValue: {
-        color: colors.minimalist.coral,
+        color: '#0891B2',
         fontWeight: '600',
     },
     statusRow: {
@@ -276,7 +279,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.minimalist.peachLight,
+        backgroundColor: 'rgba(165, 229, 237, 0.25)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: spacing.md,

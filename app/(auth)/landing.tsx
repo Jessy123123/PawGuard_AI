@@ -7,23 +7,22 @@ import {
     Dimensions,
     Animated,
     Platform,
+    ImageBackground,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Video, ResizeMode } from 'expo-av';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Local video file
-const VIDEO_SOURCE = require('../../assets/video/stray_cat.mp4');
+// Background image
+const BACKGROUND_IMAGE = require('../../assets/splash-icon.png');
 
 export default function LandingScreen() {
     const router = useRouter();
-    const videoRef = useRef<Video>(null);
 
     // Animation values - staggered entry
     const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -32,7 +31,6 @@ export default function LandingScreen() {
     const taglineOpacity = useRef(new Animated.Value(0)).current;
     const buttonsOpacity = useRef(new Animated.Value(0)).current;
     const buttonsTranslateY = useRef(new Animated.Value(60)).current;
-    const videoScale = useRef(new Animated.Value(1)).current;
     const grainOpacity = useRef(new Animated.Value(0)).current;
 
     // Button animations
@@ -55,22 +53,6 @@ export default function LandingScreen() {
                 duration: 1200,
                 useNativeDriver: true,
             }).start();
-
-            // Cinematic slow zoom
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(videoScale, {
-                        toValue: 1.08,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(videoScale, {
-                        toValue: 1,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
 
             // 2. Title fades & slides in (after 400ms)
             await new Promise(resolve => setTimeout(resolve, 400));
@@ -116,8 +98,9 @@ export default function LandingScreen() {
     }, []);
 
     const handleGetStartedPressIn = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        // Micro-bounce effect with spring
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
         Animated.spring(getStartedScale, {
             toValue: 0.96,
             friction: 3,
@@ -132,7 +115,6 @@ export default function LandingScreen() {
     };
 
     const handleGetStartedPressOut = () => {
-        // Bounce back with overshoot
         Animated.spring(getStartedScale, {
             toValue: 1,
             friction: 3,
@@ -147,7 +129,9 @@ export default function LandingScreen() {
     };
 
     const handleLoginPressIn = () => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        if (Platform.OS !== 'web') {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
         Animated.spring(loginScale, {
             toValue: 0.96,
             friction: 5,
@@ -175,46 +159,47 @@ export default function LandingScreen() {
         <View style={styles.container}>
             <StatusBar style="light" />
 
-            {/* Video Background with Parallax Zoom */}
-            <Animated.View style={[
-                styles.videoContainer,
-                {
-                    opacity: backgroundOpacity,
-                    transform: [{ scale: videoScale }],
-                }
-            ]}>
-                <Video
-                    ref={videoRef}
-                    source={VIDEO_SOURCE}
-                    style={styles.video}
-                    resizeMode={ResizeMode.COVER}
-                    shouldPlay
-                    isLooping
-                    isMuted
+            {/* Gradient Background instead of Video */}
+            <View style={StyleSheet.absoluteFill}>
+                <LinearGradient
+                    colors={['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={StyleSheet.absoluteFill}
                 />
-            </Animated.View>
 
-            {/* Premium Dark Gradient Overlay */}
-            <LinearGradient
-                colors={[
-                    'rgba(0, 0, 0, 0.15)',
-                    'rgba(0, 0, 0, 0.05)',
-                    'rgba(0, 0, 0, 0.25)',
-                    'rgba(0, 0, 0, 0.65)',
-                    'rgba(0, 0, 0, 0.85)',
-                ]}
-                locations={[0, 0.25, 0.5, 0.75, 1]}
-                style={styles.gradientOverlay}
-            />
+                {/* Premium Dark Gradient Overlay */}
+                <LinearGradient
+                    colors={[
+                        'rgba(0, 0, 0, 0.15)',
+                        'rgba(0, 0, 0, 0.05)',
+                        'rgba(0, 0, 0, 0.25)',
+                        'rgba(0, 0, 0, 0.65)',
+                        'rgba(0, 0, 0, 0.85)',
+                    ]}
+                    locations={[0, 0.25, 0.5, 0.75, 1]}
+                    style={styles.gradientOverlay}
+                />
 
-            {/* Vignette Effect */}
-            <View style={styles.vignetteTop} />
-            <View style={styles.vignetteBottom} />
-            <View style={styles.vignetteLeft} />
-            <View style={styles.vignetteRight} />
+                {/* Decorative circles */}
+                <View style={styles.decorativeCircle1} />
+                <View style={styles.decorativeCircle2} />
+            </View>
+
+            {/* Background Animation Overlay (Fade in) */}
+            <Animated.View style={[
+                StyleSheet.absoluteFillObject,
+                {
+                    backgroundColor: '#000',
+                    opacity: backgroundOpacity.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [1, 0],
+                    }),
+                }
+            ]} pointerEvents="none" />
 
             {/* Subtle Film Grain */}
-            <Animated.View style={[styles.filmGrain, { opacity: grainOpacity }]} />
+            <Animated.View style={[styles.filmGrain, { opacity: grainOpacity }]} pointerEvents="none" />
 
             {/* Content */}
             <View style={styles.content}>
@@ -309,72 +294,26 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0A0A0A',
     },
-    videoContainer: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    video: {
-        flex: 1,
-        width: SCREEN_WIDTH * 1.1,
-        height: SCREEN_HEIGHT * 1.1,
-        marginLeft: -SCREEN_WIDTH * 0.05,
-        marginTop: -SCREEN_HEIGHT * 0.05,
-    },
     gradientOverlay: {
         ...StyleSheet.absoluteFillObject,
     },
-    // Vignette - Soft edges effect
-    vignetteTop: {
+    decorativeCircle1: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 150,
-        backgroundColor: 'transparent',
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 50 },
-                shadowOpacity: 0.4,
-                shadowRadius: 80,
-            },
-        }),
+        top: -100,
+        right: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: 'rgba(255, 146, 104, 0.1)',
     },
-    vignetteBottom: {
+    decorativeCircle2: {
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 200,
-    },
-    vignetteLeft: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        width: 60,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 40, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 60,
-            },
-        }),
-    },
-    vignetteRight: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        bottom: 0,
-        width: 60,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: -40, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 60,
-            },
-        }),
+        bottom: 200,
+        left: -150,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: 'rgba(100, 200, 255, 0.05)',
     },
     filmGrain: {
         ...StyleSheet.absoluteFillObject,
@@ -384,7 +323,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'space-between',
         paddingHorizontal: spacing.xl + 8,
-        paddingTop: SCREEN_HEIGHT * 0.12,
+        paddingTop: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.12 : SCREEN_HEIGHT * 0.08,
         paddingBottom: spacing.mega + 24,
     },
     logoSection: {
@@ -464,7 +403,6 @@ const styles = StyleSheet.create({
         borderRadius: 32,
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.2)',
-        // Top inner highlight
         borderTopColor: 'rgba(255, 255, 255, 0.35)',
         borderBottomColor: 'rgba(0, 0, 0, 0.15)',
     },

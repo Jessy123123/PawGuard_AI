@@ -9,6 +9,7 @@ import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AnimalProfileScreenProps {
     navigation: any;
@@ -16,6 +17,8 @@ interface AnimalProfileScreenProps {
 }
 
 export const AnimalProfileScreen: React.FC<AnimalProfileScreenProps> = ({ navigation }) => {
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
     return (
         <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
             <StatusBar style="dark" />
@@ -53,8 +56,8 @@ export const AnimalProfileScreen: React.FC<AnimalProfileScreenProps> = ({ naviga
                 {/* Info Cards */}
                 <FloatingCard style={styles.infoCard} shadow="soft">
                     <View style={styles.infoRow}>
-                        <View style={styles.iconCircle}>
-                            <Ionicons name="location" size={20} color={colors.minimalist.coral} />
+                        <View style={[styles.iconCircle, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
+                            <Ionicons name="location" size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
                         </View>
                         <View style={styles.infoText}>
                             <Text style={styles.infoLabel}>Last seen location</Text>
@@ -65,8 +68,8 @@ export const AnimalProfileScreen: React.FC<AnimalProfileScreenProps> = ({ naviga
 
                 <FloatingCard style={styles.infoCard} shadow="soft">
                     <View style={styles.infoRow}>
-                        <View style={styles.iconCircle}>
-                            <Ionicons name="heart" size={20} color={colors.minimalist.coral} />
+                        <View style={[styles.iconCircle, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
+                            <Ionicons name="heart" size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
                         </View>
                         <View style={styles.infoText}>
                             <Text style={styles.infoLabel}>Health status</Text>
@@ -77,8 +80,8 @@ export const AnimalProfileScreen: React.FC<AnimalProfileScreenProps> = ({ naviga
 
                 <FloatingCard style={styles.infoCard} shadow="soft">
                     <View style={styles.infoRow}>
-                        <View style={styles.iconCircle}>
-                            <Ionicons name="time" size={20} color={colors.minimalist.coral} />
+                        <View style={[styles.iconCircle, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
+                            <Ionicons name="time" size={20} color={isNGO ? '#0891B2' : colors.minimalist.coral} />
                         </View>
                         <View style={styles.infoText}>
                             <Text style={styles.infoLabel}>Rescue history</Text>
@@ -90,12 +93,12 @@ export const AnimalProfileScreen: React.FC<AnimalProfileScreenProps> = ({ naviga
                 {/* NGO Action Button */}
                 <Pressable style={styles.actionButton}>
                     <LinearGradient
-                        colors={[colors.minimalist.coral, colors.minimalist.orange]}
+                        colors={isNGO ? ['#A5E5ED', '#BBF3DE'] : [colors.minimalist.coral, colors.minimalist.orange]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={styles.buttonGradient}
                     >
-                        <Text style={styles.actionButtonText}>Rescue Decision (NGO-only)</Text>
+                        <Text style={[styles.actionButtonText, isNGO && { color: '#0891B2' }]}>Rescue Decision (NGO-only)</Text>
                     </LinearGradient>
                 </Pressable>
 

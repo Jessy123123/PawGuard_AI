@@ -22,6 +22,8 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAuth } from '../../contexts/AuthContext';
+import { NGOAdoptionListScreen } from '../../screens/NGOAdoptionListScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -103,6 +105,13 @@ const filters: { key: FilterType; label: string }[] = [
 
 export default function CommunityScreen() {
     const router = useRouter();
+    const { user } = useAuth();
+
+    // If user is NGO, show the NGO Adoption List screen
+    if (user?.role === 'ngo') {
+        return <NGOAdoptionListScreen />;
+    }
+
     const scrollViewRef = useRef<ScrollView>(null);
     const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
     const [messages] = useState<CommunityMessage[]>(mockMessages);

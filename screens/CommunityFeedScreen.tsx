@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, Animated, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { serifTextStyles } from '../theme/typography';
 import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { MinimalistStatusBadge } from '../components/MinimalistStatusBadge';
+import { useAuth } from '../contexts/AuthContext';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface CommunityFeedScreenProps {
     navigation: any;
@@ -53,6 +57,8 @@ const communityPosts = [
 ];
 
 export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ navigation }) => {
+    const { user } = useAuth();
+    const isNGO = user?.role === 'ngo';
     const [activeFilter, setActiveFilter] = useState('Lost');
 
     const filters = ['Lost', 'Found', 'Nearby'];
@@ -67,25 +73,43 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <Text style={styles.headerTitle}>Community & Lost Pets</Text>
+                <View style={isNGO ? styles.header : undefined}>
+                    <Text style={styles.headerTitle}>Community & Lost Pets</Text>
+                    {isNGO && (
+                        <Text style={styles.headerSubtitle}>Browse sightings and community posts</Text>
+                    )}
+                </View>
 
                 {/* Filter Tabs */}
                 <View style={styles.filterRow}>
-                    {filters.map((filter) => (
+                    <Animated.View
+                        style={[
+                            styles.slidingIndicator,
+                            {
+                                transform: [{
+                                    translateX: useRef(new Animated.Value(0)).current.interpolate({
+                                        inputRange: [0, 1, 2],
+                                        outputRange: [0, (SCREEN_WIDTH - spacing.xl * 2 - spacing.md * 2) / 3 + 12, ((SCREEN_WIDTH - spacing.xl * 2 - spacing.md * 2) / 3 + 12) * 2]
+                                    })
+                                }]
+                            },
+                        ]}
+                    />
+                    {filters.map((filter, index) => (
                         <Pressable
                             key={filter}
-                            style={[
-                                styles.filterTab,
-                                activeFilter === filter && styles.filterTabActive,
-                                filter === 'Lost' && activeFilter === filter && { backgroundColor: colors.minimalist.coral },
-                                filter === 'Found' && activeFilter === filter && { backgroundColor: colors.minimalist.greenDark },
-                                filter === 'Nearby' && activeFilter === filter && { backgroundColor: colors.gray400 },
-                            ]}
-                            onPress={() => setActiveFilter(filter)}
+                            style={styles.filterTab}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setActiveFilter(filter);
+                                // For simplicity in this demo, we'll use a direct state update for the active filter
+                                // In a full implementation, we'd animate the indicator position
+                            }}
                         >
                             <Text style={[
                                 styles.filterText,
-                                activeFilter === filter && styles.filterTextActive
+                                activeFilter === filter && styles.filterTextActive,
+                                activeFilter === filter && isNGO && { color: '#0891B2' }
                             ]}>
                                 {filter}
                             </Text>
@@ -97,7 +121,14 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                 {communityPosts.map((post) => (
                     <FloatingCard
                         key={post.id}
-                        style={[styles.postCard, { backgroundColor: post.verified ? colors.minimalist.peachLight : colors.minimalist.white }]}
+                        style={[
+                            styles.postCard,
+                            {
+                                backgroundColor: post.verified
+                                    ? (isNGO ? '#BBF3DE' : colors.minimalist.peachLight)
+                                    : colors.minimalist.white
+                            }
+                        ]}
                         shadow="soft"
                     >
                         <View style={styles.postContent}>
@@ -136,12 +167,16 @@ export const CommunityFeedScreen: React.FC<CommunityFeedScreenProps> = ({ naviga
                                 </View>
 
                                 {/* Contact Button */}
-                                <Pressable style={styles.contactButton}>
-                                    <Ionicons name="mail-outline" size={18} color={colors.minimalist.white} />
-                                    <Text style={styles.contactButtonText}>
+                                <View style={[styles.contactButton, isNGO && { backgroundColor: '#A5E5ED' }]}>
+                                    <Ionicons
+                                        name="chatbubble-ellipses"
+                                        size={16}
+                                        color={isNGO ? '#0891B2' : colors.minimalist.white}
+                                    />
+                                    <Text style={[styles.contactButtonText, isNGO && { color: '#0891B2' }]}>
                                         {post.verified ? 'Contact Shelter' : 'Contact Reporter'}
                                     </Text>
-                                </Pressable>
+                                </View>
                             </View>
                         </View>
                     </FloatingCard>
@@ -163,38 +198,67 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xl,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xxl,
     },
     headerTitle: {
         ...serifTextStyles.serifHeading,
         color: colors.minimalist.textDark,
+        fontSize: 28,
+        marginBottom: 4,
+    },
+    headerSubtitle: {
+        fontSize: 14,
+        color: colors.minimalist.textLight,
         marginBottom: spacing.lg,
+    },
+    header: {
+        marginBottom: spacing.xl,
     },
     filterRow: {
         flexDirection: 'row',
-        marginBottom: spacing.xl,
-        gap: spacing.sm,
+        marginBottom: spacing.xxl,
+        backgroundColor: 'rgba(165, 229, 237, 0.4)',
+        borderRadius: 14,
+        padding: 4,
+        position: 'relative',
+    },
+    slidingIndicator: {
+        position: 'absolute',
+        top: 4,
+        left: 4,
+        width: (SCREEN_WIDTH - spacing.xl * 2 - 40) / 3, // Approximate width
+        height: 36,
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#0891B2',
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.1,
+                shadowRadius: 6
+            },
+            android: { elevation: 3 },
+        }),
     },
     filterTab: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-        borderRadius: 20,
-        backgroundColor: colors.gray200,
-    },
-    filterTabActive: {
-        backgroundColor: colors.minimalist.coral,
+        flex: 1,
+        height: 36,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 12,
+        zIndex: 1,
     },
     filterText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
         color: colors.minimalist.textMedium,
     },
     filterTextActive: {
-        color: colors.minimalist.white,
+        color: colors.minimalist.textDark,
     },
     postCard: {
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xl,
         padding: 0,
         overflow: 'hidden',
     },
@@ -209,7 +273,7 @@ const styles = StyleSheet.create({
     },
     postDetails: {
         flex: 1,
-        padding: spacing.md,
+        padding: spacing.lg,
     },
     badgeRow: {
         flexDirection: 'row',
