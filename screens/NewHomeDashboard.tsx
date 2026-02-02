@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +10,13 @@ import { spacing } from '../theme/spacing';
 import { FloatingCard } from '../components/FloatingCard';
 import { SearchBar } from '../components/SearchBar';
 import { FilterChip } from '../components/FilterChip';
+import { useDisasterMode } from '../contexts/DisasterModeContext';
 
 export const NewHomeDashboard: React.FC = () => {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedFilter, setSelectedFilter] = useState('All');
+    const { isDisasterModeActive, weatherAlert, weather, loading: weatherLoading } = useDisasterMode();
 
     const filters = ['All', 'Dogs', 'Cats', 'Injured', 'At Risk'];
 
@@ -39,21 +41,58 @@ export const NewHomeDashboard: React.FC = () => {
 
                 {/* Status Cards */}
                 <View style={styles.statusRow}>
+                    {/* Normal Day Mode Card */}
                     <FloatingCard style={styles.statusCard} shadow="soft">
                         <View style={styles.statusIndicator}>
-                            <View style={[styles.dot, { backgroundColor: colors.minimalist.greenDark }]} />
+                            <View style={[styles.dot, { backgroundColor: isDisasterModeActive ? colors.gray400 : colors.minimalist.greenDark }]} />
                         </View>
                         <Text style={styles.statusTitle}>Normal Day Mode</Text>
-                        <Text style={styles.statusDescription}>All systems monitoring.</Text>
+                        <Text style={styles.statusDescription}>
+                            {isDisasterModeActive ? 'Paused during alert.' : 'All systems monitoring.'}
+                        </Text>
                     </FloatingCard>
 
-                    <FloatingCard style={styles.statusCard} shadow="soft">
-                        <View style={styles.statusIndicator}>
-                            <View style={[styles.dot, { backgroundColor: colors.gray400 }]} />
-                        </View>
-                        <Text style={styles.statusTitle}>Disaster Alert Mode</Text>
-                        <Text style={styles.statusDescription}>Inactive. No immediate threats.</Text>
-                    </FloatingCard>
+                    {/* Disaster Alert Mode Card */}
+                    <Pressable
+                        onPress={() => isDisasterModeActive && router.push('/disaster-mode')}
+                        disabled={!isDisasterModeActive}
+                    >
+                        <FloatingCard
+                            style={[
+                                styles.statusCard,
+                                isDisasterModeActive && styles.disasterCardActive
+                            ]}
+                            shadow="soft"
+                        >
+                            <View style={styles.statusIndicator}>
+                                {weatherLoading ? (
+                                    <ActivityIndicator size="small" color={colors.minimalist.coral} />
+                                ) : (
+                                    <View style={[
+                                        styles.dot,
+                                        { backgroundColor: isDisasterModeActive ? colors.minimalist.redDark : colors.gray400 },
+                                        isDisasterModeActive && styles.pulsingDot
+                                    ]} />
+                                )}
+                            </View>
+                            <Text style={[
+                                styles.statusTitle,
+                                isDisasterModeActive && styles.disasterTitle
+                            ]}>
+                                {isDisasterModeActive ? weatherAlert.title : 'Disaster Alert Mode'}
+                            </Text>
+                            <Text style={styles.statusDescription}>
+                                {isDisasterModeActive
+                                    ? `${weatherAlert.severity} - Tap for details`
+                                    : 'Inactive. No immediate threats.'}
+                            </Text>
+                            {isDisasterModeActive && weather && (
+                                <Text style={styles.weatherInfo}>
+                                    {weather.cityName} • {Math.round(weather.temp)}°C
+                                </Text>
+                            )}
+                        </FloatingCard>
+                    </Pressable>
                 </View>
 
                 {/* Category Filter */}
@@ -199,5 +238,26 @@ const styles = StyleSheet.create({
     },
     footer: {
         height: spacing.xxl,
+    },
+    // Disaster mode styles
+    disasterCardActive: {
+        borderWidth: 2,
+        borderColor: colors.minimalist.redDark,
+        backgroundColor: `${colors.minimalist.redDark}08`,
+    },
+    pulsingDot: {
+        shadowColor: colors.minimalist.redDark,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 6,
+        elevation: 4,
+    },
+    disasterTitle: {
+        color: colors.minimalist.redDark,
+    },
+    weatherInfo: {
+        fontSize: 11,
+        color: colors.minimalist.textLight,
+        marginTop: 4,
     },
 });

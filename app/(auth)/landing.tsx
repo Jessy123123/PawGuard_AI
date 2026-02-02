@@ -7,23 +7,19 @@ import {
     Dimensions,
     Animated,
     Platform,
+    ImageBackground,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Video, ResizeMode } from 'expo-av';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Local video file
-const VIDEO_SOURCE = require('../../assets/video/stray_cat.mp4');
-
 export default function LandingScreen() {
     const router = useRouter();
-    const videoRef = useRef<Video>(null);
 
     // Animation values - staggered entry
     const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -32,7 +28,6 @@ export default function LandingScreen() {
     const taglineOpacity = useRef(new Animated.Value(0)).current;
     const buttonsOpacity = useRef(new Animated.Value(0)).current;
     const buttonsTranslateY = useRef(new Animated.Value(60)).current;
-    const videoScale = useRef(new Animated.Value(1)).current;
     const grainOpacity = useRef(new Animated.Value(0)).current;
 
     // Button animations
@@ -55,22 +50,6 @@ export default function LandingScreen() {
                 duration: 1200,
                 useNativeDriver: true,
             }).start();
-
-            // Cinematic slow zoom
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(videoScale, {
-                        toValue: 1.08,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(videoScale, {
-                        toValue: 1,
-                        duration: 25000,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
 
             // 2. Title fades & slides in (after 400ms)
             await new Promise(resolve => setTimeout(resolve, 400));
@@ -175,22 +154,18 @@ export default function LandingScreen() {
         <View style={styles.container}>
             <StatusBar style="light" />
 
-            {/* Video Background with Parallax Zoom */}
+            {/* Gradient Background (replaced video) */}
             <Animated.View style={[
                 styles.videoContainer,
                 {
                     opacity: backgroundOpacity,
-                    transform: [{ scale: videoScale }],
                 }
             ]}>
-                <Video
-                    ref={videoRef}
-                    source={VIDEO_SOURCE}
+                <LinearGradient
+                    colors={['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.video}
-                    resizeMode={ResizeMode.COVER}
-                    shouldPlay
-                    isLooping
-                    isMuted
                 />
             </Animated.View>
 

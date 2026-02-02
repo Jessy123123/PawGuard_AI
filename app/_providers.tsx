@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../contexts/AuthContext';
 import { DataProvider } from '../contexts/DataContext';
 import { ReportProvider } from '../contexts/ReportContext';
+import { DisasterModeProvider } from '../contexts/DisasterModeContext';
 
 // Disable font scaling globally (TS-safe)
 (Text as any).defaultProps = (Text as any).defaultProps || {};
@@ -20,7 +21,9 @@ export const Providers = ({ children }: ProvidersProps) => {
             <AuthProvider>
                 <DataProvider>
                     <ReportProvider>
-                        {children}
+                        <DisasterModeProvider>
+                            {children}
+                        </DisasterModeProvider>
                     </ReportProvider>
                 </DataProvider>
             </AuthProvider>
