@@ -494,7 +494,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                                                 onPress: async () => {
                                                     setIsUpdatingStatus(true);
                                                     try {
-                                                        const { supabase } = await import('../lib/supabse');
+                                                        const { supabase } = await import('../lib/supabase');
                                                         await supabase
                                                             .from('animal_reports')
                                                             .update({
@@ -538,7 +538,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                                                 onPress: async () => {
                                                     setIsUpdatingStatus(true);
                                                     try {
-                                                        const { supabase } = await import('../lib/supabse');
+                                                        const { supabase } = await import('../lib/supabase');
                                                         await supabase
                                                             .from('animal_reports')
                                                             .update({

@@ -3,7 +3,7 @@
  * Handles push notification management and in-app alerts for NGO users
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import { DisasterZone, AnimalReport } from '../lib/supabaseTypes';
 
 // ============= TYPES =============
@@ -261,7 +261,7 @@ export function setupDisasterNotifications(): () => void {
                 schema: 'public',
                 table: 'disaster_zones',
             },
-            (payload) => {
+            (payload: { eventType: string; new: unknown; old: unknown }) => {
                 if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
                     const zone = payload.new as any;
                     if (zone.is_active) {
@@ -303,7 +303,7 @@ export function setupEmergencyReportNotifications(): () => void {
                 table: 'animal_reports',
                 filter: 'is_emergency=eq.true',
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 const report = payload.new as any;
                 sendEmergencyReportNotification({
                     id: report.id,

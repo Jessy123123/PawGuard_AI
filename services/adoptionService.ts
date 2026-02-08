@@ -3,8 +3,8 @@
  * Handles adoption post creation, listing, and status management
  */
 
-import { supabase } from '../lib/supabse';
-import { DbAdoptionPost, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/communityTypes';
+import { supabase } from '../lib/supabase';
+import { DbAdoptionPost, DbNgoProfile, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/communityTypes';
 
 // ============= CREATE OPERATIONS =============
 
@@ -114,7 +114,7 @@ export async function getAdoptionPostsWithNgo(): Promise<AdoptionPost[]> {
 
         if (error) throw error;
 
-        return (data || []).map(item => {
+        return (data || []).map((item: DbAdoptionPost & { ngo_profiles?: DbNgoProfile }) => {
             const post = dbToAdoptionPost(item);
             if (item.ngo_profiles) {
                 post.ngoProfile = dbToNgoProfile(item.ngo_profiles);
@@ -318,7 +318,7 @@ export function subscribeToAdoptionPosts(
                 schema: 'public',
                 table: 'adoption_posts',
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 console.log('📡 Adoption post update:', payload);
                 if (payload.new) {
                     callback(dbToAdoptionPost(payload.new as DbAdoptionPost));

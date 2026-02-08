@@ -1,10 +1,14 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DisasterModeScreen } from '../../screens/DisasterModeScreen';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function DisasterTab() {
     const router = useRouter();
+    const { user } = useAuth();
+
+    // Citizens can only view, NGOs can take action
+    const isViewOnly = user?.role !== 'ngo';
 
     const navigation = {
         goBack: () => router.back(),
@@ -19,5 +23,5 @@ export default function DisasterTab() {
         },
     };
 
-    return <DisasterModeScreen navigation={navigation} />;
+    return <DisasterModeScreen navigation={navigation} viewOnly={isViewOnly} />;
 }

@@ -107,11 +107,7 @@ export default function CommunityScreen() {
     const router = useRouter();
     const { user } = useAuth();
 
-    // If user is NGO, show the NGO Adoption List screen
-    if (user?.role === 'ngo') {
-        return <NGOAdoptionListScreen />;
-    }
-
+    // All hooks MUST be declared before any conditional returns
     const scrollViewRef = useRef<ScrollView>(null);
     const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
     const [messages] = useState<CommunityMessage[]>(mockMessages);
@@ -125,6 +121,12 @@ export default function CommunityScreen() {
     const headerIconScale = useRef(new Animated.Value(1)).current;
     const bannerFade = useRef(new Animated.Value(0)).current;
     const [isScrolled, setIsScrolled] = useState(false);
+
+    // If user is NGO, show the NGO Adoption List screen
+    // (moved after hooks to comply with Rules of Hooks)
+    if (user?.role === 'ngo') {
+        return <NGOAdoptionListScreen />;
+    }
 
     useEffect(() => {
         // Stagger message entry

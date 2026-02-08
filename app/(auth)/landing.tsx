@@ -7,82 +7,88 @@ import {
     Dimensions,
     Animated,
     Platform,
-    ImageBackground,
+    Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { spacing } from '../../theme/spacing';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// Background image
-const BACKGROUND_IMAGE = require('../../assets/splash-icon.png');
+// Pet images with URIs
+const pets = [
+    {
+        name: 'Julio',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBlC3iKuEvu3nbgKY9YHNLpyxv8hi11V1R-iN35moknYOObvMOQvFs9pZoEenSAq9kJ5bQWwenK8o4XMrX2GOizODhjbW3tJa_CbxkYJkOCLd_VY0ojDV1JaDpKRcofUu7efT5c2aRHOMjFUVWgPN5QauqLpu_jvayUunpmpHJ1FDjtO2Y3n6hIil0RixtKLsjKAoptAlKIwBiY9bpBwRt8h5XwSpHM1q2JBZ69nHv_Zt9yDAu4KmS-7JO_tHTB2kj2_xvf10r_rv2Z',
+        bgColor: '#E0E7FF',
+        height: 180,
+    },
+    {
+        name: 'Mussle',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDc6y0WQjyzEFUgtBYhxGa61ZSm4YjtxOX1j17Onqx7aCc0t5erfZa3YtYfTHg4xkEQBeK5BTDGInfo4muViDwf4nbPSUv9H3QvY7kjWLB_hiOoLQjnUowq71sNde1TbMSR8PryKkF6-OWqmmlDP98Md-p1MKWpiOzn4YWJcdgbux5vZTkS5dO5jJCblDJnTs8Xmb370jcBdmiWMgBpW8Vg-o_DkvVBcptUDYUkL4SLxAbYS2AHBlftyp3UtqPjIoW7NCZG7HaCl48Q',
+        bgColor: '#DCFCE7',
+        height: 240,
+    },
+    {
+        name: 'Ronnie',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB8ZwJVFXHTh59t2QY96brPG0a-XnfqwCod7fGg5ap7SMzJM0istNBNNg9AeuSTztKeTgCkFIddSa4WWexIhsAUl6zuE_kRApzisAV0lPYHshQ8BDtuh5SQLiMd8BJXG2yDHY-RYe_M5EZ3-tCJTW2pTzeq-MD3Rm6fwdtEPbo0j23To3H6dYIqZjyU6VfbYJjQ_2VMpkpWcjvmvMZUaFA57g6ByiyR4lt2Y2GAV3xLwzAtWCrRsE9Fl1jd6AAA0nsqPWlwd29ynQY4',
+        bgColor: '#CFFAFE',
+        height: 200,
+    },
+    {
+        name: 'Xavier',
+        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCZB9oEtJDx9Ib6dm2_dhuEQZqfc4AhudJUjtQ18qaOANbm4buXqyy9KrjF5DQwNJa0Z7xEvLfOzzMpaH1qPYvO3vm6yxncuSk_M6dIKjrTv54P49gj3UEXZjE_aovQsrleWAtUWELbUBg6hO3u7VlZ_7sAfjMQvSFbiHl2wP-ck9f8lZsu9I1PYCxwZ4U0NnlAWnkoDcl-A5d5jLusa6sAZqkL-kTDtBfIaM7OrWMJEX0Zvtsw7BEa_ZFgpNthlxlFKGPsR_QzkFtP',
+        bgColor: '#FCE7F3',
+        height: 220,
+    },
+];
 
 export default function LandingScreen() {
     const router = useRouter();
 
-    // Animation values - staggered entry
-    const backgroundOpacity = useRef(new Animated.Value(0)).current;
+    // Animation values
+    const contentOpacity = useRef(new Animated.Value(0)).current;
+    const petsTranslateY = useRef(new Animated.Value(30)).current;
     const titleOpacity = useRef(new Animated.Value(0)).current;
-    const titleTranslateY = useRef(new Animated.Value(30)).current;
-    const taglineOpacity = useRef(new Animated.Value(0)).current;
     const buttonsOpacity = useRef(new Animated.Value(0)).current;
-    const buttonsTranslateY = useRef(new Animated.Value(60)).current;
-    const grainOpacity = useRef(new Animated.Value(0)).current;
+    const buttonsTranslateY = useRef(new Animated.Value(20)).current;
 
-    // Button animations
+    // Button scales
     const getStartedScale = useRef(new Animated.Value(1)).current;
     const loginScale = useRef(new Animated.Value(1)).current;
-    const getStartedGlow = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         const runAnimations = async () => {
-            // 1. Background fades in
-            Animated.timing(backgroundOpacity, {
-                toValue: 1,
-                duration: 800,
-                useNativeDriver: true,
-            }).start();
-
-            // Film grain subtle fade
-            Animated.timing(grainOpacity, {
-                toValue: 0.025,
-                duration: 1200,
-                useNativeDriver: true,
-            }).start();
-
-            // 2. Title fades & slides in (after 400ms)
-            await new Promise(resolve => setTimeout(resolve, 400));
-            Animated.parallel([
-                Animated.timing(titleOpacity, {
-                    toValue: 1,
-                    duration: 600,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(titleTranslateY, {
-                    toValue: 0,
-                    duration: 600,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-
-            // 3. Tagline fades in (after 300ms more)
-            await new Promise(resolve => setTimeout(resolve, 300));
-            Animated.timing(taglineOpacity, {
+            // Content fades in
+            Animated.timing(contentOpacity, {
                 toValue: 1,
                 duration: 500,
                 useNativeDriver: true,
             }).start();
 
-            // 4. Buttons slide up (after 250ms more)
-            await new Promise(resolve => setTimeout(resolve, 250));
+            // Pets slide up
+            Animated.spring(petsTranslateY, {
+                toValue: 0,
+                friction: 8,
+                tension: 50,
+                useNativeDriver: true,
+            }).start();
+
+            // Title appears
+            await new Promise(resolve => setTimeout(resolve, 300));
+            Animated.timing(titleOpacity, {
+                toValue: 1,
+                duration: 400,
+                useNativeDriver: true,
+            }).start();
+
+            // Buttons slide up
+            await new Promise(resolve => setTimeout(resolve, 200));
             Animated.parallel([
                 Animated.timing(buttonsOpacity, {
                     toValue: 1,
-                    duration: 500,
+                    duration: 400,
                     useNativeDriver: true,
                 }),
                 Animated.spring(buttonsTranslateY, {
@@ -97,50 +103,19 @@ export default function LandingScreen() {
         runAnimations();
     }, []);
 
-    const handleGetStartedPressIn = () => {
-        if (Platform.OS !== 'web') {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-        Animated.spring(getStartedScale, {
-            toValue: 0.96,
-            friction: 3,
-            tension: 400,
-            useNativeDriver: true,
-        }).start();
-        Animated.timing(getStartedGlow, {
-            toValue: 1,
-            duration: 100,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const handleGetStartedPressOut = () => {
-        Animated.spring(getStartedScale, {
-            toValue: 1,
-            friction: 3,
-            tension: 400,
-            useNativeDriver: true,
-        }).start();
-        Animated.timing(getStartedGlow, {
-            toValue: 0,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const handleLoginPressIn = () => {
+    const handlePressIn = (scale: Animated.Value) => {
         if (Platform.OS !== 'web') {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         }
-        Animated.spring(loginScale, {
-            toValue: 0.96,
+        Animated.spring(scale, {
+            toValue: 0.98,
             friction: 5,
             useNativeDriver: true,
         }).start();
     };
 
-    const handleLoginPressOut = () => {
-        Animated.spring(loginScale, {
+    const handlePressOut = (scale: Animated.Value) => {
+        Animated.spring(scale, {
             toValue: 1,
             friction: 5,
             useNativeDriver: true,
@@ -157,134 +132,84 @@ export default function LandingScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar style="light" />
-
-            {/* Gradient Background instead of Video */}
-            <View style={StyleSheet.absoluteFill}>
-                <LinearGradient
-                    colors={['#1a1a2e', '#16213e', '#0f3460', '#1a1a2e']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                />
-
-                {/* Premium Dark Gradient Overlay */}
-                <LinearGradient
-                    colors={[
-                        'rgba(0, 0, 0, 0.15)',
-                        'rgba(0, 0, 0, 0.05)',
-                        'rgba(0, 0, 0, 0.25)',
-                        'rgba(0, 0, 0, 0.65)',
-                        'rgba(0, 0, 0, 0.85)',
-                    ]}
-                    locations={[0, 0.25, 0.5, 0.75, 1]}
-                    style={styles.gradientOverlay}
-                />
-
-                {/* Decorative circles */}
-                <View style={styles.decorativeCircle1} />
-                <View style={styles.decorativeCircle2} />
-            </View>
-
-            {/* Background Animation Overlay (Fade in) */}
-            <Animated.View style={[
-                StyleSheet.absoluteFillObject,
-                {
-                    backgroundColor: '#000',
-                    opacity: backgroundOpacity.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [1, 0],
-                    }),
-                }
-            ]} pointerEvents="none" />
-
-            {/* Subtle Film Grain */}
-            <Animated.View style={[styles.filmGrain, { opacity: grainOpacity }]} pointerEvents="none" />
+            <StatusBar style="dark" />
 
             {/* Content */}
-            <View style={styles.content}>
-                {/* Logo Section - Centered */}
-                <View style={styles.logoSection}>
-                    <Animated.View style={{
-                        opacity: titleOpacity,
-                        transform: [{ translateY: titleTranslateY }],
-                    }}>
-                        <Text style={styles.appName}>PawGuard AI</Text>
-                    </Animated.View>
-
-                    <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
-                        Protecting animals through{'\n'}technology and community
-                    </Animated.Text>
-                </View>
-
-                {/* CTA Section - Bottom */}
+            <Animated.View style={[styles.content, { opacity: contentOpacity }]}>
+                {/* Pet Cards Row */}
                 <Animated.View style={[
-                    styles.ctaSection,
-                    {
-                        opacity: buttonsOpacity,
-                        transform: [{ translateY: buttonsTranslateY }],
-                    }
+                    styles.petsRow,
+                    { transform: [{ translateY: petsTranslateY }] }
                 ]}>
-                    {/* Get Started - Premium Button */}
-                    <Animated.View style={[
-                        styles.primaryButtonWrapper,
-                        { transform: [{ scale: getStartedScale }] }
-                    ]}>
-                        {/* Outer Glow */}
-                        <Animated.View style={[
-                            styles.buttonGlow,
-                            {
-                                opacity: getStartedGlow.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.4, 0.7],
-                                })
-                            }
-                        ]} />
-                        <Pressable
-                            onPressIn={handleGetStartedPressIn}
-                            onPressOut={handleGetStartedPressOut}
-                            onPress={handleGetStarted}
-                            style={styles.primaryButtonPressable}
-                        >
-                            <LinearGradient
-                                colors={['#FFB088', '#FF9268', '#FF7B4A']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={styles.primaryButton}
-                            >
-                                {/* Inner Shadow Overlay */}
-                                <View style={styles.innerShadow} />
-                                <Text style={styles.primaryButtonText}>Get Started</Text>
-                            </LinearGradient>
-                        </Pressable>
-                    </Animated.View>
-
-                    {/* Log In - Frosted Glass Button */}
-                    <Animated.View style={{ transform: [{ scale: loginScale }] }}>
-                        <Pressable
-                            onPressIn={handleLoginPressIn}
-                            onPressOut={handleLoginPressOut}
-                            onPress={handleLogin}
-                            style={styles.secondaryButtonPressable}
-                        >
-                            {Platform.OS === 'ios' ? (
-                                <BlurView intensity={20} tint="dark" style={styles.secondaryButton}>
-                                    <Text style={styles.secondaryButtonText}>Log In</Text>
-                                </BlurView>
-                            ) : (
-                                <View style={[styles.secondaryButton, styles.secondaryButtonAndroid]}>
-                                    <Text style={styles.secondaryButtonText}>Log In</Text>
-                                </View>
-                            )}
-                        </Pressable>
-                    </Animated.View>
-
-                    {/* Footer */}
-                    <Text style={styles.footer}>
-                        Join thousands helping animals in your community
-                    </Text>
+                    {pets.map((pet, index) => (
+                        <View key={index} style={styles.petColumn}>
+                            <View style={[
+                                styles.petCard,
+                                { backgroundColor: pet.bgColor, height: pet.height }
+                            ]}>
+                                <Image
+                                    source={{ uri: pet.image }}
+                                    style={styles.petImage}
+                                    resizeMode="cover"
+                                />
+                            </View>
+                            <Text style={styles.petName}>{pet.name}</Text>
+                        </View>
+                    ))}
                 </Animated.View>
-            </View>
+
+                {/* Bottom Section */}
+                <View style={styles.bottomSection}>
+                    {/* Title */}
+                    <Animated.View style={[{ opacity: titleOpacity }]}>
+                        <Text style={styles.appName}>PawGuard AI</Text>
+                        <Text style={styles.tagline}>
+                            Protecting animals through technology and community
+                        </Text>
+                    </Animated.View>
+
+                    {/* Buttons */}
+                    <Animated.View style={[
+                        styles.buttonsContainer,
+                        {
+                            opacity: buttonsOpacity,
+                            transform: [{ translateY: buttonsTranslateY }],
+                        }
+                    ]}>
+                        {/* Get Started Button */}
+                        <Animated.View style={{ transform: [{ scale: getStartedScale }] }}>
+                            <Pressable
+                                onPressIn={() => handlePressIn(getStartedScale)}
+                                onPressOut={() => handlePressOut(getStartedScale)}
+                                onPress={handleGetStarted}
+                                style={styles.getStartedButton}
+                            >
+                                <Text style={styles.getStartedText}>Get Started</Text>
+                            </Pressable>
+                        </Animated.View>
+
+                        {/* Log In Button */}
+                        <Animated.View style={{ transform: [{ scale: loginScale }] }}>
+                            <Pressable
+                                onPressIn={() => handlePressIn(loginScale)}
+                                onPressOut={() => handlePressOut(loginScale)}
+                                onPress={handleLogin}
+                                style={styles.loginButton}
+                            >
+                                <Text style={styles.loginText}>Log In</Text>
+                            </Pressable>
+                        </Animated.View>
+
+                        {/* Description */}
+                        <Text style={styles.footerDescription}>
+                            Join thousands of animal lovers protecting pets in your community
+                        </Text>
+                    </Animated.View>
+
+                    {/* Home Indicator */}
+                    <View style={styles.homeIndicator} />
+                </View>
+            </Animated.View>
         </View>
     );
 }
@@ -292,155 +217,116 @@ export default function LandingScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0A0A0A',
-    },
-    gradientOverlay: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    decorativeCircle1: {
-        position: 'absolute',
-        top: -100,
-        right: -100,
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: 'rgba(255, 146, 104, 0.1)',
-    },
-    decorativeCircle2: {
-        position: 'absolute',
-        bottom: 200,
-        left: -150,
-        width: 400,
-        height: 400,
-        borderRadius: 200,
-        backgroundColor: 'rgba(100, 200, 255, 0.05)',
-    },
-    filmGrain: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(128, 128, 128, 0.15)',
+        backgroundColor: '#FFF9F4',
     },
     content: {
         flex: 1,
-        justifyContent: 'space-between',
-        paddingHorizontal: spacing.xl + 8,
-        paddingTop: Platform.OS === 'ios' ? SCREEN_HEIGHT * 0.12 : SCREEN_HEIGHT * 0.08,
-        paddingBottom: spacing.mega + 24,
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
     },
-    logoSection: {
-        flex: 1,
+    petsRow: {
+        flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center',
-    },
-    appName: {
-        fontSize: 44,
-        fontWeight: '600',
-        color: '#FFFAF5',
-        textAlign: 'center',
-        letterSpacing: 1.5,
-        textShadowColor: 'rgba(0, 0, 0, 0.4)',
-        textShadowOffset: { width: 0, height: 3 },
-        textShadowRadius: 10,
+        paddingHorizontal: spacing.md,
+        gap: 12,
         marginBottom: spacing.xl,
     },
-    tagline: {
-        fontSize: 16,
-        fontWeight: '400',
-        color: 'rgba(255, 255, 255, 0.75)',
-        textAlign: 'center',
-        lineHeight: 26,
-        letterSpacing: 0.3,
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 6,
+    petColumn: {
+        flex: 1,
+        alignItems: 'center',
     },
-    ctaSection: {
-        gap: spacing.lg,
-    },
-    primaryButtonWrapper: {
-        position: 'relative',
-    },
-    buttonGlow: {
-        position: 'absolute',
-        top: -8,
-        left: -8,
-        right: -8,
-        bottom: -8,
-        borderRadius: 40,
-        backgroundColor: 'rgba(255, 146, 104, 0.35)',
-        ...Platform.select({
-            ios: {
-                shadowColor: '#FF9268',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-            },
-        }),
-    },
-    primaryButtonPressable: {
-        borderRadius: 32,
+    petCard: {
+        width: '100%',
+        borderRadius: 999,
         overflow: 'hidden',
     },
-    primaryButton: {
-        paddingVertical: 18,
-        paddingHorizontal: 32,
-        borderRadius: 32,
+    petImage: {
+        width: '100%',
+        height: '100%',
+    },
+    petName: {
+        marginTop: spacing.sm,
+        fontSize: 10,
+        fontWeight: '600',
+        color: '#1B2A4E',
+        opacity: 0.7,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    bottomSection: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingHorizontal: spacing.xl + 8,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 30,
+    },
+    appName: {
+        fontSize: 42,
+        fontWeight: '400',
+        color: '#1B2A4E',
+        textAlign: 'center',
+        fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+        marginBottom: spacing.sm,
+    },
+    tagline: {
+        fontSize: 14,
+        color: '#1B2A4E',
+        opacity: 0.6,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: spacing.lg,
+        maxWidth: 280,
+    },
+    buttonsContainer: {
+        width: '100%',
+        gap: spacing.sm,
+    },
+    getStartedButton: {
+        backgroundColor: '#FF7E67',
+        paddingVertical: 20,
+        borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
         ...Platform.select({
             ios: {
-                shadowColor: '#FF7B4A',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.35,
-                shadowRadius: 12,
+                shadowColor: '#FF7E67',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.3,
+                shadowRadius: 16,
             },
             android: {
-                elevation: 6,
+                elevation: 8,
             },
         }),
     },
-    innerShadow: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: 32,
-        borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.2)',
-        borderTopColor: 'rgba(255, 255, 255, 0.35)',
-        borderBottomColor: 'rgba(0, 0, 0, 0.15)',
-    },
-    primaryButtonText: {
-        fontSize: 17,
+    getStartedText: {
+        fontSize: 16,
         fontWeight: '600',
         color: '#FFFFFF',
-        letterSpacing: 0.4,
     },
-    secondaryButtonPressable: {
-        borderRadius: 32,
-        overflow: 'hidden',
-    },
-    secondaryButton: {
-        paddingVertical: 16,
-        paddingHorizontal: 32,
-        borderRadius: 32,
+    loginButton: {
+        paddingVertical: 14,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1.5,
-        borderColor: 'rgba(255, 255, 255, 0.35)',
-        overflow: 'hidden',
     },
-    secondaryButtonAndroid: {
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    },
-    secondaryButtonText: {
-        fontSize: 16,
+    loginText: {
+        fontSize: 15,
         fontWeight: '500',
-        color: 'rgba(255, 255, 255, 0.9)',
-        letterSpacing: 0.3,
+        color: '#1B2A4E',
     },
-    footer: {
-        fontSize: 13,
-        fontWeight: '400',
-        color: 'rgba(255, 255, 255, 0.4)',
-        textAlign: 'center',
+    homeIndicator: {
+        marginTop: spacing.lg,
+        width: 128,
+        height: 5,
+        backgroundColor: 'rgba(27, 42, 78, 0.1)',
+        borderRadius: 3,
+    },
+    footerDescription: {
         marginTop: spacing.md,
-        letterSpacing: 0.2,
+        fontSize: 12,
+        color: '#1B2A4E',
+        opacity: 0.5,
+        textAlign: 'center',
+        lineHeight: 18,
     },
 });

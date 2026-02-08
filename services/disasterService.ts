@@ -3,7 +3,7 @@
  * Manages disaster zones and emergency mode operations
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import { DbDisasterZone, DisasterZone, dbToDisasterZone } from '../lib/supabaseTypes';
 import { setDisasterModeForZone } from './reportService';
 
@@ -309,7 +309,7 @@ export function subscribeToDisasterZones(
                 schema: 'public',
                 table: 'disaster_zones',
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 console.log('📡 Disaster zone update:', payload);
                 if (payload.new) {
                     callback(dbToDisasterZone(payload.new as DbDisasterZone));

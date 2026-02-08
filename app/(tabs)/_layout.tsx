@@ -66,12 +66,11 @@ export default function TabsLayout() {
                     ),
                 }}
             />
-            {/* Disaster Mode Tab - NGO Only */}
+            {/* Disaster Mode Tab - Visible to all, view-only for citizens */}
             <Tabs.Screen
                 name="disaster"
                 options={{
                     title: 'Disaster',
-                    href: isNGO ? undefined : null, // Hide for non-NGO users
                     tabBarIcon: ({ color, size }) => (
                         <View>
                             <Ionicons

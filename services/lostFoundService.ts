@@ -3,7 +3,7 @@
  * Handles lost pet and found animal posts for both users and NGOs
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import { DbLostFoundPost, LostFoundPost, dbToLostFoundPost } from '../lib/communityTypes';
 
 // ============= CREATE OPERATIONS =============
@@ -311,7 +311,7 @@ export function subscribeToLostFoundPosts(
                 schema: 'public',
                 table: 'lost_found_posts',
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 console.log('📡 Lost/Found post update:', payload);
                 if (payload.new) {
                     callback(dbToLostFoundPost(payload.new as DbLostFoundPost));

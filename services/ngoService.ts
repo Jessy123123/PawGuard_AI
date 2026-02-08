@@ -3,7 +3,7 @@
  * Handles NGO profile creation, verification, and contact retrieval
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import { DbNgoProfile, NgoProfile, dbToNgoProfile } from '../lib/communityTypes';
 
 // ============= CREATE OPERATIONS =============

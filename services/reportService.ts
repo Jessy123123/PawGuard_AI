@@ -3,7 +3,7 @@
  * Handles all Supabase operations for animal reports
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import {
     DbAnimalReport,
     DbAnimalEmbedding,
@@ -611,7 +611,7 @@ export async function getStatusHistory(reportId: string): Promise<StatusHistoryE
 
         if (error) throw error;
 
-        return (data || []).map(item => ({
+        return (data || []).map((item: DbStatusHistory) => ({
             id: item.id,
             reportId: item.report_id,
             oldStatus: item.old_status,
@@ -645,7 +645,7 @@ export function subscribeToReportUpdates(
                 schema: 'public',
                 table: 'animal_reports',
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 console.log('📡 Real-time update:', payload);
                 if (payload.new) {
                     callback(dbToAnimalReport(payload.new as DbAnimalReport));
@@ -677,7 +677,7 @@ export function subscribeToReport(
                 table: 'animal_reports',
                 filter: `id=eq.${reportId}`,
             },
-            (payload) => {
+            (payload: { new: unknown; old: unknown }) => {
                 console.log('📡 Report update:', payload);
                 if (payload.new) {
                     callback(dbToAnimalReport(payload.new as DbAnimalReport));

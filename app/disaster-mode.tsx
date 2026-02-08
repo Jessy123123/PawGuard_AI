@@ -33,8 +33,8 @@ export default function DisasterModeScreen() {
         // Default alert if none active (for demo)
         if (!activeAlert) {
             setDisasterMode(true, {
-                title: 'Flood Warning',
-                description: 'High risk of flash floods in the Northern Districts. Multiple shelters are evacuating animals.',
+                title: 'Ipoh Flash Flood Emergency',
+                description: 'Severe flash flooding in Ipoh city center due to heavy monsoon rainfall. Multiple animals spotted stranded in affected areas requiring immediate rescue. Flood waters rising in low-lying residential areas.',
                 severity: 'Critical',
                 status: 'Ongoing'
             });
