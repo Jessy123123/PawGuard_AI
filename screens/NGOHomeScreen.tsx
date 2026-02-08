@@ -10,6 +10,7 @@ import {
     Animated,
     Platform,
     RefreshControl,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -22,10 +23,13 @@ import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+import { getAllReports, subscribeToReportUpdates } from '../services/reportService';
+import { getActiveDisasterZones, subscribeToDisasterZones } from '../services/disasterService';
+import { AnimalReport, DisasterZone } from '../lib/supabaseTypes';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Mock data for NGO home
+// Mock data for rescue stories (keeping for now)
 const rescueStories = [
     {
         id: '1',
@@ -42,25 +46,6 @@ const rescueStories = [
         image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=800',
         tag: 'In Progress',
         color: '#A5E5ED',
-    },
-];
-
-const urgentReports = [
-    {
-        id: '1',
-        animal: 'Injured Cat',
-        location: 'Marina Bay',
-        time: '15 min ago',
-        severity: 'critical',
-        image: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600',
-    },
-    {
-        id: '2',
-        animal: 'Lost Dog',
-        location: 'Orchard Road',
-        time: '1 hour ago',
-        severity: 'high',
-        image: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=600',
     },
 ];
 
@@ -152,11 +137,12 @@ const StoryCard: React.FC<{
     );
 };
 
-// Urgent Report Card
+// Urgent Report Card - Updated to use AnimalReport
 const UrgentReportCard: React.FC<{
-    report: typeof urgentReports[0];
+    report: AnimalReport;
+    timeAgo: string;
     onPress: () => void;
-}> = ({ report, onPress }) => {
+}> = ({ report, timeAgo, onPress }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePress = () => {
@@ -169,25 +155,42 @@ const UrgentReportCard: React.FC<{
     };
 
     const getSeverityColor = () => {
-        return report.severity === 'critical' ? '#0891B2' : '#A5E5ED';
+        if (report.isEmergency) return '#DC2626'; // Red for emergency
+        if (report.status === 'new') return '#0891B2'; // Cyan for new
+        return '#A5E5ED'; // Light blue for others
     };
+
+    const animalName = `${report.species === 'dog' ? '🐕' : '🐈'} ${report.breed || (report.species === 'dog' ? 'Dog' : 'Cat')}`;
 
     return (
         <Animated.View style={[styles.urgentCard, { transform: [{ scale: scaleAnim }] }]}>
             <Pressable onPress={handlePress} style={styles.urgentCardInner}>
-                <Image source={{ uri: report.image }} style={styles.urgentImage} resizeMode="cover" />
+                {report.imageUrl ? (
+                    <Image source={{ uri: report.imageUrl }} style={styles.urgentImage} resizeMode="cover" />
+                ) : (
+                    <View style={[styles.urgentImage, { backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }]}>
+                        <Ionicons name="paw" size={24} color="#9CA3AF" />
+                    </View>
+                )}
                 <View style={styles.urgentContent}>
                     <View style={styles.urgentHeader}>
-                        <Text style={styles.urgentTitle}>{report.animal}</Text>
+                        <Text style={styles.urgentTitle}>{animalName}</Text>
                         <View style={[styles.severityDot, { backgroundColor: getSeverityColor() }]}>
                             <View style={[styles.severityPulse, { backgroundColor: getSeverityColor() }]} />
                         </View>
                     </View>
                     <View style={styles.urgentMeta}>
                         <Ionicons name="location" size={12} color={colors.minimalist.textLight} />
-                        <Text style={styles.urgentLocation}>{report.location}</Text>
+                        <Text style={styles.urgentLocation} numberOfLines={1}>{report.address}</Text>
                     </View>
-                    <Text style={styles.urgentTime}>{report.time}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <Text style={styles.urgentTime}>{timeAgo}</Text>
+                        {report.isEmergency && (
+                            <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 9, color: '#DC2626', fontWeight: '700' }}>EMERGENCY</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.minimalist.textLight} />
             </Pressable>
@@ -253,8 +256,12 @@ const SpotlightCard: React.FC<{
     );
 };
 
-// Quick Stats Card
-const QuickStats: React.FC = () => {
+// Quick Stats Card - Updated to use dynamic data
+const QuickStats: React.FC<{
+    pending: number;
+    rescued: number;
+    adopted: number;
+}> = ({ pending, rescued, adopted }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -270,20 +277,20 @@ const QuickStats: React.FC = () => {
         <Animated.View style={[styles.statsContainer, { opacity: fadeAnim }]}>
             <View style={styles.statBox}>
                 <LinearGradient colors={['#F9F8D9', '#A5E5ED']} style={styles.statGradient}>
-                    <Text style={styles.statNumber}>12</Text>
-                    <Text style={styles.statLabel}>Pending Reports</Text>
+                    <Text style={styles.statNumber}>{pending}</Text>
+                    <Text style={styles.statLabel}>Pending</Text>
                 </LinearGradient>
             </View>
             <View style={styles.statBox}>
                 <LinearGradient colors={['#BBF3DE', '#A2CEA9']} style={styles.statGradient}>
-                    <Text style={styles.statNumber}>28</Text>
-                    <Text style={styles.statLabel}>Animals Rescued</Text>
+                    <Text style={styles.statNumber}>{rescued}</Text>
+                    <Text style={styles.statLabel}>Rescued</Text>
                 </LinearGradient>
             </View>
             <View style={styles.statBox}>
                 <LinearGradient colors={['#A5E5ED', '#BBF3DE']} style={styles.statGradient}>
-                    <Text style={styles.statNumber}>15</Text>
-                    <Text style={styles.statLabel}>Adoptions</Text>
+                    <Text style={styles.statNumber}>{adopted}</Text>
+                    <Text style={styles.statLabel}>Adopted</Text>
                 </LinearGradient>
             </View>
         </Animated.View>
@@ -295,13 +302,91 @@ export const NGOHomeScreen: React.FC = () => {
     const { user } = useAuth();
     const { isDisasterModeActive, activeAlert } = useData();
     const [refreshing, setRefreshing] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [reports, setReports] = useState<AnimalReport[]>([]);
+    const [disasterZones, setDisasterZones] = useState<DisasterZone[]>([]);
     const scrollY = useRef(new Animated.Value(0)).current;
+
+    // Fetch reports and disaster zones on mount
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    // Subscribe to real-time updates
+    useEffect(() => {
+        const unsubReports = subscribeToReportUpdates((updatedReport) => {
+            setReports(prev => {
+                const exists = prev.find(r => r.id === updatedReport.id);
+                if (exists) {
+                    return prev.map(r => r.id === updatedReport.id ? updatedReport : r);
+                } else {
+                    return [updatedReport, ...prev];
+                }
+            });
+            console.log('📡 NGO: Real-time report update:', updatedReport.reportId);
+        });
+
+        const unsubDisaster = subscribeToDisasterZones((updatedZone) => {
+            setDisasterZones(prev => {
+                const exists = prev.find(z => z.id === updatedZone.id);
+                if (exists) {
+                    return prev.map(z => z.id === updatedZone.id ? updatedZone : z);
+                } else {
+                    return [updatedZone, ...prev];
+                }
+            });
+            console.log('📡 NGO: Real-time disaster zone update:', updatedZone.name);
+        });
+
+        return () => {
+            unsubReports();
+            unsubDisaster();
+        };
+    }, []);
+
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const [allReports, activeZones] = await Promise.all([
+                getAllReports({ limit: 20 }),
+                getActiveDisasterZones(),
+            ]);
+            setReports(allReports);
+            setDisasterZones(activeZones);
+            console.log('✅ NGO: Loaded', allReports.length, 'reports,', activeZones.length, 'active disaster zones');
+        } catch (error) {
+            console.error('❌ NGO: Error loading data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const onRefresh = async () => {
         setRefreshing(true);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await loadData();
         setRefreshing(false);
+    };
+
+    // Calculate stats from real data
+    const pendingCount = reports.filter(r => r.status === 'new' || r.status === 'in_progress').length;
+    const rescuedCount = reports.filter(r => r.isRescued).length;
+    const adoptedCount = reports.filter(r => r.status === 'adopted').length;
+
+    // Get urgent reports (new or emergency)
+    const urgentReports = reports.filter(r => r.status === 'new' || r.isEmergency).slice(0, 5);
+
+    // Helper to format time ago
+    const formatTimeAgo = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 60) return `${diffMins} min ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     };
 
     const headerOpacity = scrollY.interpolate({
@@ -359,7 +444,7 @@ export const NGOHomeScreen: React.FC = () => {
                 )}
 
                 {/* Quick Stats */}
-                <QuickStats />
+                <QuickStats pending={pendingCount} rescued={rescuedCount} adopted={adoptedCount} />
 
                 {/* Rescue Stories Section */}
                 <View style={styles.section}>
@@ -380,15 +465,28 @@ export const NGOHomeScreen: React.FC = () => {
                 {/* Urgent Reports Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Needs Attention</Text>
+                        <Text style={styles.sectionTitle}>Needs Attention ({urgentReports.length})</Text>
                     </View>
-                    {urgentReports.map(report => (
-                        <UrgentReportCard
-                            key={report.id}
-                            report={report}
-                            onPress={() => router.push({ pathname: '/ngo-report-detail', params: { reportId: report.id } })}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+                            <ActivityIndicator size="small" color="#0891B2" />
+                            <Text style={{ color: colors.minimalist.textLight, marginTop: 8 }}>Loading reports...</Text>
+                        </View>
+                    ) : urgentReports.length > 0 ? (
+                        urgentReports.map(report => (
+                            <UrgentReportCard
+                                key={report.id}
+                                report={report}
+                                timeAgo={formatTimeAgo(report.createdAt)}
+                                onPress={() => router.push({ pathname: '/ngo-report-detail', params: { reportId: report.id } })}
+                            />
+                        ))
+                    ) : (
+                        <View style={{ padding: spacing.xl, alignItems: 'center' }}>
+                            <Ionicons name="checkmark-circle-outline" size={40} color={colors.minimalist.greenDark} />
+                            <Text style={{ color: colors.minimalist.textMedium, marginTop: 8 }}>All caught up! No pending reports.</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Adoption Spotlights Section */}

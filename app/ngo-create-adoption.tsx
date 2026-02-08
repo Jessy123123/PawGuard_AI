@@ -1,3 +1,4 @@
-import { NGOCreateAdoptionScreen } from '../screens/NGOCreateAdoptionScreen';
+import NGOCreateAdoptionScreen from '../screens/NGOCreateAdoptionScreen';
 
 export default NGOCreateAdoptionScreen;
+

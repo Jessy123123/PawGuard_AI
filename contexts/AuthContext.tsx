@@ -2,6 +2,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserRole } from '../types';
 
+// Generate a proper UUID v4 (no external dependencies)
+const generateUUID = (): string => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
 interface User {
     id: string;
     email: string;
@@ -51,8 +60,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Use email as consistent ID (simple hash for demo)
-            const userId = email.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Check if we have an existing user with this email (to preserve UUID)
+            const existingUserData = await AsyncStorage.getItem(`@user_${email.toLowerCase()}`);
+            let userId: string;
+
+            if (existingUserData) {
+                const existingUser = JSON.parse(existingUserData);
+                userId = existingUser.id;
+            } else {
+                // Generate a proper UUID for new users
+                userId = generateUUID();
+            }
 
             const newUser: User = {
                 id: userId,
@@ -63,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             };
 
             await AsyncStorage.setItem('@user', JSON.stringify(newUser));
+            await AsyncStorage.setItem(`@user_${email.toLowerCase()}`, JSON.stringify(newUser));
             await AsyncStorage.setItem('@token', 'mock-jwt-token');
             setUser(newUser);
         } finally {
@@ -78,8 +97,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             const profileComplete = !!(name && role && (role === 'ngo' ? orgName : true) && phone);
 
-            // Use email as consistent ID (simple hash for demo)
-            const userId = email.toLowerCase().replace(/[^a-z0-9]/g, '');
+            // Generate a proper UUID for new users
+            const userId = generateUUID();
 
             const newUser: User = {
                 id: userId,
@@ -92,6 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             };
 
             await AsyncStorage.setItem('@user', JSON.stringify(newUser));
+            await AsyncStorage.setItem(`@user_${email.toLowerCase()}`, JSON.stringify(newUser));
             await AsyncStorage.setItem('@token', 'mock-jwt-token');
             setUser(newUser);
         } finally {

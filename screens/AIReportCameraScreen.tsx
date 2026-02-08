@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
@@ -13,9 +12,7 @@ import { FloatingCard } from '../components/FloatingCard';
 import { AnimalIdentificationResult } from '../types/yolo';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
-
-// Gemini Cloud Function URL
-const GEMINI_ANALYZE_URL = 'https://us-central1-pawguardai-4ee35.cloudfunctions.net/analyzeAnimal';
+import { yoloBackendService } from '../services/yoloBackendService';
 
 export const AIReportCameraScreen = () => {
     const router = useRouter();
@@ -77,59 +74,43 @@ export const AIReportCameraScreen = () => {
         setAnalysisResult(null);
 
         try {
-            console.log('🎯 Starting Gemini AI analysis...');
+            console.log('🎯 Starting YOLO AI analysis...');
 
-            // Convert image to Base64
-            const base64 = await FileSystem.readAsStringAsync(uri, {
-                encoding: FileSystem.EncodingType.Base64,
-            });
+            // Use YOLO Backend Service for detection
+            const yoloResult = await yoloBackendService.detectAnimals(uri);
 
-            // Call Gemini Cloud Function
-            const response = await fetch(GEMINI_ANALYZE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imageBase64: base64,
-                    mimeType: 'image/jpeg',
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Gemini analysis failed');
-            }
-
-            const geminiResult = await response.json();
-            console.log('✅ Gemini response:', geminiResult);
-
-            // Handle case where no animal is detected
-            if (!geminiResult.species || geminiResult.species === 'unknown') {
-                console.log('⚠️ Gemini: No dog/cat detected');
+            // Check if any animal was detected
+            if (!yoloResult.success || !yoloResult.primary_detection) {
+                console.log('⚠️ YOLO: No dog/cat detected');
                 Alert.alert('No Animal Detected', 'Please try taking a clearer photo of a dog or cat.');
                 setIsAnalyzing(false);
                 return;
             }
 
-            // Map Gemini response to AnimalIdentificationResult
+            const detection = yoloResult.primary_detection;
+            console.log('✅ YOLO detected:', detection.class_name, 'with confidence:', detection.confidence);
+
+            // Map YOLO response to AnimalIdentificationResult
             const result: AnimalIdentificationResult = {
-                species: geminiResult.species as 'dog' | 'cat' | 'unknown',
-                breed: geminiResult.breed || 'Mixed',
-                color: geminiResult.color || 'Unknown',
-                distinctiveFeatures: geminiResult.distinctiveFeatures || 'Analyzed by Gemini AI',
-                healthNotes: geminiResult.healthStatus || 'No health concerns noted',
-                isEmergency: geminiResult.isEmergency || false,
-                confidence: 0.95, // Gemini doesn't return confidence, use high default
+                species: detection.class_name as 'dog' | 'cat',
+                breed: 'Unknown', // YOLO doesn't detect breed
+                color: 'Unknown', // YOLO doesn't detect color
+                distinctiveFeatures: `Detected by YOLO with ${(detection.confidence * 100).toFixed(1)}% confidence`,
+                healthNotes: 'Visual analysis only - no health concerns detected',
+                isEmergency: false,
+                confidence: detection.confidence,
+                embedding: yoloResult.embedding || undefined, // Store CLIP embedding if available
             };
 
-            // setAnalysisResult(result);
-            // setIsAnalyzing(false);
+            setAnalysisResult(result);
+            setIsAnalyzing(false);
 
         } catch (error: any) {
             const errorMsg = error?.message || 'Unknown error';
-            console.error('❌ Gemini analysis failed:', errorMsg);
+            console.error('❌ YOLO analysis failed:', errorMsg);
             Alert.alert(
                 'Analysis Failed',
-                `Could not analyze the image. Please check your internet connection.\n\nError: ${errorMsg}`
+                `Could not analyze the image. Please check your YOLO server connection.\n\nError: ${errorMsg}`
             );
             setIsAnalyzing(false);
         }
@@ -166,7 +147,7 @@ export const AIReportCameraScreen = () => {
                         </View>
                         <Text style={styles.title}>Identify Animal</Text>
                         <Text style={styles.subtitle}>
-                            Take a photo or upload an image. Gemini AI will identify the species, breed, and health concerns.
+                            Take a photo or upload an image. PawGuard AI will identify the species, breed, and health concerns.
                         </Text>
 
                         <View style={styles.buttonRow}>
@@ -195,7 +176,7 @@ export const AIReportCameraScreen = () => {
                         {isAnalyzing ? (
                             <View style={styles.analyzingOverlay}>
                                 <ActivityIndicator size="large" color={colors.minimalist.white} />
-                                <Text style={styles.analyzingText}>Analyzing with Gemini AI...</Text>
+                                <Text style={styles.analyzingText}>Analyzing image...</Text>
                             </View>
                         ) : analysisResult ? (
                             <View style={styles.resultCard}>

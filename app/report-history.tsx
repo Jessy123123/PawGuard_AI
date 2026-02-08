@@ -9,49 +9,56 @@ import { StatusBadge } from '../components/StatusBadge';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { serifTextStyles } from '../theme/typography';
-import { getAnimalsByUser } from '../services/animalService';
+import { getReportsByUser, subscribeToReportUpdates } from '../services/reportService';
 import { useAuth } from '../contexts/AuthContext';
-import { AnimalIdentity } from '../types';
+import { AnimalReport } from '../lib/supabaseTypes';
 
 export default function ReportHistoryScreen() {
     const router = useRouter();
     const { user } = useAuth();
     const isNGO = user?.role === 'ngo';
     const accentColor = isNGO ? '#0891B2' : colors.minimalist.coral;
-    const [animals, setAnimals] = useState<AnimalIdentity[]>([]);
+    const [reports, setReports] = useState<AnimalReport[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        loadUserAnimals();
+        loadUserReports();
     }, [user]);
 
-    const loadUserAnimals = async () => {
+    // Subscribe to real-time updates
+    useEffect(() => {
+        if (!user) return;
+
+        const unsubscribe = subscribeToReportUpdates((updatedReport) => {
+            // Only update if this report belongs to the current user
+            if (updatedReport.reporterId === user.id) {
+                setReports(prev =>
+                    prev.map(r => r.id === updatedReport.id ? updatedReport : r)
+                );
+                console.log('📡 Real-time update received for:', updatedReport.reportId);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [user]);
+
+    const loadUserReports = async () => {
         if (!user) {
-            setAnimals([]);
+            setReports([]);
             setIsLoading(false);
             return;
         }
 
         try {
             setIsLoading(true);
-            console.log('📥 Loading animals for user:', user.id);
-            const userAnimals = await getAnimalsByUser(user.id);
-            console.log('✅ Loaded', userAnimals.length, 'animals');
-
-            // Debug: Check if images are loaded
-            userAnimals.forEach((animal, index) => {
-                console.log(`Animal ${index + 1}:`, {
-                    id: animal.systemId,
-                    species: animal.species,
-                    breed: animal.breed,
-                    imageUrl: animal.primaryImageUrl ? 'Has image ✅' : 'No image ❌',
-                    embedding: animal.embedding ? 'Has embedding ✅' : 'No embedding ❌'
-                });
-            });
-
-            setAnimals(userAnimals);
+            console.log('📥 Loading reports for user:', user.id);
+            const userReports = await getReportsByUser(user.id);
+            console.log('✅ Loaded', userReports.length, 'reports');
+            setReports(userReports);
         } catch (error) {
-            console.error('❌ Error loading animals:', error);
+            console.error('❌ Error loading reports:', error);
         } finally {
             setIsLoading(false);
         }
@@ -75,21 +82,21 @@ export default function ReportHistoryScreen() {
                         <ActivityIndicator size="large" color={accentColor} />
                         <Text style={styles.loadingText}>Loading your animals...</Text>
                     </View>
-                ) : animals.length > 0 ? (
-                    animals.map((animal) => (
+                ) : reports.length > 0 ? (
+                    reports.map((report) => (
                         <Pressable
-                            key={animal.id}
+                            key={report.id}
                             onPress={() => router.push({
                                 pathname: '/animal-profile',
-                                params: { id: animal.id }
+                                params: { id: report.id }
                             })}
                         >
                             {({ pressed }) => (
                                 <FloatingCard shadow="soft" style={[styles.reportCard, pressed && styles.pressed]}>
                                     <View style={styles.cardContent}>
-                                        {animal.primaryImageUrl && (
+                                        {report.imageUrl && (
                                             <Image
-                                                source={{ uri: animal.primaryImageUrl }}
+                                                source={{ uri: report.imageUrl }}
                                                 style={styles.thumbnail}
                                             />
                                         )}
@@ -97,27 +104,43 @@ export default function ReportHistoryScreen() {
                                             <View style={styles.cardHeader}>
                                                 <View style={styles.animalInfo}>
                                                     <Text style={styles.animalName}>
-                                                        {animal.species === 'dog' ? '🐕' : '🐈'} {animal.breed}
+                                                        {report.species === 'dog' ? '🐕' : '🐈'} {report.breed || 'Unknown breed'}
                                                     </Text>
                                                     <Text style={[styles.animalId, { color: accentColor }]}>
-                                                        ID: {animal.systemId}
+                                                        ID: {report.animalId}
                                                     </Text>
                                                     <Text style={styles.reportDate}>
-                                                        {new Date(animal.lastSeenAt).toLocaleDateString()} • {animal.lastSeenLocation}
+                                                        {new Date(report.createdAt).toLocaleDateString()} • {report.address}
                                                     </Text>
                                                 </View>
-                                                <StatusBadge status={animal.status as any} />
+                                                <StatusBadge status={report.status as any} />
                                             </View>
 
-                                            {animal.color && (
-                                                <Text style={styles.colorText}>Color: {animal.color}</Text>
+                                            {report.color && (
+                                                <Text style={styles.colorText}>Color: {report.color}</Text>
                                             )}
-                                            {animal.embedding && (
-                                                <View style={[styles.embeddingBadge, { backgroundColor: isNGO ? 'rgba(165, 229, 237, 0.25)' : colors.minimalist.peachLight }]}>
-                                                    <Ionicons name="finger-print" size={12} color={accentColor} />
-                                                    <Text style={[styles.embeddingText, { color: accentColor }]}>Identity Saved</Text>
-                                                </View>
-                                            )}
+
+                                            {/* Status progression indicators */}
+                                            <View style={styles.statusRow}>
+                                                {report.isRescued && (
+                                                    <View style={[styles.statusPill, { backgroundColor: 'rgba(167, 243, 208, 0.5)' }]}>
+                                                        <Ionicons name="checkmark-circle" size={12} color={colors.minimalist.greenDark} />
+                                                        <Text style={[styles.statusPillText, { color: colors.minimalist.greenDark }]}>Rescued</Text>
+                                                    </View>
+                                                )}
+                                                {report.isVaccinated && (
+                                                    <View style={[styles.statusPill, { backgroundColor: 'rgba(147, 197, 253, 0.3)' }]}>
+                                                        <Ionicons name="medkit" size={12} color="#2563EB" />
+                                                        <Text style={[styles.statusPillText, { color: '#2563EB' }]}>Vaccinated</Text>
+                                                    </View>
+                                                )}
+                                                {report.isNeutered && (
+                                                    <View style={[styles.statusPill, { backgroundColor: 'rgba(196, 181, 253, 0.3)' }]}>
+                                                        <Ionicons name="cut" size={12} color="#7C3AED" />
+                                                        <Text style={[styles.statusPillText, { color: '#7C3AED' }]}>Neutered</Text>
+                                                    </View>
+                                                )}
+                                            </View>
                                         </View>
                                     </View>
 
@@ -287,6 +310,24 @@ const styles = StyleSheet.create({
     embeddingText: {
         fontSize: 11,
         color: colors.minimalist.coral,
+        fontWeight: '600',
+    },
+    statusRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginTop: 8,
+    },
+    statusPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    statusPillText: {
+        fontSize: 11,
         fontWeight: '600',
     },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,8 @@ import {
     TextInput,
     Alert,
     Dimensions,
+    ActivityIndicator,
+    Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -23,44 +25,67 @@ import { FloatingCard } from '../components/FloatingCard';
 import { ReportStatusBadge } from '../components/ReportStatusBadge';
 import { SeverityIndicator } from '../components/SeverityIndicator';
 import { ContactModal } from '../components/ContactModal';
-import { NGOReport, ReportStatus } from '../types';
+import { getReportById, updateReportStatus, addNgoNotes, subscribeToReportUpdates } from '../services/reportService';
+import { AnimalReport, ReportStatus } from '../lib/supabaseTypes';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Mock data - in real app, fetch by reportId
-const mockReport: NGOReport = {
-    id: '1',
-    reportId: 'RPT-2026-0001',
-    animalType: 'dog',
-    animalBreed: 'Mixed Breed',
-    animalColor: 'Brown with white patches',
-    injurySeverity: 'high',
-    injuryDescription: 'The dog appears to have an injured hind leg and is limping heavily. Found near the park entrance, seems to be in pain when moving. May need immediate veterinary attention.',
-    photos: [
-        'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600',
-        'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=600',
-        'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=600',
-    ],
-    location: 'Central Park, Main Entrance, Near the Fountain',
-    coordinates: { lat: 3.1390, lng: 101.6869 },
-    reporterName: 'John Doe',
-    reporterPhone: '+60123456789',
-    reporterEmail: 'john.doe@example.com',
-    status: 'new',
-    reportedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    internalNotes: '',
-};
 
 export const NGOReportDetailScreen: React.FC = () => {
     const router = useRouter();
     const params = useLocalSearchParams<{ reportId: string }>();
 
-    const [report, setReport] = useState<NGOReport>(mockReport);
+    const [report, setReport] = useState<AnimalReport | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [showContactModal, setShowContactModal] = useState(false);
-    const [internalNotes, setInternalNotes] = useState(report.internalNotes || '');
+    const [ngoNotes, setNgoNotes] = useState('');
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+    // Fetch report on mount
+    useEffect(() => {
+        loadReport();
+    }, [params.reportId]);
+
+    // Subscribe to real-time updates
+    useEffect(() => {
+        if (!params.reportId) return;
+
+        const unsubscribe = subscribeToReportUpdates((updated) => {
+            if (updated.id === params.reportId) {
+                setReport(updated);
+                setNgoNotes(updated.ngoNotes || '');
+                console.log('📡 Report updated in real-time');
+            }
+        });
+
+        return () => unsubscribe();
+    }, [params.reportId]);
+
+    const loadReport = async () => {
+        if (!params.reportId) {
+            Alert.alert('Error', 'No report ID provided');
+            router.back();
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const data = await getReportById(params.reportId);
+            if (data) {
+                setReport(data);
+                setNgoNotes(data.ngoNotes || '');
+            } else {
+                Alert.alert('Error', 'Report not found');
+                router.back();
+            }
+        } catch (error) {
+            console.error('Error loading report:', error);
+            Alert.alert('Error', 'Failed to load report');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const formatDateTime = (dateString: string) => {
         const date = new Date(dateString);
@@ -75,6 +100,8 @@ export const NGOReportDetailScreen: React.FC = () => {
     };
 
     const handleStatusUpdate = async (newStatus: ReportStatus) => {
+        if (!report) return;
+
         Alert.alert(
             'Update Status',
             `Mark this report as "${newStatus.replace('_', ' ')}"?`,
@@ -82,32 +109,92 @@ export const NGOReportDetailScreen: React.FC = () => {
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Confirm',
-                    onPress: () => {
-                        setReport(prev => ({
-                            ...prev,
-                            status: newStatus,
-                            updatedAt: new Date().toISOString(),
-                            ...(newStatus === 'resolved' && { resolvedAt: new Date().toISOString() }),
-                        }));
-                        Alert.alert('Success', 'Report status updated!');
+                    onPress: async () => {
+                        setIsUpdatingStatus(true);
+                        try {
+                            await updateReportStatus(report.id, newStatus, 'ngo-user-id', 'NGO User'); // TODO: Use real NGO info
+                            Alert.alert('Success', 'Report status updated!');
+                        } catch (error) {
+                            console.error('Error updating status:', error);
+                            Alert.alert('Error', 'Failed to update status');
+                        } finally {
+                            setIsUpdatingStatus(false);
+                        }
                     },
                 },
             ]
         );
     };
 
-    const handleSaveNotes = async () => {
-        setIsSaving(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setReport(prev => ({
-            ...prev,
-            internalNotes,
-            updatedAt: new Date().toISOString(),
-        }));
-        setIsSaving(false);
-        Alert.alert('Notes Saved', 'Internal notes have been updated.');
+    const handleToggleField = async (field: 'isRescued' | 'isVaccinated' | 'isNeutered') => {
+        if (!report) return;
+
+        const newValue = !report[field];
+        setIsUpdatingStatus(true);
+        try {
+            // Use the specific update function based on field
+            if (field === 'isVaccinated') {
+                const { updateVaccinationStatus } = await import('../services/reportService');
+                await updateVaccinationStatus(report.id, newValue, 'ngo-user-id', 'NGO User');
+            } else if (field === 'isNeutered') {
+                const { updateNeuteringStatus } = await import('../services/reportService');
+                await updateNeuteringStatus(report.id, newValue, 'ngo-user-id', 'NGO User');
+            } else if (field === 'isRescued') {
+                const { updateRescueStatus } = await import('../services/reportService');
+                await updateRescueStatus(report.id, newValue, 'ngo-user-id', 'NGO User');
+            }
+            // Optimistic update
+            setReport(prev => prev ? { ...prev, [field]: newValue } : null);
+        } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+            Alert.alert('Error', `Failed to update ${field}`);
+        } finally {
+            setIsUpdatingStatus(false);
+        }
     };
+
+    const handleSaveNotes = async () => {
+        if (!report) return;
+
+        setIsSaving(true);
+        try {
+            await addNgoNotes(report.id, ngoNotes);
+            Alert.alert('Notes Saved', 'Internal notes have been updated.');
+        } catch (error) {
+            console.error('Error saving notes:', error);
+            Alert.alert('Error', 'Failed to save notes');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Loading state
+    if (isLoading) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#0891B2" />
+                    <Text style={{ marginTop: 12, color: colors.minimalist.textMedium }}>Loading report...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (!report) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Ionicons name="alert-circle-outline" size={48} color={colors.minimalist.textLight} />
+                    <Text style={{ marginTop: 12, color: colors.minimalist.textMedium }}>Report not found</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    const photos = report.imageUrl ? [report.imageUrl] : [];
+    const coordinates = report.latitude && report.longitude
+        ? { lat: report.latitude, lng: report.longitude }
+        : null;
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -140,39 +227,55 @@ export const NGOReportDetailScreen: React.FC = () => {
                             setActivePhotoIndex(index);
                         }}
                     >
-                        {report.photos.map((photo, index) => (
-                            <Image
-                                key={index}
-                                source={{ uri: photo }}
-                                style={styles.galleryImage}
-                                resizeMode="cover"
-                            />
-                        ))}
+                        {photos.length > 0 ? (
+                            photos.map((photo: string, index: number) => (
+                                <Image
+                                    key={index}
+                                    source={{ uri: photo }}
+                                    style={styles.galleryImage}
+                                    resizeMode="cover"
+                                />
+                            ))
+                        ) : (
+                            <View style={[styles.galleryImage, { backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }]}>
+                                <Ionicons name="paw" size={48} color="#9CA3AF" />
+                                <Text style={{ color: '#9CA3AF', marginTop: 8 }}>No photo available</Text>
+                            </View>
+                        )}
                     </ScrollView>
                     {/* Photo Indicators */}
-                    <View style={styles.photoIndicators}>
-                        {report.photos.map((_, index) => (
-                            <View
-                                key={index}
-                                style={[
-                                    styles.indicator,
-                                    activePhotoIndex === index && styles.indicatorActive
-                                ]}
-                            />
-                        ))}
-                    </View>
+                    {photos.length > 1 && (
+                        <View style={styles.photoIndicators}>
+                            {photos.map((_: string, index: number) => (
+                                <View
+                                    key={index}
+                                    style={[
+                                        styles.indicator,
+                                        activePhotoIndex === index && styles.indicatorActive
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    )}
                     {/* Photo Counter */}
-                    <View style={styles.photoCounter}>
-                        <Text style={styles.photoCounterText}>
-                            {activePhotoIndex + 1}/{report.photos.length}
-                        </Text>
-                    </View>
+                    {photos.length > 0 && (
+                        <View style={styles.photoCounter}>
+                            <Text style={styles.photoCounterText}>
+                                {activePhotoIndex + 1}/{photos.length}
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
-                {/* Status & Severity Row */}
+                {/* Status & Emergency Row */}
                 <View style={styles.statusRow}>
-                    <ReportStatusBadge status={report.status} />
-                    <SeverityIndicator severity={report.injurySeverity} size="medium" />
+                    <ReportStatusBadge status={report.status as any} />
+                    {report.isEmergency && (
+                        <View style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: '#DC2626' }}>EMERGENCY</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Animal Information */}
@@ -182,36 +285,36 @@ export const NGOReportDetailScreen: React.FC = () => {
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Type</Text>
                             <Text style={styles.infoValue}>
-                                {report.animalType === 'dog' ? '🐕' : '🐱'} {report.animalType.charAt(0).toUpperCase() + report.animalType.slice(1)}
+                                {report.species === 'dog' ? '🐕' : '🐱'} {report.species.charAt(0).toUpperCase() + report.species.slice(1)}
                             </Text>
                         </View>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Breed</Text>
-                            <Text style={styles.infoValue}>{report.animalBreed || 'Unknown'}</Text>
+                            <Text style={styles.infoValue}>{report.breed || 'Unknown'}</Text>
                         </View>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Color</Text>
-                            <Text style={styles.infoValue}>{report.animalColor || 'Unknown'}</Text>
+                            <Text style={styles.infoValue}>{report.color || 'Unknown'}</Text>
                         </View>
                     </View>
                 </FloatingCard>
 
-                {/* Injury Description */}
+                {/* Health Notes */}
                 <FloatingCard shadow="soft" style={styles.section}>
-                    <Text style={styles.sectionTitle}>Injury Description</Text>
-                    <Text style={styles.descriptionText}>{report.injuryDescription}</Text>
+                    <Text style={styles.sectionTitle}>Health Notes</Text>
+                    <Text style={styles.descriptionText}>{report.healthNotes || 'No health notes provided'}</Text>
                 </FloatingCard>
 
                 {/* Location */}
                 <FloatingCard shadow="soft" style={styles.section}>
                     <Text style={styles.sectionTitle}>Location</Text>
-                    {report.coordinates && (
+                    {coordinates && (
                         <View style={styles.mapContainer}>
                             <MapView
                                 style={styles.map}
                                 initialRegion={{
-                                    latitude: report.coordinates.lat,
-                                    longitude: report.coordinates.lng,
+                                    latitude: coordinates.lat,
+                                    longitude: coordinates.lng,
                                     latitudeDelta: 0.01,
                                     longitudeDelta: 0.01,
                                 }}
@@ -220,8 +323,8 @@ export const NGOReportDetailScreen: React.FC = () => {
                             >
                                 <Marker
                                     coordinate={{
-                                        latitude: report.coordinates.lat,
-                                        longitude: report.coordinates.lng,
+                                        latitude: coordinates.lat,
+                                        longitude: coordinates.lng,
                                     }}
                                 />
                             </MapView>
@@ -229,7 +332,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                     )}
                     <View style={styles.addressRow}>
                         <Ionicons name="location" size={18} color="#0891B2" />
-                        <Text style={styles.addressText}>{report.location}</Text>
+                        <Text style={styles.addressText}>{report.address}</Text>
                     </View>
                 </FloatingCard>
 
@@ -243,17 +346,19 @@ export const NGOReportDetailScreen: React.FC = () => {
                         <View style={styles.reporterInfo}>
                             <Text style={styles.reporterName}>{report.reporterName}</Text>
                             <Text style={styles.reportTime}>
-                                Reported on {formatDateTime(report.reportedAt)}
+                                Reported on {formatDateTime(report.createdAt)}
                             </Text>
                         </View>
                     </View>
-                    <Pressable
-                        style={styles.contactButton}
-                        onPress={() => setShowContactModal(true)}
-                    >
-                        <Ionicons name="chatbubble-ellipses" size={20} color={colors.minimalist.white} />
-                        <Text style={styles.contactButtonText}>Contact Reporter</Text>
-                    </Pressable>
+                    {report.reporterPhone && (
+                        <Pressable
+                            style={styles.contactButton}
+                            onPress={() => setShowContactModal(true)}
+                        >
+                            <Ionicons name="chatbubble-ellipses" size={20} color={colors.minimalist.white} />
+                            <Text style={styles.contactButtonText}>Contact Reporter</Text>
+                        </Pressable>
+                    )}
                 </FloatingCard>
 
                 {/* NGO Actions */}
@@ -264,6 +369,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                             <Pressable
                                 style={[styles.actionButton, styles.inProgressButton]}
                                 onPress={() => handleStatusUpdate('in_progress')}
+                                disabled={isUpdatingStatus}
                             >
                                 <Ionicons name="time" size={18} color="#D97706" />
                                 <Text style={[styles.actionButtonText, { color: '#D97706' }]}>
@@ -271,10 +377,23 @@ export const NGOReportDetailScreen: React.FC = () => {
                                 </Text>
                             </Pressable>
                         )}
+                        {report.status !== 'rescued' && (
+                            <Pressable
+                                style={[styles.actionButton, { backgroundColor: '#DBEAFE' }]}
+                                onPress={() => handleStatusUpdate('rescued')}
+                                disabled={isUpdatingStatus}
+                            >
+                                <Ionicons name="heart" size={18} color="#2563EB" />
+                                <Text style={[styles.actionButtonText, { color: '#2563EB' }]}>
+                                    Mark Rescued
+                                </Text>
+                            </Pressable>
+                        )}
                         {report.status !== 'resolved' && (
                             <Pressable
                                 style={[styles.actionButton, styles.resolvedButton]}
                                 onPress={() => handleStatusUpdate('resolved')}
+                                disabled={isUpdatingStatus}
                             >
                                 <Ionicons name="checkmark-circle" size={18} color="#059669" />
                                 <Text style={[styles.actionButtonText, { color: '#059669' }]}>
@@ -284,6 +403,194 @@ export const NGOReportDetailScreen: React.FC = () => {
                         )}
                     </View>
                 </FloatingCard>
+
+                {/* Animal Welfare Status */}
+                <FloatingCard shadow="soft" style={styles.section}>
+                    <Text style={styles.sectionTitle}>Animal Welfare</Text>
+
+                    {/* Rescued Toggle */}
+                    <View style={styles.toggleRow}>
+                        <View style={styles.toggleInfo}>
+                            <Ionicons name="heart" size={20} color="#2563EB" />
+                            <View style={{ marginLeft: 12 }}>
+                                <Text style={styles.toggleLabel}>Rescued</Text>
+                                <Text style={styles.toggleDescription}>Animal has been rescued</Text>
+                            </View>
+                        </View>
+                        <Switch
+                            value={report.isRescued}
+                            onValueChange={() => handleToggleField('isRescued')}
+                            trackColor={{ false: '#E5E7EB', true: '#93C5FD' }}
+                            thumbColor={report.isRescued ? '#2563EB' : '#9CA3AF'}
+                            disabled={isUpdatingStatus}
+                        />
+                    </View>
+
+                    {/* Vaccinated Toggle */}
+                    <View style={styles.toggleRow}>
+                        <View style={styles.toggleInfo}>
+                            <Ionicons name="medkit" size={20} color="#059669" />
+                            <View style={{ marginLeft: 12 }}>
+                                <Text style={styles.toggleLabel}>Vaccinated</Text>
+                                <Text style={styles.toggleDescription}>Vaccinations administered</Text>
+                            </View>
+                        </View>
+                        <Switch
+                            value={report.isVaccinated}
+                            onValueChange={() => handleToggleField('isVaccinated')}
+                            trackColor={{ false: '#E5E7EB', true: '#A7F3D0' }}
+                            thumbColor={report.isVaccinated ? '#059669' : '#9CA3AF'}
+                            disabled={isUpdatingStatus}
+                        />
+                    </View>
+
+                    {/* Neutered Toggle */}
+                    <View style={styles.toggleRow}>
+                        <View style={styles.toggleInfo}>
+                            <Ionicons name="cut" size={20} color="#7C3AED" />
+                            <View style={{ marginLeft: 12 }}>
+                                <Text style={styles.toggleLabel}>Neutered/Spayed</Text>
+                                <Text style={styles.toggleDescription}>Sterilization completed</Text>
+                            </View>
+                        </View>
+                        <Switch
+                            value={report.isNeutered}
+                            onValueChange={() => handleToggleField('isNeutered')}
+                            trackColor={{ false: '#E5E7EB', true: '#DDD6FE' }}
+                            thumbColor={report.isNeutered ? '#7C3AED' : '#9CA3AF'}
+                            disabled={isUpdatingStatus}
+                        />
+                    </View>
+
+                    {isUpdatingStatus && (
+                        <View style={{ alignItems: 'center', marginTop: 8 }}>
+                            <ActivityIndicator size="small" color="#0891B2" />
+                        </View>
+                    )}
+                </FloatingCard>
+
+                {/* Rescue Outcome - Only show when rescued */}
+                {(report.isRescued || report.status === 'rescued') && (
+                    <FloatingCard shadow="soft" style={styles.section}>
+                        <Text style={styles.sectionTitle}>Rescue Outcome</Text>
+                        <Text style={styles.outcomeDescription}>
+                            Select the final outcome for this rescued animal:
+                        </Text>
+                        <View style={styles.outcomeButtonsRow}>
+                            <Pressable
+                                style={[
+                                    styles.outcomeButton,
+                                    styles.releaseButton,
+                                    report.rescueOutcome === 'released_to_nature' && styles.outcomeButtonActive,
+                                ]}
+                                onPress={async () => {
+                                    Alert.alert(
+                                        'Release to Nature',
+                                        'Mark this animal as released back to nature?',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            {
+                                                text: 'Confirm',
+                                                onPress: async () => {
+                                                    setIsUpdatingStatus(true);
+                                                    try {
+                                                        const { supabase } = await import('../lib/supabse');
+                                                        await supabase
+                                                            .from('animal_reports')
+                                                            .update({
+                                                                rescue_outcome: 'released_to_nature',
+                                                                // Keep tracking enabled - animal may be re-spotted
+                                                                is_tracking_enabled: true,
+                                                                updated_at: new Date().toISOString()
+                                                            })
+                                                            .eq('id', report.id);
+                                                        Alert.alert('Success', 'Animal marked as released to nature. Tracking remains active.');
+                                                    } catch (error) {
+                                                        console.error('Error:', error);
+                                                        Alert.alert('Error', 'Failed to update outcome');
+                                                    } finally {
+                                                        setIsUpdatingStatus(false);
+                                                    }
+                                                },
+                                            },
+                                        ]
+                                    );
+                                }}
+                                disabled={isUpdatingStatus}
+                            >
+                                <Ionicons name="leaf" size={22} color="#059669" />
+                                <Text style={styles.releaseButtonText}>Release to Nature</Text>
+                            </Pressable>
+                            <Pressable
+                                style={[
+                                    styles.outcomeButton,
+                                    styles.shelterButton,
+                                    report.rescueOutcome === 'shelter_recovery' && styles.outcomeButtonActive,
+                                ]}
+                                onPress={async () => {
+                                    Alert.alert(
+                                        'Send to Shelter',
+                                        'Place this animal in shelter for recovery? You can create an adoption post later.',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            {
+                                                text: 'Confirm',
+                                                onPress: async () => {
+                                                    setIsUpdatingStatus(true);
+                                                    try {
+                                                        const { supabase } = await import('../lib/supabse');
+                                                        await supabase
+                                                            .from('animal_reports')
+                                                            .update({
+                                                                rescue_outcome: 'shelter_recovery',
+                                                                updated_at: new Date().toISOString()
+                                                            })
+                                                            .eq('id', report.id);
+                                                        Alert.alert('Success', 'Animal is now in shelter recovery. You can create an adoption post when ready.');
+                                                    } catch (error) {
+                                                        console.error('Error:', error);
+                                                        Alert.alert('Error', 'Failed to update outcome');
+                                                    } finally {
+                                                        setIsUpdatingStatus(false);
+                                                    }
+                                                },
+                                            },
+                                        ]
+                                    );
+                                }}
+                                disabled={isUpdatingStatus}
+                            >
+                                <Ionicons name="home" size={22} color="#6366F1" />
+                                <Text style={styles.shelterButtonText}>Send to Shelter</Text>
+                            </Pressable>
+                        </View>
+
+                        {/* Create Adoption Post - only show if in shelter */}
+                        {report.rescueOutcome === 'shelter_recovery' && (
+                            <Pressable
+                                style={styles.adoptionPostButton}
+                                onPress={() => {
+                                    router.push({
+                                        pathname: '/ngo-create-adoption',
+                                        params: {
+                                            reportId: report.id,
+                                            animalId: report.animalId,
+                                            species: report.species,
+                                            breed: report.breed || '',
+                                            color: report.color || '',
+                                            imageUrl: report.imageUrl,
+                                        },
+                                    });
+                                }}
+                            >
+                                <Ionicons name="add-circle" size={20} color="#fff" />
+                                <Text style={styles.adoptionPostButtonText}>
+                                    Create Adoption Post
+                                </Text>
+                            </Pressable>
+                        )}
+                    </FloatingCard>
+                )}
 
                 {/* Internal Notes */}
                 <FloatingCard shadow="soft" style={styles.section}>
@@ -300,8 +607,8 @@ export const NGOReportDetailScreen: React.FC = () => {
                         placeholderTextColor={colors.minimalist.textLight}
                         multiline
                         numberOfLines={4}
-                        value={internalNotes}
-                        onChangeText={setInternalNotes}
+                        value={ngoNotes}
+                        onChangeText={setNgoNotes}
                         textAlignVertical="top"
                     />
                     <Pressable
@@ -324,7 +631,7 @@ export const NGOReportDetailScreen: React.FC = () => {
                 onClose={() => setShowContactModal(false)}
                 contactName={report.reporterName}
                 phone={report.reporterPhone}
-                email={report.reporterEmail}
+                email={undefined} // AnimalReport doesn't have email field
             />
         </SafeAreaView>
     );
@@ -585,6 +892,84 @@ const styles = StyleSheet.create({
     },
     bottomSpacing: {
         height: 40,
+    },
+    // Toggle styles for animal welfare section
+    toggleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+    },
+    toggleInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    toggleLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: colors.minimalist.textDark,
+    },
+    toggleDescription: {
+        fontSize: 12,
+        color: colors.minimalist.textLight,
+        marginTop: 2,
+    },
+    // Rescue Outcome styles
+    outcomeDescription: {
+        fontSize: 13,
+        color: colors.minimalist.textMedium,
+        marginBottom: spacing.md,
+    },
+    outcomeButtonsRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+    },
+    outcomeButton: {
+        flex: 1,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    releaseButton: {
+        backgroundColor: '#D1FAE5',
+    },
+    shelterButton: {
+        backgroundColor: '#E0E7FF',
+    },
+    outcomeButtonActive: {
+        borderWidth: 2,
+        borderColor: '#059669',
+    },
+    releaseButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#059669',
+    },
+    shelterButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#6366F1',
+    },
+    adoptionPostButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#7C3AED',
+        paddingVertical: spacing.md,
+        borderRadius: 12,
+        marginTop: spacing.md,
+        gap: spacing.sm,
+    },
+    adoptionPostButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#fff',
     },
 });
 

@@ -8,9 +8,10 @@ export interface AnimalIdentificationResult {
     breed: string;
     color: string;
     distinctiveFeatures: string;
-    healthNotes?: string; // New field for Gemini
-    isEmergency?: boolean; // New field for Gemini
+    healthNotes?: string;
+    isEmergency?: boolean;
     confidence: number;
+    embedding?: number[]; // CLIP embedding from YOLO backend for animal re-identification
 }
 
 export interface YOLODetection {

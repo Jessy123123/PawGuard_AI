@@ -14,7 +14,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useReports } from '../contexts/ReportContext';
 import { getCurrentLocation } from '../services/locationService';
-import { createAnimalIdentity, uploadAnimalImage } from '../services/animalService';
+import { createReport } from '../services/reportService';
+import { getCurrentWeather, WeatherData } from '../services/weatherService';
 import { useAuth } from '../contexts/AuthContext';
 
 export const ReportSightingScreen = () => {
@@ -99,8 +100,23 @@ export const ReportSightingScreen = () => {
         fetchLocation();
     }, []);
 
+    // Fetch weather when location is available
+    useEffect(() => {
+        const fetchWeather = async () => {
+            if (location.latitude && location.longitude && !isDetectingLocation) {
+                const weatherData = await getCurrentWeather(location.latitude, location.longitude);
+                if (weatherData) {
+                    setWeather(weatherData);
+                    console.log('🌤️ Weather fetched:', weatherData.condition, weatherData.temperature + '°C');
+                }
+            }
+        };
+        fetchWeather();
+    }, [location, isDetectingLocation]);
+
     const [reportId, setReportId] = useState('Generating...');
     const [isSaving, setIsSaving] = useState(false);
+    const [weather, setWeather] = useState<WeatherData | null>(null);
 
     const handleSubmit = async () => {
         if (!photoUri) {
@@ -121,28 +137,35 @@ export const ReportSightingScreen = () => {
         setIsSaving(true);
 
         try {
-            console.log('📤 Uploading image to Firebase Storage...');
-            // Upload image to Firebase Storage first
-            const tempAnimalId = 'temp-' + Date.now();
-            const imageUrl = await uploadAnimalImage(photoUri, tempAnimalId);
-            console.log('✅ Image uploaded:', imageUrl);
+            console.log('📤 Creating report in Supabase...');
 
-            console.log('💾 Creating animal identity in Firestore...');
-            // Create animal identity in Firestore (with embedding!)
-            const createdAnimal = await createAnimalIdentity(
-                aiResult,
-                imageUrl,
-                { userId: user.id, userName: user.name },
-                {
-                    address: manualAddress || locationName,
-                    coordinates: { lat: location.latitude, lng: location.longitude }
-                }
-            );
-            console.log('✅ Animal created with ID:', createdAnimal.systemId);
+            // Create report in Supabase
+            const newReport = await createReport({
+                reporterId: user.id,
+                reporterName: user.name,
+                reporterPhone: user.phone,
+                species: aiResult.species as 'dog' | 'cat' | 'unknown',
+                breed: aiResult.breed,
+                color: aiResult.color,
+                distinctiveFeatures: aiResult.distinctiveFeatures,
+                healthNotes: aiResult.healthNotes,
+                isEmergency: aiResult.isEmergency || condition === 'injured',
+                imageUrl: photoUri, // For now use local URI, can upload to storage later
+                embedding: aiResult.embedding, // CLIP embedding from YOLO backend
+                address: manualAddress || locationName,
+                latitude: location.latitude,
+                longitude: location.longitude,
+                weatherCondition: weather?.condition,
+                temperature: weather?.temperature,
+                weatherAlert: weather?.alerts?.[0]?.event,
+            });
 
-            // Update the displayed report ID with the real system ID
-            console.log('🔄 Updating badge from', reportId, 'to', createdAnimal.systemId);
-            setReportId(createdAnimal.systemId);
+            if (!newReport) {
+                throw new Error('Failed to create report');
+            }
+
+            console.log('✅ Report created with ID:', newReport.reportId);
+            setReportId(newReport.animalId);
 
             // Also save to context for local viewing
             addReport({
@@ -156,7 +179,7 @@ export const ReportSightingScreen = () => {
 
             Alert.alert(
                 'Success! 🎉',
-                `Animal saved with ID: ${createdAnimal.systemId}\n\nThe embedding has been saved to Firestore!`,
+                `Report submitted with Animal ID: ${newReport.animalId}\n\nNGOs will be notified and can update the status.`,
                 [
                     {
                         text: 'View Reports',
@@ -165,10 +188,10 @@ export const ReportSightingScreen = () => {
                 ]
             );
         } catch (error: any) {
-            console.error('❌ Error saving animal:', error);
+            console.error('❌ Error saving report:', error);
             Alert.alert(
                 'Save Failed',
-                `Could not save the animal report.\n\nError: ${error.message || 'Unknown error'}`
+                `Could not save the report.\n\nError: ${error.message || 'Unknown error'}`
             );
         } finally {
             setIsSaving(false);
@@ -471,7 +494,7 @@ export const ReportSightingScreen = () => {
                     >
                         {isSaving ? (
                             <>
-                                <Text style={styles.submitButtonText}>Saving to Firebase...</Text>
+                                <Text style={styles.submitButtonText}>Saving to Supabase...</Text>
                             </>
                         ) : (
                             <>

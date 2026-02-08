@@ -221,7 +221,12 @@ export default function CommunityScreen() {
                 <Pressable
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.push({ pathname: '/animal-profile', params: { id: message.id } });
+                        // Navigate based on post type
+                        if (message.type === 'adoption') {
+                            router.push({ pathname: '/adoption-detail', params: { postId: message.id } });
+                        } else {
+                            router.push({ pathname: '/animal-profile', params: { id: message.id } });
+                        }
                     }}
                     style={({ pressed }) => [
                         styles.messageCard,

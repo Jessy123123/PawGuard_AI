@@ -1,0 +1,120 @@
+App.archive.tsx(3,27): error TS2307: Cannot find module './app/providers' or its corresponding type declarations.
+App.archive.tsx(4,31): error TS2307: Cannot find module './app/navigation' or its corresponding type declarations.
+app/(auth)/login.tsx(104,42): error TS2554: Expected 2 arguments, but got 3.
+components/LoadingOverlay.tsx(28,39): error TS2339: Property 'blackOverlay' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'.
+contexts/AuthContext.tsx(77,26): error TS2339: Property 'name' does not exist on type 'never'.
+contexts/AuthContext.tsx(78,26): error TS2339: Property 'role' does not exist on type 'never'.
+contexts/AuthContext.tsx(79,26): error TS2339: Property 'phone' does not exist on type 'never'.
+contexts/AuthContext.tsx(80,27): error TS2339: Property 'role' does not exist on type 'never'.
+contexts/AuthContext.tsx(80,49): error TS2339: Property 'ngo_name' does not exist on type 'never'.
+contexts/AuthContext.tsx(84,30): error TS2339: Property 'id' does not exist on type 'never'.
+contexts/AuthContext.tsx(85,33): error TS2339: Property 'email' does not exist on type 'never'.
+contexts/AuthContext.tsx(86,32): error TS2339: Property 'name' does not exist on type 'never'.
+contexts/AuthContext.tsx(87,32): error TS2339: Property 'role' does not exist on type 'never'.
+contexts/AuthContext.tsx(88,33): error TS2339: Property 'phone' does not exist on type 'never'.
+contexts/AuthContext.tsx(89,44): error TS2339: Property 'ngo_name' does not exist on type 'never'.
+contexts/AuthContext.tsx(133,18): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "users", never, "POST">', gave the following error.
+    Argument of type '{ id: string; email: string; name: string; role: UserRole; phone: string | undefined; ngo_name: string | undefined; created_at: string; updated_at: string; }[]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "users", never, "POST">', gave the following error.
+    Type '{ id: string; email: string; name: string; role: UserRole; phone: string | undefined; ngo_name: string | undefined; created_at: string; updated_at: string; }' is not assignable to type 'never'.
+contexts/AuthContext.tsx(174,25): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+index.archive.ts(3,17): error TS1261: Already included file name 'D:/github clone/PawGuard_AI/App/index.tsx' differs from file name 'D:/github clone/PawGuard_AI/app/index.tsx' only in casing.
+  The file is in the program because:
+    Imported via './App' from file 'D:/github clone/PawGuard_AI/index.archive.ts'
+    Matched by default include pattern '**/*'
+screens/AuthScreen.tsx(46,56): error TS2554: Expected 2 arguments, but got 3.
+screens/NGOReportDetailScreen.tsx(497,91): error TS2307: Cannot find module '../lib/supabse' or its corresponding type declarations.
+screens/NGOReportDetailScreen.tsx(541,91): error TS2307: Cannot find module '../lib/supabse' or its corresponding type declarations.
+screens/PublicDashboard.tsx(65,106): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+screens/PublicDashboard.tsx(132,48): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+screens/PublicDashboard.tsx(132,78): error TS2551: Property 'backgroundLight' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'backgroundAlt'?
+screens/PublicDashboard.tsx(221,29): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+services/adoptionService.ts(42,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "adoption_posts", never, "POST">', gave the following error.
+    Argument of type '{ report_id: string | undefined; animal_id: string; ngo_id: string; ngo_name: string; name: string | undefined; species: string; breed: string | undefined; age_estimate: string | undefined; ... 13 more ...; status: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "adoption_posts", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'report_id' does not exist in type 'never[]'.
+services/adoptionService.ts(71,54): error TS2339: Property 'name' does not exist on type 'never'.
+services/adoptionService.ts(71,67): error TS2339: Property 'animal_id' does not exist on type 'never'.
+services/adoptionService.ts(119,22): error TS2339: Property 'ngo_profiles' does not exist on type 'never'.
+services/adoptionService.ts(120,55): error TS2339: Property 'ngo_profiles' does not exist on type 'never'.
+services/adoptionService.ts(149,18): error TS2339: Property 'ngo_profiles' does not exist on type 'never'.
+services/adoptionService.ts(150,51): error TS2339: Property 'ngo_profiles' does not exist on type 'never'.
+services/adoptionService.ts(226,21): error TS2345: Argument of type '{ status: "pending" | "adopted" | "available" | "withdrawn"; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/adoptionService.ts(254,21): error TS2345: Argument of type '{ status: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/adoptionService.ts(263,21): error TS2345: Argument of type '{ status: string; rescue_outcome: string; is_tracking_enabled: boolean; adopted_by_user_id: string; adoption_date: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/adoptionService.ts(286,56): error TS2345: Argument of type '{ post_id: string; }' is not assignable to parameter of type 'undefined'.
+services/adoptionService.ts(298,60): error TS2345: Argument of type '{ post_id: string; }' is not assignable to parameter of type 'undefined'.
+services/disasterService.ts(65,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "disaster_zones", never, "POST">', gave the following error.
+    Argument of type 'Partial<DbDisasterZone>' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "disaster_zones", never, "POST">', gave the following error.
+    Argument of type 'Partial<DbDisasterZone>' is not assignable to parameter of type 'never[]'.
+      Type 'Partial<DbDisasterZone>' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+services/disasterService.ts(71,54): error TS2339: Property 'name' does not exist on type 'never'.
+services/disasterService.ts(214,21): error TS2345: Argument of type '{ is_active: boolean; activated_at: string; }' is not assignable to parameter of type 'never'.
+services/disasterService.ts(248,21): error TS2345: Argument of type '{ is_active: boolean; deactivated_at: string; }' is not assignable to parameter of type 'never'.
+services/disasterService.ts(282,21): error TS2345: Argument of type '{ severity: "medium" | "critical" | "high" | "low"; }' is not assignable to parameter of type 'never'.
+services/lostFoundService.ts(54,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "lost_found_posts", never, "POST">', gave the following error.
+    Argument of type '{ post_type: "lost" | "found"; user_id: string; user_name: string; user_role: "citizen" | "ngo"; contact_phone: string; contact_email: string | undefined; species: "dog" | "cat" | "other"; ... 12 more ...; status: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "lost_found_posts", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'post_type' does not exist in type 'never[]'.
+services/lostFoundService.ts(231,28): error TS2339: Property 'user_name' does not exist on type 'never'.
+services/lostFoundService.ts(232,32): error TS2339: Property 'contact_phone' does not exist on type 'never'.
+services/lostFoundService.ts(233,32): error TS2339: Property 'contact_email' does not exist on type 'never'.
+services/lostFoundService.ts(250,21): error TS2345: Argument of type '{ status: string; resolved_at: string; resolved_note: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/lostFoundService.ts(278,21): error TS2345: Argument of type '{ status: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/ngoService.ts(35,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "ngo_profiles", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; organization_name: string; registration_number: string; license_document_url: string | undefined; office_address: string; office_phone: string; emergency_phone: string | undefined; ... 6 more ...; species_handled: string[] | undefined; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "ngo_profiles", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+services/ngoService.ts(56,52): error TS2339: Property 'organization_name' does not exist on type 'never'.
+services/ngoService.ts(167,24): error TS2339: Property 'organization_name' does not exist on type 'never'.
+services/ngoService.ts(168,25): error TS2339: Property 'office_phone' does not exist on type 'never'.
+services/ngoService.ts(169,34): error TS2339: Property 'emergency_phone' does not exist on type 'never'.
+services/ngoService.ts(170,25): error TS2339: Property 'email' does not exist on type 'never'.
+services/ngoService.ts(171,27): error TS2339: Property 'office_address' does not exist on type 'never'.
+services/ngoService.ts(172,28): error TS2339: Property 'latitude' does not exist on type 'never'.
+services/ngoService.ts(173,29): error TS2339: Property 'longitude' does not exist on type 'never'.
+services/ngoService.ts(211,21): error TS2345: Argument of type 'Partial<DbNgoProfile>' is not assignable to parameter of type 'never'.
+services/ngoService.ts(231,21): error TS2345: Argument of type '{ is_verified: boolean; verified_at: string; verified_by: string; }' is not assignable to parameter of type 'never'.
+services/reportService.ts(108,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "animal_reports", never, "POST">', gave the following error.
+    Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "animal_reports", never, "POST">', gave the following error.
+    Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never[]'.
+      Type 'Partial<DbAnimalReport>' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+services/reportService.ts(128,47): error TS2339: Property 'report_id' does not exist on type 'never'.
+services/reportService.ts(149,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "animal_embeddings", never, "POST">', gave the following error.
+    Argument of type '{ animal_id: string; embedding: number[]; image_url: string; species: "dog" | "cat"; created_by: string; sighting_count: number; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "animal_embeddings", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'animal_id' does not exist in type 'never[]'.
+services/reportService.ts(302,21): error TS2345: Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never'.
+services/reportService.ts(338,21): error TS2345: Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never'.
+services/reportService.ts(372,21): error TS2345: Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never'.
+services/reportService.ts(412,21): error TS2345: Argument of type 'Partial<DbAnimalReport>' is not assignable to parameter of type 'never'.
+services/reportService.ts(438,21): error TS2345: Argument of type '{ assigned_ngo_id: string; assigned_ngo_name: string; status: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/reportService.ts(468,21): error TS2345: Argument of type '{ ngo_notes: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+services/reportService.ts(506,29): error TS2345: Argument of type '{ disaster_mode: boolean; }' is not assignable to parameter of type 'never'.
+services/reportService.ts(542,18): error TS2339: Property 'center_latitude' does not exist on type 'never'.
+services/reportService.ts(543,18): error TS2339: Property 'center_longitude' does not exist on type 'never'.
+services/reportService.ts(544,18): error TS2339: Property 'radius_km' does not exist on type 'never'.
+services/reportService.ts(547,76): error TS2339: Property 'name' does not exist on type 'never'.
+services/reportService.ts(587,47): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "status_history", never, "POST">', gave the following error.
+    Argument of type '{ report_id: string; old_status: string | undefined; new_status: string; action_type: "rescue" | "vaccination" | "neutering" | "status_change" | "assignment"; changed_by: string; changed_by_name: string; notes: string | undefined; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "status_history", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'report_id' does not exist in type 'never[]'.
+services/reportService.ts(615,22): error TS2339: Property 'id' does not exist on type 'never'.
+services/reportService.ts(616,28): error TS2339: Property 'report_id' does not exist on type 'never'.
+services/reportService.ts(617,29): error TS2339: Property 'old_status' does not exist on type 'never'.
+services/reportService.ts(618,29): error TS2339: Property 'new_status' does not exist on type 'never'.
+services/reportService.ts(619,30): error TS2339: Property 'action_type' does not exist on type 'never'.
+services/reportService.ts(620,29): error TS2339: Property 'changed_by' does not exist on type 'never'.
+services/reportService.ts(621,33): error TS2339: Property 'changed_by_name' does not exist on type 'never'.
+services/reportService.ts(622,25): error TS2339: Property 'notes' does not exist on type 'never'.
+services/reportService.ts(623,29): error TS2339: Property 'created_at' does not exist on type 'never'.
