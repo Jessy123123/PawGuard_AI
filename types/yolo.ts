@@ -7,7 +7,7 @@ export interface AnimalIdentificationResult {
     species: 'dog' | 'cat' | 'unknown';
     breed: string;
     color: string;
-    distinctiveFeatures: string;
+    distinctiveFeatures: string[];
     healthNotes?: string;
     isEmergency?: boolean;
     confidence: number;

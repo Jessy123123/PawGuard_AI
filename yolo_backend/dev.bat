@@ -24,6 +24,10 @@ REM Activate virtual environment
 echo [INFO] Activating virtual environment...
 call venv\Scripts\activate.bat
 
+REM Upgrade pip and setuptools to fix pkg_resources error
+echo [INFO] Upgrading pip and setuptools...
+python -m pip install --upgrade pip setuptools wheel
+
 REM Install/update dependencies
 echo [INFO] Installing/updating dependencies...
 pip install -r requirements.txt

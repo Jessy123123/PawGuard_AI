@@ -95,7 +95,7 @@ export const AIReportCameraScreen = () => {
                 species: detection.class_name as 'dog' | 'cat',
                 breed: 'Unknown', // YOLO doesn't detect breed
                 color: 'Unknown', // YOLO doesn't detect color
-                distinctiveFeatures: `Detected by YOLO with ${(detection.confidence * 100).toFixed(1)}% confidence`,
+                distinctiveFeatures: [`Detected by YOLO with ${(detection.confidence * 100).toFixed(1)}% confidence`],
                 healthNotes: 'Visual analysis only - no health concerns detected',
                 isEmergency: false,
                 confidence: detection.confidence,

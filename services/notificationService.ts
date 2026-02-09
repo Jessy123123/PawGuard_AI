@@ -3,7 +3,7 @@
  * Handles push notification management and in-app alerts for NGO users
  */
 
-import { supabase } from '../lib/supabse';
+import { supabase } from '../lib/supabase';
 import { DisasterZone, AnimalReport } from '../lib/supabaseTypes';
 
 // ============= TYPES =============

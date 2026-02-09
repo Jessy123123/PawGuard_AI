@@ -3,8 +3,8 @@
  * Handles NGO profile creation, verification, and contact retrieval
  */
 
-import { supabase } from '../lib/supabse';
-import { DbNgoProfile, NgoProfile, dbToNgoProfile } from '../lib/communityTypes';
+import { supabase } from '../lib/supabase';
+import { DbNgoProfile, DbNgoProfileInsert, NgoProfile, dbToNgoProfile } from '../lib/supabaseTypes';
 
 // ============= CREATE OPERATIONS =============
 
@@ -30,24 +30,27 @@ interface CreateNgoProfileParams {
  */
 export async function createNgoProfile(params: CreateNgoProfileParams): Promise<NgoProfile | null> {
     try {
+
+        const dbProfile: DbNgoProfileInsert = {
+            user_id: params.userId,
+            organization_name: params.organizationName,
+            registration_number: params.registrationNumber,
+            license_document_url: params.licenseDocumentUrl,
+            office_address: params.officeAddress,
+            office_phone: params.officePhone,
+            emergency_phone: params.emergencyPhone,
+            email: params.email,
+            website: params.website,
+            latitude: params.latitude,
+            longitude: params.longitude,
+            operating_hours: params.operatingHours,
+            capacity: params.capacity,
+            species_handled: params.speciesHandled,
+        };
+
         const { data, error } = await supabase
             .from('ngo_profiles')
-            .insert({
-                user_id: params.userId,
-                organization_name: params.organizationName,
-                registration_number: params.registrationNumber,
-                license_document_url: params.licenseDocumentUrl,
-                office_address: params.officeAddress,
-                office_phone: params.officePhone,
-                emergency_phone: params.emergencyPhone,
-                email: params.email,
-                website: params.website,
-                latitude: params.latitude,
-                longitude: params.longitude,
-                operating_hours: params.operatingHours,
-                capacity: params.capacity,
-                species_handled: params.speciesHandled,
-            })
+            .insert(dbProfile)
             .select()
             .single();
 
@@ -166,11 +169,11 @@ export async function getNgoContact(ngoId: string): Promise<{
         return data ? {
             name: data.organization_name,
             phone: data.office_phone,
-            emergencyPhone: data.emergency_phone,
+            emergencyPhone: data.emergency_phone ?? undefined,
             email: data.email,
             address: data.office_address,
-            latitude: data.latitude,
-            longitude: data.longitude,
+            latitude: data.latitude ?? undefined,
+            longitude: data.longitude ?? undefined,
         } : null;
     } catch (error) {
         console.error('❌ Error fetching NGO contact:', error);
