@@ -26,7 +26,7 @@ const pets = [
     },
     {
         name: 'Mussle',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDc6y0WQjyzEFUgtBYhxGa61ZSm4YjtxOX1j17Onqx7aCc0t5erfZa3YtYfTHg4xkEQBeK5BTDGInfo4muViDwf4nbPSUv9H3QvY7kjWLB_hiOoLQjnUowq71sNde1TbMSR8PryKkF6-OWqmmlDP98Md-p1MKWpiOzn4YWJcdgbux5vZTkS5dO5jJCblDJnTs8Xmb370jcBdmiWMgBpW8Vg-o_DkvVBcptUDYUkL4SLxAbYS2AHBlftyp3UtqPjIoW7NCZG7HaCl48Q',
+        image: require('../../assets/cat.jpg'),
         bgColor: '#DCFCE7',
         height: 240,
     },
@@ -38,7 +38,7 @@ const pets = [
     },
     {
         name: 'Xavier',
-        image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCZB9oEtJDx9Ib6dm2_dhuEQZqfc4AhudJUjtQ18qaOANbm4buXqyy9KrjF5DQwNJa0Z7xEvLfOzzMpaH1qPYvO3vm6yxncuSk_M6dIKjrTv54P49gj3UEXZjE_aovQsrleWAtUWELbUBg6hO3u7VlZ_7sAfjMQvSFbiHl2wP-ck9f8lZsu9I1PYCxwZ4U0NnlAWnkoDcl-A5d5jLusa6sAZqkL-kTDtBfIaM7OrWMJEX0Zvtsw7BEa_ZFgpNthlxlFKGPsR_QzkFtP',
+        image: require('../../assets/dog.jpg'),
         bgColor: '#FCE7F3',
         height: 220,
     },
@@ -148,7 +148,7 @@ export default function LandingScreen() {
                                 { backgroundColor: pet.bgColor, height: pet.height }
                             ]}>
                                 <Image
-                                    source={{ uri: pet.image }}
+                                    source={typeof pet.image === 'string' ? { uri: pet.image } : pet.image}
                                     style={styles.petImage}
                                     resizeMode="cover"
                                 />
