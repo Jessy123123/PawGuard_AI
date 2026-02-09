@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { DbAdoptionPost, DbNgoProfile, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/communityTypes';
+import { DbAdoptionPost, DbAdoptionPostInsert, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/supabaseTypes';
 
 // ============= CREATE OPERATIONS =============
 
@@ -37,32 +37,34 @@ interface CreateAdoptionPostParams {
  */
 export async function createAdoptionPost(params: CreateAdoptionPostParams): Promise<AdoptionPost | null> {
     try {
+        const dbPost: DbAdoptionPostInsert = {
+            report_id: params.reportId,
+            animal_id: params.animalId,
+            ngo_id: params.ngoId,
+            ngo_name: params.ngoName,
+            name: params.name,
+            species: params.species,
+            breed: params.breed,
+            age_estimate: params.ageEstimate,
+            gender: params.gender,
+            size: params.size,
+            health_status: params.healthStatus,
+            temperament: params.temperament,
+            good_with_children: params.goodWithChildren,
+            good_with_pets: params.goodWithPets,
+            is_vaccinated: params.isVaccinated || false,
+            is_neutered: params.isNeutered || false,
+            special_needs: params.specialNeeds,
+            photos: params.photos,
+            video_url: params.videoUrl,
+            adoption_fee: params.adoptionFee,
+            requirements: params.requirements,
+            status: 'available',
+        };
+
         const { data, error } = await supabase
             .from('adoption_posts')
-            .insert({
-                report_id: params.reportId,
-                animal_id: params.animalId,
-                ngo_id: params.ngoId,
-                ngo_name: params.ngoName,
-                name: params.name,
-                species: params.species,
-                breed: params.breed,
-                age_estimate: params.ageEstimate,
-                gender: params.gender,
-                size: params.size,
-                health_status: params.healthStatus,
-                temperament: params.temperament,
-                good_with_children: params.goodWithChildren,
-                good_with_pets: params.goodWithPets,
-                is_vaccinated: params.isVaccinated || false,
-                is_neutered: params.isNeutered || false,
-                special_needs: params.specialNeeds,
-                photos: params.photos,
-                video_url: params.videoUrl,
-                adoption_fee: params.adoptionFee,
-                requirements: params.requirements,
-                status: 'available',
-            })
+            .insert(dbPost)
             .select()
             .single();
 
@@ -194,10 +196,10 @@ export async function filterAdoptionPosts(filters: {
             query = query.eq('species', filters.species);
         }
         if (filters.size) {
-            query = query.eq('size', filters.size);
+            query = query.eq('size', filters.size as any);
         }
         if (filters.gender) {
-            query = query.eq('gender', filters.gender);
+            query = query.eq('gender', filters.gender as any);
         }
 
         const { data, error } = await query.order('created_at', { ascending: false });

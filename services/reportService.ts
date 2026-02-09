@@ -6,8 +6,11 @@
 import { supabase } from '../lib/supabase';
 import {
     DbAnimalReport,
+    DbAnimalReportInsert,
     DbAnimalEmbedding,
+    DbAnimalEmbeddingInsert,
     DbStatusHistory,
+    DbStatusHistoryInsert,
     AnimalReport,
     StatusHistoryEntry,
     ReportStatus,
@@ -75,7 +78,7 @@ export async function createReport(params: CreateReportParams): Promise<AnimalRe
         const reportId = await generateReportId();
         const animalId = generateAnimalId(params.species === 'unknown' ? 'dog' : params.species);
 
-        const dbReport: Partial<DbAnimalReport> = {
+        const dbReport: DbAnimalReportInsert = {
             report_id: reportId,
             reporter_id: params.reporterId,
             reporter_name: params.reporterName,
@@ -144,16 +147,18 @@ async function storeAnimalEmbedding(params: {
     createdBy: string;
 }): Promise<void> {
     try {
+        const embeddingData: DbAnimalEmbeddingInsert = {
+            animal_id: params.animalId,
+            embedding: params.embedding,
+            image_url: params.imageUrl,
+            species: params.species,
+            created_by: params.createdBy,
+            sighting_count: 1,
+        };
+
         const { error } = await supabase
             .from('animal_embeddings')
-            .insert({
-                animal_id: params.animalId,
-                embedding: params.embedding,
-                image_url: params.imageUrl,
-                species: params.species,
-                created_by: params.createdBy,
-                sighting_count: 1,
-            });
+            .insert(embeddingData);
 
         if (error) {
             console.error('⚠️ Failed to store embedding:', error);
@@ -614,12 +619,12 @@ export async function getStatusHistory(reportId: string): Promise<StatusHistoryE
         return (data || []).map((item: DbStatusHistory) => ({
             id: item.id,
             reportId: item.report_id,
-            oldStatus: item.old_status,
+            oldStatus: item.old_status ?? undefined,
             newStatus: item.new_status,
             actionType: item.action_type,
             changedBy: item.changed_by,
             changedByName: item.changed_by_name,
-            notes: item.notes,
+            notes: item.notes ?? undefined,
             createdAt: item.created_at,
         }));
     } catch (error) {

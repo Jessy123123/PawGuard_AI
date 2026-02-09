@@ -1,15 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserRole } from '../types';
-
-// Generate a proper UUID v4 (no external dependencies)
-const generateUUID = (): string => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-};
+import { supabase } from '../lib/supabase';
+import { DbUser, DbUserInsert } from '../lib/supabaseTypes';
 
 interface User {
     id: string;
@@ -43,12 +35,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const loadStoredUser = async () => {
         try {
-            const storedUser = await AsyncStorage.getItem('@user');
-            if (storedUser) {
-                setUser(JSON.parse(storedUser));
+            // Get current session from Supabase
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session?.user) {
+                // Fetch user profile from database
+                const { data: profile, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (error) {
+                    console.error('Error fetching user profile:', error);
+                    return;
+                }
+
+                if (profile) {
+                    setUser({
+                        id: profile.id,
+                        email: profile.email,
+                        name: profile.name,
+                        role: profile.role as UserRole,
+                        phone: profile.phone || undefined,
+                        organizationName: profile.ngo_name || undefined,
+                        profileComplete: !!(profile.name && profile.role && profile.phone),
+                    });
+                }
             }
         } catch (error) {
-            console.error('Failed to load user:', error);
+            console.error('Failed to load user session:', error);
         } finally {
             setIsLoading(false);
         }
@@ -57,33 +73,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const login = async (email: string, password: string, role: UserRole = 'citizen') => {
         setIsLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Sign in with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-            // Check if we have an existing user with this email (to preserve UUID)
-            const existingUserData = await AsyncStorage.getItem(`@user_${email.toLowerCase()}`);
-            let userId: string;
+            if (authError) throw authError;
+            if (!authData.user) throw new Error('No user returned from login');
 
-            if (existingUserData) {
-                const existingUser = JSON.parse(existingUserData);
-                userId = existingUser.id;
-            } else {
-                // Generate a proper UUID for new users
-                userId = generateUUID();
+            // Fetch user profile from database
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', authData.user.id)
+                .single();
+
+            if (profileError) {
+                console.error('Error fetching user profile:', profileError);
+                throw profileError;
             }
 
-            const newUser: User = {
-                id: userId,
-                email,
-                name: email.split('@')[0], // Default name from email
-                role, // Use the selected role
-                profileComplete: true, // Login assumes existing user with complete profile
-            };
-
-            await AsyncStorage.setItem('@user', JSON.stringify(newUser));
-            await AsyncStorage.setItem(`@user_${email.toLowerCase()}`, JSON.stringify(newUser));
-            await AsyncStorage.setItem('@token', 'mock-jwt-token');
-            setUser(newUser);
+            if (profile) {
+                setUser({
+                    id: profile.id,
+                    email: profile.email,
+                    name: profile.name,
+                    role: profile.role as UserRole,
+                    phone: profile.phone || undefined,
+                    organizationName: profile.ngo_name || undefined,
+                    profileComplete: !!(profile.name && profile.role && profile.phone),
+                });
+            }
+        } catch (error: any) {
+            console.error('Login failed:', error);
+            throw new Error(error.message || 'Login failed');
         } finally {
             setIsLoading(false);
         }
@@ -92,28 +116,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const register = async (email: string, password: string, name: string, role: UserRole, phone?: string, orgName?: string) => {
         setIsLoading(true);
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Sign up with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+            });
 
+            if (authError) throw authError;
+            if (!authData.user) throw new Error('No user returned from signup');
+
+            console.log('✅ Supabase Auth user created:', authData.user.id);
+
+            // Insert user details into users table
             const profileComplete = !!(name && role && (role === 'ngo' ? orgName : true) && phone);
 
-            // Generate a proper UUID for new users
-            const userId = generateUUID();
-
-            const newUser: User = {
-                id: userId,
+            const userInsert: DbUserInsert = {
+                id: authData.user.id,
                 email,
                 name,
                 role,
-                phone,
-                organizationName: orgName,
-                profileComplete,
+                phone: phone || null,
+                ngo_name: orgName || null,
             };
 
-            await AsyncStorage.setItem('@user', JSON.stringify(newUser));
-            await AsyncStorage.setItem(`@user_${email.toLowerCase()}`, JSON.stringify(newUser));
-            await AsyncStorage.setItem('@token', 'mock-jwt-token');
-            setUser(newUser);
+            const { data: profile, error: profileError } = await supabase
+                .from('users')
+                .insert(userInsert)
+                .select()
+                .single();
+
+            if (profileError) {
+                console.error('❌ Error creating user profile:', profileError);
+                throw profileError;
+            }
+
+            console.log('✅ User profile created in database:', profile);
+
+            setUser({
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+                role: profile.role as UserRole,
+                phone: profile.phone || undefined,
+                organizationName: profile.ngo_name || undefined,
+                profileComplete,
+            });
+        } catch (error: any) {
+            console.error('❌ Registration failed:', error);
+            throw new Error(error.message || 'Registration failed');
         } finally {
             setIsLoading(false);
         }
@@ -123,9 +173,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if (!user) return;
 
         try {
-            const updatedUser = { ...user, ...updates };
+            const { error } = await supabase
+                .from('users')
+                .update({
+                    name: updates.name,
+                    phone: updates.phone || null,
+                    ngo_name: updates.organizationName || null,
+                })
+                .eq('id', user.id);
 
-            // Check if profile is complete
+            if (error) throw error;
+
+            const updatedUser = { ...user, ...updates };
             const profileComplete = !!(
                 updatedUser.name &&
                 updatedUser.role &&
@@ -134,20 +193,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             );
 
             updatedUser.profileComplete = profileComplete;
-
-            await AsyncStorage.setItem('@user', JSON.stringify(updatedUser));
             setUser(updatedUser);
-        } catch (error) {
-            console.error('Failed to update profile:', error);
+
+            console.log('✅ Profile updated successfully');
+        } catch (error: any) {
+            console.error('❌ Failed to update profile:', error);
+            throw new Error(error.message || 'Update failed');
         }
     };
 
     const logout = async () => {
         try {
-            await AsyncStorage.multiRemove(['@user', '@token']);
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+
             setUser(null);
-        } catch (error) {
-            console.error('Failed to logout:', error);
+            console.log('✅ Logged out successfully');
+        } catch (error: any) {
+            console.error('❌ Failed to logout:', error);
+            throw new Error(error.message || 'Logout failed');
         }
     };
 

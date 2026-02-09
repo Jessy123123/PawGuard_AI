@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { DbLostFoundPost, LostFoundPost, dbToLostFoundPost } from '../lib/communityTypes';
+import { DbLostFoundPost, DbLostFoundPostInsert, LostFoundPost, dbToLostFoundPost } from '../lib/supabaseTypes';
 
 // ============= CREATE OPERATIONS =============
 
@@ -49,30 +49,32 @@ export async function createFoundPost(params: CreateLostFoundPostParams): Promis
  */
 async function createLostFoundPost(params: CreateLostFoundPostParams): Promise<LostFoundPost | null> {
     try {
+        const dbPost: DbLostFoundPostInsert = {
+            post_type: params.postType,
+            user_id: params.userId,
+            user_name: params.userName,
+            user_role: params.userRole,
+            contact_phone: params.contactPhone,
+            contact_email: params.contactEmail,
+            species: params.species,
+            breed: params.breed,
+            color: params.color,
+            size: params.size,
+            distinctive_features: params.distinctiveFeatures,
+            name: params.name,
+            animal_id: params.animalId,
+            last_seen_address: params.lastSeenAddress,
+            last_seen_latitude: params.lastSeenLatitude,
+            last_seen_longitude: params.lastSeenLongitude,
+            last_seen_date: params.lastSeenDate,
+            photos: params.photos,
+            reward_offered: params.rewardOffered,
+            status: 'active',
+        };
+
         const { data, error } = await supabase
             .from('lost_found_posts')
-            .insert({
-                post_type: params.postType,
-                user_id: params.userId,
-                user_name: params.userName,
-                user_role: params.userRole,
-                contact_phone: params.contactPhone,
-                contact_email: params.contactEmail,
-                species: params.species,
-                breed: params.breed,
-                color: params.color,
-                size: params.size,
-                distinctive_features: params.distinctiveFeatures,
-                name: params.name,
-                animal_id: params.animalId,
-                last_seen_address: params.lastSeenAddress,
-                last_seen_latitude: params.lastSeenLatitude,
-                last_seen_longitude: params.lastSeenLongitude,
-                last_seen_date: params.lastSeenDate,
-                photos: params.photos,
-                reward_offered: params.rewardOffered,
-                status: 'active',
-            })
+            .insert(dbPost)
             .select()
             .single();
 
@@ -230,7 +232,7 @@ export async function getPostContactInfo(postId: string): Promise<{
         return data ? {
             userName: data.user_name,
             contactPhone: data.contact_phone,
-            contactEmail: data.contact_email,
+            contactEmail: data.contact_email ?? undefined,
         } : null;
     } catch (error) {
         console.error('❌ Error getting contact info:', error);

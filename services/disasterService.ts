@@ -5,6 +5,8 @@
 
 import { supabase } from '../lib/supabase';
 import { DbDisasterZone, DisasterZone, dbToDisasterZone } from '../lib/supabaseTypes';
+import { supabase } from '../lib/supabase';
+import { DbDisasterZone, DbDisasterZoneInsert, DisasterZone, dbToDisasterZone } from '../lib/supabaseTypes';
 import { setDisasterModeForZone } from './reportService';
 
 // ============= MOCK DISASTER DATA FOR SABAH EARTHQUAKE DEMO =============
@@ -49,7 +51,7 @@ export const MOCK_DISASTER_ZONES: Omit<DisasterZone, 'id'>[] = [
  */
 export async function createDisasterZone(zone: Omit<DisasterZone, 'id'>): Promise<DisasterZone | null> {
     try {
-        const dbZone: Partial<DbDisasterZone> = {
+        const dbZone: DbDisasterZoneInsert = {
             name: zone.name,
             description: zone.description,
             center_latitude: zone.centerLatitude,
