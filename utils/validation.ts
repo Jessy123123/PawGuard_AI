@@ -3,7 +3,6 @@ import * as yup from 'yup';
 export const loginSchema = yup.object().shape({
     email: yup
         .string()
-        .email('Please enter a valid email address')
         .required('Email is required'),
     password: yup
         .string()
@@ -14,15 +13,10 @@ export const loginSchema = yup.object().shape({
 export const signupSchema = yup.object().shape({
     email: yup
         .string()
-        .email('Please enter a valid email address')
         .required('Email is required'),
     password: yup
         .string()
         .min(6, 'Password must be at least 6 characters')
-        .matches(
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-            'Password must contain uppercase, lowercase, and number'
-        )
         .required('Password is required'),
     organizationName: yup.string().when('$isNGO', {
         is: true,

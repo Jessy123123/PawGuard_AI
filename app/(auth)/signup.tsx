@@ -31,6 +31,8 @@ export default function SignupScreen() {
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
     const [orgName, setOrgName] = useState('');
+    const [regNumber, setRegNumber] = useState('');
+    const [country, setCountry] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -98,17 +100,17 @@ export default function SignupScreen() {
             return;
         }
 
-        if (selectedRole === 'ngo' && !orgName) {
-            setErrorMessage('Please enter your organization name');
+        if (selectedRole === 'ngo' && (!orgName || !regNumber || !country)) {
+            setErrorMessage('Please enter all organization details');
             setShowError(true);
             return;
         }
 
         try {
-            await register(email, password, name, selectedRole, phone, orgName || undefined);
+            await register(email.trim(), password.trim(), name, selectedRole, phone, orgName || undefined, regNumber || undefined, country || undefined);
             router.replace('/(tabs)/home');
-        } catch (error) {
-            setErrorMessage('Sign up failed. Please try again.');
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Sign up failed. Please try again.');
             setShowError(true);
         }
     };
@@ -327,23 +329,61 @@ export default function SignupScreen() {
                             </View>
 
                             {selectedRole === 'ngo' && (
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Organization Name</Text>
-                                    <View style={[
-                                        styles.inputContainer,
-                                        focusedField === 'org' && styles.inputFocused
-                                    ]}>
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="Your organization name"
-                                            placeholderTextColor={colors.minimalist.textLight}
-                                            value={orgName}
-                                            onChangeText={setOrgName}
-                                            onFocus={() => setFocusedField('org')}
-                                            onBlur={() => setFocusedField(null)}
-                                        />
+                                <>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>Organization Name</Text>
+                                        <View style={[
+                                            styles.inputContainer,
+                                            focusedField === 'org' && styles.inputFocused
+                                        ]}>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="Your organization name"
+                                                placeholderTextColor={colors.minimalist.textLight}
+                                                value={orgName}
+                                                onChangeText={setOrgName}
+                                                onFocus={() => setFocusedField('org')}
+                                                onBlur={() => setFocusedField(null)}
+                                            />
+                                        </View>
                                     </View>
-                                </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>Registration Number</Text>
+                                        <View style={[
+                                            styles.inputContainer,
+                                            focusedField === 'reg' && styles.inputFocused
+                                        ]}>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="REG-29384"
+                                                placeholderTextColor={colors.minimalist.textLight}
+                                                value={regNumber}
+                                                onChangeText={setRegNumber}
+                                                onFocus={() => setFocusedField('reg')}
+                                                onBlur={() => setFocusedField(null)}
+                                            />
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>Country</Text>
+                                        <View style={[
+                                            styles.inputContainer,
+                                            focusedField === 'country' && styles.inputFocused
+                                        ]}>
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="USA"
+                                                placeholderTextColor={colors.minimalist.textLight}
+                                                value={country}
+                                                onChangeText={setCountry}
+                                                onFocus={() => setFocusedField('country')}
+                                                onBlur={() => setFocusedField(null)}
+                                            />
+                                        </View>
+                                    </View>
+                                </>
                             )}
                         </Animated.View>
                     )}

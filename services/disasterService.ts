@@ -4,8 +4,6 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { DbDisasterZone, DisasterZone, dbToDisasterZone } from '../lib/supabaseTypes';
-import { supabase } from '../lib/supabase';
 import { DbDisasterZone, DbDisasterZoneInsert, DisasterZone, dbToDisasterZone } from '../lib/supabaseTypes';
 import { setDisasterModeForZone } from './reportService';
 

@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import { DbAdoptionPost, DbAdoptionPostInsert, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/supabaseTypes';
+import { DbAdoptionPost, DbAdoptionPostInsert, DbNgoProfile, AdoptionPost, dbToAdoptionPost, dbToNgoProfile } from '../lib/supabaseTypes';
 
 // ============= CREATE OPERATIONS =============
 

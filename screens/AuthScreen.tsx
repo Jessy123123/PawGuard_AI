@@ -18,6 +18,8 @@ import { loginSchema, signupSchema, LoginFormData, SignupFormData } from '../uti
 export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const [selectedRole, setSelectedRole] = useState<UserRole>('citizen');
     const [isSignUp, setIsSignUp] = useState(true);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [showError, setShowError] = useState(false);
     const { login, register, isLoading } = useAuth();
 
     const {
@@ -32,6 +34,8 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     });
 
     const onSubmit = async (data: LoginFormData | SignupFormData) => {
+        setErrorMessage(null);
+        setShowError(false);
         try {
             if (isSignUp) {
                 await register(
@@ -40,14 +44,17 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                     data.email.split('@')[0], // Derive name from email since form has no name field
                     selectedRole,
                     undefined, // phone not in form
-                    'organizationName' in data ? data.organizationName : undefined
+                    'organizationName' in data ? data.organizationName : undefined,
+                    'regNumber' in data ? data.regNumber : undefined,
+                    'country' in data ? data.country : undefined
                 );
             } else {
                 await login(data.email, data.password, selectedRole);
             }
-            navigation.navigate('Main');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Auth error:', error);
+            setErrorMessage(error.message || 'Authentication failed');
+            setShowError(true);
         }
     };
 
@@ -133,6 +140,14 @@ export const AuthScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                         </Text>
                     </Pressable>
                 </View>
+
+                {/* Error Message */}
+                {showError && errorMessage && (
+                    <View style={styles.errorContainer}>
+                        <Ionicons name="alert-circle" size={20} color={colors.minimalist.errorRed} />
+                        <Text style={styles.errorText}>{errorMessage}</Text>
+                    </View>
+                )}
 
                 {/* Form */}
                 <View style={styles.form}>
@@ -412,5 +427,22 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: spacing.xxl,
         letterSpacing: 1,
+    },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(239, 68, 68, 0.05)',
+        padding: spacing.md,
+        borderRadius: 12,
+        marginBottom: spacing.lg,
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.1)',
+    },
+    errorText: {
+        fontSize: 14,
+        color: colors.minimalist.errorRed,
+        fontWeight: '600',
+        flex: 1,
     },
 });

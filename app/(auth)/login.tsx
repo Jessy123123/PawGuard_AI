@@ -101,10 +101,10 @@ export default function LoginScreen() {
         }
 
         try {
-            await login(email, password, selectedRole);
+            await login(email.trim(), password.trim(), selectedRole);
             router.replace('/(tabs)/home');
-        } catch (error) {
-            setErrorMessage('Login failed. Please check your credentials.');
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Login failed. Please check your credentials.');
             setShowError(true);
         }
     };

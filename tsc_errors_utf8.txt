@@ -1,0 +1,12 @@
+﻿App.archive.tsx(3,27): error TS2307: Cannot find module './app/providers' or its corresponding type declarations.
+App.archive.tsx(4,31): error TS2307: Cannot find module './app/navigation' or its corresponding type declarations.
+components/LoadingOverlay.tsx(28,39): error TS2339: Property 'blackOverlay' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'.
+index.archive.ts(3,17): error TS1261: Already included file name 'D:/github clone/PawGuard_AI/App/index.tsx' differs from file name 'D:/github clone/PawGuard_AI/app/index.tsx' only in casing.
+  The file is in the program because:
+    Imported via './App' from file 'D:/github clone/PawGuard_AI/index.archive.ts'
+    Matched by default include pattern '**/*'
+screens/PublicDashboard.tsx(65,106): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+screens/PublicDashboard.tsx(132,48): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+screens/PublicDashboard.tsx(132,78): error TS2551: Property 'backgroundLight' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'backgroundAlt'?
+screens/PublicDashboard.tsx(221,29): error TS2551: Property 'backgroundDark' does not exist on type '{ background: string; backgroundAlt: string; surface: string; surfaceAlt: string; surfaceDark: string; glassLight: string; glassDark: string; glassAccent: string; peach: string; coral: string; ... 45 more ...; minimalist: { ...; }; }'. Did you mean 'background'?
+services/animalService.ts(167,31): error TS2322: Type 'string[]' is not assignable to type 'string'.
