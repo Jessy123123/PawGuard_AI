@@ -107,4 +107,4 @@ python app.py
 
 ---
 
-**Built with ❤️ for the [Hackathon Name]**
+**Built with ❤️ for the KitaHack 2026**
