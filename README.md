@@ -4,9 +4,6 @@
 > **Saving Lives, One Paw at a Time.**  
 > An AI-powered platform for stray animal rescue, disaster management, and adoption.
 
-![PawGuard AI Banner](https://via.placeholder.com/1200x600?text=PawGuard+AI+Banner)
-*(Replace with your actual project banner/screenshot)*
-
 ## 💡 Inspiration
 During natural disasters like floods or earthquakes, pets and stray animals are often the forgotten victims. We noticed a lack of coordinated systems to track stranded animals or manage rescue operations efficiently. **PawGuard AI** was born out of the desire to bridge the gap between technology and animal welfare, giving NGOs and rescuers a powerful tool to save lives.
 
